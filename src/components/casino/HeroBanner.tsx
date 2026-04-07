@@ -15,14 +15,24 @@ export function HeroBanner() {
           WIN BIG<br />AT BITBET
         </h2>
         <p className="text-sm text-foreground/80 mt-1 mb-3">Up to $500 welcome bonus!</p>
-        <Button
-          variant="gold"
-          size="sm"
-          className="w-fit"
-          onClick={() => navigate(user ? "/deposit" : "/signup")}
-        >
-          {user ? "Deposit Now" : "Join Now"}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="gold"
+            size="sm"
+            onClick={() => navigate(user ? "/deposit" : "/signup")}
+          >
+            {user ? "Deposit" : "Join Now"}
+          </Button>
+          {user && (
+            <Button
+              variant="pink"
+              size="sm"
+              onClick={() => navigate("/withdraw")}
+            >
+              Withdraw
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

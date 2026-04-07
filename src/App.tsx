@@ -12,6 +12,7 @@ import Admin from "./pages/Admin.tsx";
 import GameDetail from "./pages/GameDetail.tsx";
 import Promotions from "./pages/Promotions.tsx";
 import Deposit from "./pages/Deposit.tsx";
+import Withdraw from "./pages/Withdraw.tsx";
 import SearchPage from "./pages/Search.tsx";
 import CategoryPage from "./pages/CategoryPage.tsx";
 import Friends from "./pages/Friends.tsx";
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/game/:id" element={<GameDetail />} />
             <Route path="/promotions" element={<Promotions />} />
             <Route path="/deposit" element={<Deposit />} />
+            <Route path="/withdraw" element={<Withdraw />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/category/:category" element={<CategoryPage />} />
             <Route path="/friends" element={<Friends />} />
