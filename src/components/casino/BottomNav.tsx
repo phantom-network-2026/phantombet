@@ -1,11 +1,11 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Dice5, Trophy, Gift, Search } from "lucide-react";
+import { Home, Dice5, Trophy, Users, Search } from "lucide-react";
 
 const navItems = [
   { icon: Home, label: "Home", path: "/" },
   { icon: Dice5, label: "Slots", path: "/category/slots" },
-  { icon: Trophy, label: "Live", path: "/category/live" },
-  { icon: Gift, label: "Promos", path: "/promotions" },
+  { icon: Users, label: "Friends", path: "/friends" },
+  { icon: Trophy, label: "Promos", path: "/promotions" },
   { icon: Search, label: "Search", path: "/search" },
 ];
 

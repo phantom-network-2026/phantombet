@@ -14,6 +14,8 @@ import Promotions from "./pages/Promotions.tsx";
 import Deposit from "./pages/Deposit.tsx";
 import SearchPage from "./pages/Search.tsx";
 import CategoryPage from "./pages/CategoryPage.tsx";
+import Friends from "./pages/Friends.tsx";
+import Messages from "./pages/Messages.tsx";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +36,8 @@ const App = () => (
             <Route path="/deposit" element={<Deposit />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/category/:category" element={<CategoryPage />} />
+            <Route path="/friends" element={<Friends />} />
+            <Route path="/messages/:friendId" element={<Messages />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
