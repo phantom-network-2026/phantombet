@@ -106,6 +106,7 @@ export type Database = {
           avatar_url: string | null
           balance: number
           created_at: string
+          crypto_address: string | null
           id: string
           updated_at: string
           user_id: string
@@ -115,6 +116,7 @@ export type Database = {
           avatar_url?: string | null
           balance?: number
           created_at?: string
+          crypto_address?: string | null
           id?: string
           updated_at?: string
           user_id: string
@@ -124,6 +126,7 @@ export type Database = {
           avatar_url?: string | null
           balance?: number
           created_at?: string
+          crypto_address?: string | null
           id?: string
           updated_at?: string
           user_id?: string
