@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Header } from "@/components/casino/Header";
-import { ArrowLeft, Users, DollarSign, Trash2, Plus, Minus } from "lucide-react";
+import { ArrowLeft, Users, DollarSign, Plus, Minus, Edit, Save } from "lucide-react";
 import { toast } from "sonner";
 
 interface UserProfile {
@@ -23,14 +23,16 @@ export default function Admin() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [adjustUserId, setAdjustUserId] = useState<string | null>(null);
+  const [editUserId, setEditUserId] = useState<string | null>(null);
   const [adjustAmount, setAdjustAmount] = useState("");
   const [adjustDescription, setAdjustDescription] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [editPassword, setEditPassword] = useState("");
+  const [editUsername, setEditUsername] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!loading && !isAdmin) {
-      navigate("/");
-      return;
-    }
+    if (!loading && !isAdmin) { navigate("/"); return; }
     if (isAdmin) fetchUsers();
   }, [isAdmin, loading]);
 
@@ -38,7 +40,6 @@ export default function Admin() {
     setLoadingUsers(true);
     const { data: profiles } = await supabase.from("profiles").select("*");
     const { data: roles } = await supabase.from("user_roles").select("*");
-
     if (profiles) {
       const usersWithRoles = profiles.map((p) => ({
         user_id: p.user_id,
@@ -53,31 +54,17 @@ export default function Admin() {
   };
 
   const handleAdjustBalance = async (userId: string, amount: number) => {
-    // Insert transaction
     const { error: txError } = await supabase.from("transactions").insert({
-      user_id: userId,
-      amount,
-      type: "adjustment",
+      user_id: userId, amount, type: "adjustment",
       description: adjustDescription || `Admin balance adjustment: ${amount > 0 ? "+" : ""}${amount}`,
     });
     if (txError) { toast.error("Failed to create transaction"); return; }
-
-    // Update profile balance
     const user = users.find((u) => u.user_id === userId);
     if (!user) return;
-    const newBalance = user.balance + amount;
-
-    const { error } = await supabase
-      .from("profiles")
-      .update({ balance: newBalance })
-      .eq("user_id", userId);
-
+    const { error } = await supabase.from("profiles").update({ balance: user.balance + amount }).eq("user_id", userId);
     if (error) { toast.error("Failed to update balance"); return; }
-
     toast.success(`Balance ${amount > 0 ? "added" : "deducted"}: $${Math.abs(amount).toFixed(2)}`);
-    setAdjustUserId(null);
-    setAdjustAmount("");
-    setAdjustDescription("");
+    setAdjustUserId(null); setAdjustAmount(""); setAdjustDescription("");
     fetchUsers();
   };
 
@@ -89,6 +76,43 @@ export default function Admin() {
       await supabase.from("user_roles").insert({ user_id: userId, role: "admin" });
       toast.success("Admin role granted");
     }
+    fetchUsers();
+  };
+
+  const handleEditUser = (userId: string) => {
+    if (editUserId === userId) { setEditUserId(null); return; }
+    setEditUserId(userId);
+    setEditEmail("");
+    setEditPassword("");
+    const u = users.find((u) => u.user_id === userId);
+    setEditUsername(u?.username || "");
+  };
+
+  const handleSaveUserDetails = async (userId: string) => {
+    setSaving(true);
+
+    // Update username in profiles
+    if (editUsername.trim()) {
+      const { error } = await supabase.from("profiles").update({ username: editUsername.trim() }).eq("user_id", userId);
+      if (error) { toast.error("Failed to update username"); setSaving(false); return; }
+    }
+
+    // Update email/password via edge function
+    if (editEmail.trim() || editPassword.trim()) {
+      const { data, error } = await supabase.functions.invoke("admin-update-user", {
+        body: {
+          target_user_id: userId,
+          ...(editEmail.trim() && { email: editEmail.trim() }),
+          ...(editPassword.trim() && { password: editPassword.trim() }),
+        },
+      });
+      if (error) { toast.error("Failed to update login details"); setSaving(false); return; }
+      if (data?.error) { toast.error(data.error); setSaving(false); return; }
+    }
+
+    toast.success("User details updated!");
+    setEditUserId(null); setEditEmail(""); setEditPassword(""); setEditUsername("");
+    setSaving(false);
     fetchUsers();
   };
 
@@ -142,12 +166,11 @@ export default function Admin() {
                 </div>
 
                 <div className="flex gap-2 flex-wrap">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setAdjustUserId(adjustUserId === user.user_id ? null : user.user_id)}
-                  >
-                    <DollarSign className="h-3 w-3 mr-1" /> Adjust Balance
+                  <Button variant="outline" size="sm" onClick={() => setAdjustUserId(adjustUserId === user.user_id ? null : user.user_id)}>
+                    <DollarSign className="h-3 w-3 mr-1" /> Balance
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => handleEditUser(user.user_id)}>
+                    <Edit className="h-3 w-3 mr-1" /> Edit
                   </Button>
                   <Button
                     variant={user.roles.includes("admin") ? "destructive" : "casino"}
@@ -158,46 +181,45 @@ export default function Admin() {
                   </Button>
                 </div>
 
+                {/* Edit User Details */}
+                {editUserId === user.user_id && (
+                  <div className="mt-3 p-3 rounded-lg bg-secondary space-y-2 animate-slide-up">
+                    <div>
+                      <Label className="text-xs">Username</Label>
+                      <Input value={editUsername} onChange={(e) => setEditUsername(e.target.value)} placeholder="New username" className="bg-background border-border" />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Email</Label>
+                      <Input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} placeholder="New email (leave empty to keep)" className="bg-background border-border" />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Password</Label>
+                      <Input type="password" value={editPassword} onChange={(e) => setEditPassword(e.target.value)} placeholder="New password (leave empty to keep)" className="bg-background border-border" minLength={6} />
+                    </div>
+                    <Button variant="gold" size="sm" onClick={() => handleSaveUserDetails(user.user_id)} disabled={saving}>
+                      <Save className="h-3 w-3 mr-1" /> {saving ? "Saving..." : "Save Changes"}
+                    </Button>
+                  </div>
+                )}
+
                 {/* Adjust Balance Form */}
                 {adjustUserId === user.user_id && (
                   <div className="mt-3 p-3 rounded-lg bg-secondary space-y-2 animate-slide-up">
                     <div className="flex gap-2">
                       <div className="flex-1">
                         <Label className="text-xs">Amount ($)</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={adjustAmount}
-                          onChange={(e) => setAdjustAmount(e.target.value)}
-                          placeholder="100.00"
-                          className="bg-background border-border"
-                        />
+                        <Input type="number" step="0.01" value={adjustAmount} onChange={(e) => setAdjustAmount(e.target.value)} placeholder="100.00" className="bg-background border-border" />
                       </div>
                     </div>
                     <div>
                       <Label className="text-xs">Description (optional)</Label>
-                      <Input
-                        value={adjustDescription}
-                        onChange={(e) => setAdjustDescription(e.target.value)}
-                        placeholder="Bonus credit"
-                        className="bg-background border-border"
-                      />
+                      <Input value={adjustDescription} onChange={(e) => setAdjustDescription(e.target.value)} placeholder="Bonus credit" className="bg-background border-border" />
                     </div>
                     <div className="flex gap-2">
-                      <Button
-                        variant="gold"
-                        size="sm"
-                        onClick={() => handleAdjustBalance(user.user_id, Math.abs(Number(adjustAmount)))}
-                        disabled={!adjustAmount || Number(adjustAmount) === 0}
-                      >
+                      <Button variant="gold" size="sm" onClick={() => handleAdjustBalance(user.user_id, Math.abs(Number(adjustAmount)))} disabled={!adjustAmount || Number(adjustAmount) === 0}>
                         <Plus className="h-3 w-3 mr-1" /> Add
                       </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleAdjustBalance(user.user_id, -Math.abs(Number(adjustAmount)))}
-                        disabled={!adjustAmount || Number(adjustAmount) === 0}
-                      >
+                      <Button variant="destructive" size="sm" onClick={() => handleAdjustBalance(user.user_id, -Math.abs(Number(adjustAmount)))} disabled={!adjustAmount || Number(adjustAmount) === 0}>
                         <Minus className="h-3 w-3 mr-1" /> Deduct
                       </Button>
                     </div>
