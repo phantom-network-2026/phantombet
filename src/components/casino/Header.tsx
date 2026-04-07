@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Wallet, LogOut, Shield, Menu, X } from "lucide-react";
+import { Wallet, LogOut, Shield, Menu, X, ArrowDownToLine } from "lucide-react";
 import logo from "@/assets/bitbet-logo.svg";
 
 export function Header() {
@@ -19,7 +19,7 @@ export function Header() {
         </Link>
 
         {/* Desktop nav */}
-        <div className="hidden md:flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-3">
           {user ? (
             <>
               <div className="flex items-center gap-2 rounded-lg bg-secondary px-3 py-1.5">
@@ -30,6 +30,9 @@ export function Header() {
               </div>
               <Button variant="gold" size="sm" onClick={() => navigate("/deposit")}>
                 Deposit
+              </Button>
+              <Button variant="pink" size="sm" onClick={() => navigate("/withdraw")}>
+                <ArrowDownToLine className="h-4 w-4 mr-1" /> Withdraw
               </Button>
               {isAdmin && (
                 <Button variant="ghost" size="sm" onClick={() => navigate("/admin")} className="text-casino-pink">
@@ -69,9 +72,14 @@ export function Header() {
                   ${profile?.balance?.toFixed(2) ?? "0.00"}
                 </span>
               </div>
-              <Button variant="gold" className="w-full" onClick={() => { navigate("/deposit"); setMenuOpen(false); }}>
-                Deposit
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="gold" className="flex-1" onClick={() => { navigate("/deposit"); setMenuOpen(false); }}>
+                  Deposit
+                </Button>
+                <Button variant="pink" className="flex-1" onClick={() => { navigate("/withdraw"); setMenuOpen(false); }}>
+                  <ArrowDownToLine className="h-4 w-4 mr-1" /> Withdraw
+                </Button>
+              </div>
               {isAdmin && (
                 <Button variant="ghost" className="w-full text-casino-pink" onClick={() => { navigate("/admin"); setMenuOpen(false); }}>
                   <Shield className="h-4 w-4 mr-1" /> Admin Panel
