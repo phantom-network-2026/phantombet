@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN crypto_address TEXT;
