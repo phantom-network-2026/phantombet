@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Header } from "@/components/casino/Header";
-import { ArrowLeft, Users, DollarSign, Plus, Minus, Edit, Save } from "lucide-react";
+import { ArrowLeft, Users, DollarSign, Plus, Minus, Edit, Save, Shield } from "lucide-react";
 import { toast } from "sonner";
 
 interface UserProfile {
@@ -17,6 +17,15 @@ interface UserProfile {
   roles: string[];
 }
 
+const ALL_ROLES = ["admin", "moderator", "staff", "active_user", "user"] as const;
+const ROLE_LABELS: Record<string, { label: string; emoji: string; color: string }> = {
+  admin: { label: "Admin", emoji: "👑", color: "text-casino-gold" },
+  moderator: { label: "Moderator", emoji: "🛡️", color: "text-blue-400" },
+  staff: { label: "Staff", emoji: "🔧", color: "text-purple-400" },
+  active_user: { label: "Active User", emoji: "⭐", color: "text-green-400" },
+  user: { label: "User", emoji: "👤", color: "text-muted-foreground" },
+};
+
 export default function Admin() {
   const { isAdmin, loading } = useAuth();
   const navigate = useNavigate();
@@ -24,6 +33,7 @@ export default function Admin() {
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [adjustUserId, setAdjustUserId] = useState<string | null>(null);
   const [editUserId, setEditUserId] = useState<string | null>(null);
+  const [rolesUserId, setRolesUserId] = useState<string | null>(null);
   const [adjustAmount, setAdjustAmount] = useState("");
   const [adjustDescription, setAdjustDescription] = useState("");
   const [editEmail, setEditEmail] = useState("");
@@ -68,13 +78,13 @@ export default function Admin() {
     fetchUsers();
   };
 
-  const handleToggleAdmin = async (userId: string, currentlyAdmin: boolean) => {
-    if (currentlyAdmin) {
-      await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "admin");
-      toast.success("Admin role removed");
+  const handleToggleRole = async (userId: string, role: string, hasRole: boolean) => {
+    if (hasRole) {
+      await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", role as any);
+      toast.success(`${ROLE_LABELS[role]?.label || role} role removed`);
     } else {
-      await supabase.from("user_roles").insert({ user_id: userId, role: "admin" });
-      toast.success("Admin role granted");
+      await supabase.from("user_roles").insert({ user_id: userId, role: role as any });
+      toast.success(`${ROLE_LABELS[role]?.label || role} role granted`);
     }
     fetchUsers();
   };
@@ -90,14 +100,10 @@ export default function Admin() {
 
   const handleSaveUserDetails = async (userId: string) => {
     setSaving(true);
-
-    // Update username in profiles
     if (editUsername.trim()) {
       const { error } = await supabase.from("profiles").update({ username: editUsername.trim() }).eq("user_id", userId);
       if (error) { toast.error("Failed to update username"); setSaving(false); return; }
     }
-
-    // Update email/password via edge function
     if (editEmail.trim() || editPassword.trim()) {
       const { data, error } = await supabase.functions.invoke("admin-update-user", {
         body: {
@@ -109,7 +115,6 @@ export default function Admin() {
       if (error) { toast.error("Failed to update login details"); setSaving(false); return; }
       if (data?.error) { toast.error(data.error); setSaving(false); return; }
     }
-
     toast.success("User details updated!");
     setEditUserId(null); setEditEmail(""); setEditPassword(""); setEditUsername("");
     setSaving(false);
@@ -156,8 +161,18 @@ export default function Admin() {
                 <div className="flex items-center justify-between mb-2">
                   <div>
                     <p className="font-display font-bold">{user.username || "No username"}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {user.roles.includes("admin") ? "👑 Admin" : "👤 User"} · Joined {new Date(user.created_at).toLocaleDateString()}
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {user.roles.map((role) => {
+                        const info = ROLE_LABELS[role] || { label: role, emoji: "🏷️", color: "text-muted-foreground" };
+                        return (
+                          <span key={role} className={`text-xs px-2 py-0.5 rounded-full bg-secondary ${info.color} font-medium`}>
+                            {info.emoji} {info.label}
+                          </span>
+                        );
+                      })}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Joined {new Date(user.created_at).toLocaleDateString()}
                     </p>
                   </div>
                   <div className="text-right">
@@ -172,14 +187,33 @@ export default function Admin() {
                   <Button variant="outline" size="sm" onClick={() => handleEditUser(user.user_id)}>
                     <Edit className="h-3 w-3 mr-1" /> Edit
                   </Button>
-                  <Button
-                    variant={user.roles.includes("admin") ? "destructive" : "casino"}
-                    size="sm"
-                    onClick={() => handleToggleAdmin(user.user_id, user.roles.includes("admin"))}
-                  >
-                    {user.roles.includes("admin") ? "Remove Admin" : "Make Admin"}
+                  <Button variant="outline" size="sm" onClick={() => setRolesUserId(rolesUserId === user.user_id ? null : user.user_id)}>
+                    <Shield className="h-3 w-3 mr-1" /> Roles
                   </Button>
                 </div>
+
+                {/* Role Management */}
+                {rolesUserId === user.user_id && (
+                  <div className="mt-3 p-3 rounded-lg bg-secondary space-y-2 animate-slide-up">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Assign Roles</p>
+                    <div className="flex flex-wrap gap-2">
+                      {ALL_ROLES.map((role) => {
+                        const hasRole = user.roles.includes(role);
+                        const info = ROLE_LABELS[role];
+                        return (
+                          <Button
+                            key={role}
+                            variant={hasRole ? "destructive" : "casino"}
+                            size="sm"
+                            onClick={() => handleToggleRole(user.user_id, role, hasRole)}
+                          >
+                            {info.emoji} {hasRole ? `Remove ${info.label}` : `Add ${info.label}`}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 {/* Edit User Details */}
                 {editUserId === user.user_id && (
@@ -194,7 +228,7 @@ export default function Admin() {
                     </div>
                     <div>
                       <Label className="text-xs">Password</Label>
-                      <Input type="password" value={editPassword} onChange={(e) => setEditPassword(e.target.value)} placeholder="New password (leave empty to keep)" className="bg-background border-border" minLength={6} />
+                      <Input type="password" value={editPassword} onChange={(e) => setEditPassword(e.target.value)} placeholder="New password (leave empty to keep)" className="bg-background border-border" />
                     </div>
                     <Button variant="gold" size="sm" onClick={() => handleSaveUserDetails(user.user_id)} disabled={saving}>
                       <Save className="h-3 w-3 mr-1" /> {saving ? "Saving..." : "Save Changes"}

@@ -45,7 +45,7 @@ export default function Signup() {
           </div>
           <div>
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="bg-secondary border-border" />
+            <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={1} className="bg-secondary border-border" />
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" variant="gold" className="w-full" disabled={loading}>
