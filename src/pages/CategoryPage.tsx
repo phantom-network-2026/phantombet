@@ -35,9 +35,12 @@ export default function CategoryPage() {
     supabase
       .from("games")
       .select("*")
-      .eq("category", category)
+      .eq("category", category as any)
       .eq("is_active", true)
       .then(({ data }) => {
+        if (data && data.length > 0) setGames(data);
+      });
+  }, [category]);
         if (data && data.length > 0) setGames(data);
       });
   }, [category]);

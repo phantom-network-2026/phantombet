@@ -3,8 +3,17 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import Login from "./pages/Login.tsx";
+import Signup from "./pages/Signup.tsx";
+import Admin from "./pages/Admin.tsx";
+import GameDetail from "./pages/GameDetail.tsx";
+import Promotions from "./pages/Promotions.tsx";
+import Deposit from "./pages/Deposit.tsx";
+import SearchPage from "./pages/Search.tsx";
+import CategoryPage from "./pages/CategoryPage.tsx";
 
 const queryClient = new QueryClient();
 
@@ -14,11 +23,20 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/game/:id" element={<GameDetail />} />
+            <Route path="/promotions" element={<Promotions />} />
+            <Route path="/deposit" element={<Deposit />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/category/:category" element={<CategoryPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
