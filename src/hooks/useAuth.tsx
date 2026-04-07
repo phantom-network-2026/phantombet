@@ -6,7 +6,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  profile: { username: string; balance: number; avatar_url: string | null } | null;
+  profile: { username: string; balance: number; avatar_url: string | null; crypto_address: string | null } | null;
   isAdmin: boolean;
   signUp: (email: string, password: string, username: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
@@ -26,10 +26,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
-      .select("username, balance, avatar_url")
+      .select("username, balance, avatar_url, crypto_address")
       .eq("user_id", userId)
       .single();
-    if (data) setProfile({ username: data.username || "", balance: Number(data.balance), avatar_url: data.avatar_url });
+    if (data) setProfile({ username: data.username || "", balance: Number(data.balance), avatar_url: data.avatar_url, crypto_address: data.crypto_address });
 
     const { data: roles } = await supabase
       .from("user_roles")
