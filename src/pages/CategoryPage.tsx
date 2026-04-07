@@ -41,9 +41,6 @@ export default function CategoryPage() {
         if (data && data.length > 0) setGames(data);
       });
   }, [category]);
-        if (data && data.length > 0) setGames(data);
-      });
-  }, [category]);
 
   return (
     <div className="min-h-screen gradient-casino-bg pb-20 md:pb-0">
