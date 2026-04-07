@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      friendships: {
+        Row: {
+          addressee_id: string
+          created_at: string
+          id: string
+          requester_id: string
+          status: Database["public"]["Enums"]["friendship_status"]
+          updated_at: string
+        }
+        Insert: {
+          addressee_id: string
+          created_at?: string
+          id?: string
+          requester_id: string
+          status?: Database["public"]["Enums"]["friendship_status"]
+          updated_at?: string
+        }
+        Update: {
+          addressee_id?: string
+          created_at?: string
+          id?: string
+          requester_id?: string
+          status?: Database["public"]["Enums"]["friendship_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       games: {
         Row: {
           category: Database["public"]["Enums"]["game_category"]
@@ -44,6 +71,33 @@ export type Database = {
           is_active?: boolean
           is_featured?: boolean
           name?: string
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_read: boolean
+          receiver_id: string
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          receiver_id: string
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          receiver_id?: string
+          sender_id?: string
         }
         Relationships: []
       }
@@ -137,6 +191,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      friendship_status: "pending" | "accepted" | "rejected"
       game_category: "slots" | "table" | "live" | "scratch" | "jackpot"
     }
     CompositeTypes: {
@@ -266,6 +321,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      friendship_status: ["pending", "accepted", "rejected"],
       game_category: ["slots", "table", "live", "scratch", "jackpot"],
     },
   },
