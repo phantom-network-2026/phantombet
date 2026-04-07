@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/casino/Header";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CreditCard, Wallet } from "lucide-react";
+import { ArrowLeft, CreditCard, Wallet, ArrowDownToLine } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function Deposit() {
@@ -42,9 +42,14 @@ export default function Deposit() {
           ))}
         </div>
 
-        <p className="text-center text-xs text-muted-foreground mt-6">
-          Demo mode — contact admin for balance adjustments.
-        </p>
+        <div className="text-center mt-6 space-y-2">
+          <Button variant="pink" className="w-full" onClick={() => navigate("/withdraw")}>
+            <ArrowDownToLine className="h-4 w-4 mr-1" /> Withdraw Funds Instead
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            Demo mode — contact admin for balance adjustments.
+          </p>
+        </div>
       </div>
     </div>
   );
