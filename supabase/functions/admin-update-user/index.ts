@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
 
     const updates: Record<string, string> = {}
     if (email && typeof email === 'string' && email.includes('@')) updates.email = email
-    if (password && typeof password === 'string' && password.length >= 6) updates.password = password
+    if (password && typeof password === 'string' && password.length >= 1) updates.password = password
 
     if (Object.keys(updates).length === 0) {
       return new Response(JSON.stringify({ error: 'No valid updates provided' }), {
