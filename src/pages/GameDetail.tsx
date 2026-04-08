@@ -12,6 +12,7 @@ import slotsImg from "@/assets/game-slots.jpg";
 const GAME_ROUTES: Record<string, string> = {
   "Blackjack": "/blackjack",
   "Lucky Scratch Card": "/scratch-card",
+  "Slot Cowboy": "/slot-cowboy",
 };
 
 export default function GameDetail() {

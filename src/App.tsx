@@ -19,6 +19,7 @@ import Friends from "./pages/Friends.tsx";
 import Messages from "./pages/Messages.tsx";
 import ScratchCard from "./pages/ScratchCard.tsx";
 import Blackjack from "./pages/Blackjack.tsx";
+import SlotCowboy from "./pages/SlotCowboy.tsx";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/messages/:friendId" element={<Messages />} />
             <Route path="/scratch-card" element={<ScratchCard />} />
             <Route path="/blackjack" element={<Blackjack />} />
+            <Route path="/slot-cowboy" element={<SlotCowboy />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
