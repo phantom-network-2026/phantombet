@@ -24,6 +24,7 @@ import Blackjack from "./pages/Blackjack.tsx";
 import SlotCowboy from "./pages/SlotCowboy.tsx";
 import Roulette from "./pages/Roulette.tsx";
 import Profile from "./pages/Profile.tsx";
+import GamesPage from "./pages/Games.tsx";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/withdraw" element={<Withdraw />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/category/:category" element={<CategoryPage />} />
+            <Route path="/games" element={<GamesPage />} />
             <Route path="/friends" element={<Friends />} />
             <Route path="/messages/:friendId" element={<Messages />} />
             <Route path="/scratch-card" element={<ScratchCard />} />
