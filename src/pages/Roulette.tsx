@@ -223,7 +223,7 @@ export default function Roulette() {
     } catch { toast.error("Failed to settle bet"); }
 
     setHistory((prev) => [winningNumber, ...prev.slice(0, 14)]);
-    if (netAmount > 0) setWinAmount(netAmount);
+    setSplashData({ resultNumber: winningNumber, netAmount });
     setSpinning(false);
     setBets([]);
   };
