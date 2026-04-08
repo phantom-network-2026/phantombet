@@ -204,7 +204,7 @@ export default function Roulette() {
     if (!user || spinning || bets.length === 0) return;
     setSpinning(true);
     setResult(null);
-    setWinAmount(null);
+    setSplashData(null);
 
     const winningNumber = Math.floor(Math.random() * 37);
     let netAmount = 0;
