@@ -244,6 +244,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_random_scratch_card: {
+        Args: { p_bet_tier: number; p_user_id: string }
+        Returns: {
+          card_id: string
+          is_winner: boolean
+          payout_multiplier: number
+          symbols: string[]
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

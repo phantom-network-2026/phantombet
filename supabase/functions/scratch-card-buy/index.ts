@@ -57,14 +57,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Claim a random unclaimed card from the pool for this tier
-    // Use a raw SQL approach to atomically grab one card
+    // Claim a random card using the database function (prevents sequential winner bias)
     const { data: cards, error: claimErr } = await admin
-      .from("scratch_card_pool")
-      .select("id, is_winner, payout_multiplier, symbols")
-      .eq("bet_tier", betTier)
-      .is("claimed_by", null)
-      .limit(1);
+      .rpc("claim_random_scratch_card", { p_bet_tier: betTier, p_user_id: user.id });
 
     if (claimErr || !cards || cards.length === 0) {
       return new Response(JSON.stringify({ error: "No cards available for this tier. Sold out!" }), {
@@ -75,19 +70,7 @@ Deno.serve(async (req) => {
 
     const card = cards[0];
 
-    // Claim the card
-    const { error: updateErr } = await admin
-      .from("scratch_card_pool")
-      .update({ claimed_by: user.id, claimed_at: new Date().toISOString() })
-      .eq("id", card.id)
-      .is("claimed_by", null); // Ensure not double-claimed
-
-    if (updateErr) {
-      return new Response(JSON.stringify({ error: "Failed to claim card, try again" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    // Card already claimed atomically by the RPC function
 
     // Deduct bet from balance
     const newBalance = Number(profile.balance) - betTier;
@@ -125,7 +108,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       card: {
-        id: card.id,
+        id: card.card_id,
         is_winner: card.is_winner,
         symbols: card.symbols,
         payout_multiplier: card.payout_multiplier,
