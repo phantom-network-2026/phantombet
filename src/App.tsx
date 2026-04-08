@@ -23,6 +23,7 @@ import ScratchCard from "./pages/ScratchCard.tsx";
 import Blackjack from "./pages/Blackjack.tsx";
 import SlotCowboy from "./pages/SlotCowboy.tsx";
 import Roulette from "./pages/Roulette.tsx";
+import Profile from "./pages/Profile.tsx";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +53,7 @@ const App = () => (
             <Route path="/blackjack" element={<Blackjack />} />
             <Route path="/slot-cowboy" element={<SlotCowboy />} />
             <Route path="/roulette" element={<Roulette />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
