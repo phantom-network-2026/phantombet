@@ -10,21 +10,25 @@ interface FakeWinsConfig {
   usernames: string[];
 }
 
+const GAME_WIN_RANGES: Record<string, { min: number; max: number; bigChance: number; bigMax: number }> = {
+  "European Roulette": { min: 0.20, max: 25, bigChance: 0.05, bigMax: 175 },
+  "Slot Cowboy": { min: 0.10, max: 8, bigChance: 0.08, bigMax: 50 },
+  "Lucky Sevens": { min: 0.05, max: 5, bigChance: 0.06, bigMax: 40 },
+  "Golden Dragon": { min: 0.15, max: 12, bigChance: 0.07, bigMax: 60 },
+  "Mega Fortune": { min: 0.20, max: 15, bigChance: 0.04, bigMax: 200 },
+  "Diamond Rush": { min: 0.10, max: 10, bigChance: 0.06, bigMax: 45 },
+  "Blackjack": { min: 1, max: 30, bigChance: 0.1, bigMax: 100 },
+  "Scratch & Win": { min: 0.50, max: 10, bigChance: 0.03, bigMax: 50 },
+};
+
+const DEFAULT_GAME_FALLBACK = { min: 0.10, max: 10, bigChance: 0.05, bigMax: 50 };
+
 const DEFAULT_CONFIG: FakeWinsConfig = {
   enabled: false,
-  minAmount: 0.5,
-  maxAmount: 500,
+  minAmount: 0.1,
+  maxAmount: 200,
   intervalSeconds: 4,
-  games: [
-    "European Roulette",
-    "Slot Cowboy",
-    "Blackjack",
-    "Scratch & Win",
-    "Lucky Sevens",
-    "Golden Dragon",
-    "Mega Fortune",
-    "Diamond Rush",
-  ],
+  games: Object.keys(GAME_WIN_RANGES),
   usernames: [
     "LuckyAce99", "CryptoKing", "BigWinner22", "SlotMaster", "JackpotJoe",
     "GoldRush88", "HighRoller", "DiamondDan", "MegaSpin", "WinStreak",
@@ -55,10 +59,16 @@ function randomBetween(min: number, max: number) {
 function generateWin(config: FakeWinsConfig) {
   const username = config.usernames[Math.floor(Math.random() * config.usernames.length)];
   const game = config.games[Math.floor(Math.random() * config.games.length)];
-  const amount = randomBetween(config.minAmount, config.maxAmount);
-  // Round nicely
-  const rounded = amount < 10 ? Math.round(amount * 100) / 100 : Math.round(amount * 10) / 10;
-  return { username, game, amount: rounded, id: Date.now() + Math.random() };
+  const range = GAME_WIN_RANGES[game] || DEFAULT_GAME_FALLBACK;
+  // Most wins are small; rare big wins
+  const isBig = Math.random() < range.bigChance;
+  const raw = isBig
+    ? randomBetween(range.max, range.bigMax)
+    : randomBetween(range.min, range.max);
+  // Weighted toward lower end for realism
+  const skewed = isBig ? raw : range.min + (raw - range.min) * Math.random();
+  const amount = Math.round(skewed * 100) / 100;
+  return { username, game, amount, id: Date.now() + Math.random() };
 }
 
 export function FakeWinsTicker() {
