@@ -187,6 +187,7 @@ export default function Roulette() {
   const [result, setResult] = useState<number | null>(null);
   const [splashData, setSplashData] = useState<{ resultNumber: number; netAmount: number } | null>(null);
   const [history, setHistory] = useState<number[]>([]);
+  const [lastBets, setLastBets] = useState<PlacedBet[]>([]);
 
   const totalBet = bets.reduce((s, b) => s + b.amount, 0);
   const balance = profile?.balance ?? 0;
