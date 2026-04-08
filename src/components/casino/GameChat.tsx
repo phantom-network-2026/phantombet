@@ -212,7 +212,7 @@ export function GameChat({ gameRoom }: { gameRoom: string }) {
           <MessageCircle className="h-4 w-4 text-[hsl(var(--casino-gold))]" />
           <span className="text-sm font-bold">Game Chat</span>
           {hasStaffAccess && (
-            <ShieldAlert className="h-3.5 w-3.5 text-casino-pink" title="Moderator" />
+            <ShieldAlert className="h-3.5 w-3.5 text-casino-pink" />
           )}
         </div>
         <button onClick={() => setIsOpen(false)} className="text-xs text-muted-foreground hover:text-foreground">
