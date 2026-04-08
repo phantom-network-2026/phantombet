@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-const BET_OPTIONS = [1, 2, 3, 4, 5];
+const BET_OPTIONS = [1, 5, 10, 25, 50];
 
 const SYMBOLS = ["💎", "🍒", "⭐", "🔔", "7️⃣", "🍀", "💰", "🎰", "👑"];
 
@@ -37,7 +37,7 @@ export default function ScratchCard() {
 function ScratchCardInner() {
   const navigate = useNavigate();
   const { user, profile, refreshProfile } = useAuth();
-  const [bet, setBet] = useState(5);
+  const [bet, setBet] = useState(1);
   const [card, setCard] = useState<ScratchCell[]>([]);
   const [gameState, setGameState] = useState<"idle" | "playing" | "revealing" | "done">("idle");
   const [serverResult, setServerResult] = useState<{ is_winner: boolean; win_amount: number } | null>(null);
