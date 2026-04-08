@@ -82,9 +82,25 @@ Deno.serve(async (req) => {
     }
 
     // Update balance
+    const updateData: Record<string, any> = { balance: newBalance };
+
+    // Track biggest win automatically
+    if (amount > 0) {
+      const { data: currentProfile } = await admin
+        .from("profiles")
+        .select("biggest_win")
+        .eq("user_id", userId)
+        .single();
+      const currentBiggest = Number(currentProfile?.biggest_win) || 0;
+      if (amount > currentBiggest) {
+        updateData.biggest_win = amount;
+        updateData.biggest_win_game = gameType || "Unknown";
+      }
+    }
+
     await admin
       .from("profiles")
-      .update({ balance: newBalance })
+      .update(updateData)
       .eq("user_id", userId);
 
     // Record transaction
