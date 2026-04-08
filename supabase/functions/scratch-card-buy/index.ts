@@ -57,14 +57,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Claim a random unclaimed card from the pool for this tier
-    // Use a raw SQL approach to atomically grab one card
+    // Claim a random card using the database function (prevents sequential winner bias)
     const { data: cards, error: claimErr } = await admin
-      .from("scratch_card_pool")
-      .select("id, is_winner, payout_multiplier, symbols")
-      .eq("bet_tier", betTier)
-      .is("claimed_by", null)
-      .limit(1);
+      .rpc("claim_random_scratch_card", { p_bet_tier: betTier, p_user_id: user.id });
 
     if (claimErr || !cards || cards.length === 0) {
       return new Response(JSON.stringify({ error: "No cards available for this tier. Sold out!" }), {
