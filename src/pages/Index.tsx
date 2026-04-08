@@ -28,6 +28,48 @@ const defaultGames = [
   { id: "8", name: "Mega Jackpot", image_url: treasureImg, category: "jackpot", is_featured: true },
 ];
 
+function PrizeReelBanner() {
+  const navigate = useNavigate();
+  return (
+    <button
+      onClick={() => navigate("/prize-reel")}
+      className="mx-4 mt-3 w-[calc(100%-2rem)] rounded-xl overflow-hidden text-left transition-transform active:scale-[0.98] hover:scale-[1.01]"
+      style={{
+        background: "linear-gradient(135deg, hsl(270,40%,15%), hsl(280,35%,10%))",
+        border: "1px solid hsl(43,80%,45%,0.4)",
+        boxShadow: "0 0 20px hsl(270,50%,20%,0.3), 0 0 8px hsl(43,80%,50%,0.1)",
+      }}
+    >
+      <div className="flex items-center gap-3 p-3">
+        <div
+          className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
+          style={{
+            background: "linear-gradient(135deg, hsl(43,80%,50%), hsl(43,70%,35%))",
+            boxShadow: "0 0 10px hsl(43,80%,50%,0.4)",
+          }}
+        >
+          <Gift className="h-5 w-5" style={{ color: "hsl(270,40%,8%)" }} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm font-bold text-foreground">🎰 Prize Reel</span>
+            <span
+              className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded"
+              style={{ background: "hsl(140,60%,40%)", color: "white" }}
+            >
+              Free
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Spin daily for free prizes — build a 7-day streak for bonus rewards!
+          </p>
+        </div>
+        <ChevronRight className="h-4 w-4 shrink-0 text-[hsl(43,80%,55%)]" />
+      </div>
+    </button>
+  );
+}
+
 export default function Index() {
   const [games, setGames] = useState(defaultGames);
   const [category, setCategory] = useState("all");
