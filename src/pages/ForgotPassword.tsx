@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import logo from "@/assets/bitbet-logo.svg";
+import logo from "@/assets/phantombet-logo.svg";
 
 export default function ForgotPassword() {
   const [username, setUsername] = useState("");
