@@ -1,16 +1,35 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { Header } from "@/components/casino/Header";
 import { BottomNav } from "@/components/casino/BottomNav";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Play } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 import slotsImg from "@/assets/game-slots.jpg";
+
+const GAME_ROUTES: Record<string, string> = {
+  "Blackjack": "/blackjack",
+  "Lucky Scratch Card": "/scratch-card",
+};
 
 export default function GameDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [gameName, setGameName] = useState("");
+
+  useEffect(() => {
+    if (!id) return;
+    supabase.from("games").select("name").eq("id", id).single().then(({ data }) => {
+      if (data?.name) {
+        setGameName(data.name);
+        const route = GAME_ROUTES[data.name];
+        if (route) navigate(route, { replace: true });
+      }
+    });
+  }, [id, navigate]);
 
   return (
     <div className="min-h-screen gradient-casino-bg pb-20 md:pb-0">
@@ -22,7 +41,7 @@ export default function GameDetail() {
         <div className="rounded-2xl overflow-hidden bg-card border border-border">
           <img src={slotsImg} alt="Game" className="w-full h-48 md:h-64 object-cover" />
           <div className="p-6 text-center space-y-4">
-            <h1 className="font-display text-2xl font-black text-gold">Game Preview</h1>
+            <h1 className="font-display text-2xl font-black text-gold">{gameName || "Game Preview"}</h1>
             <p className="text-muted-foreground">
               This is a demo casino. Game functionality will be available soon!
             </p>
