@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Wallet, LogOut, Shield, Menu, X, ArrowDownToLine, User } from "lucide-react";
 import { FakeWinsTicker } from "./FakeWinsTicker";
 import logo from "@/assets/bitbet-logo.svg";
@@ -41,8 +42,11 @@ export function Header() {
                   <Shield className="h-4 w-4 mr-1" /> Admin
                 </Button>
               )}
-              <Button variant="ghost" size="sm" onClick={() => navigate("/profile")} className="text-casino-gold">
-                <User className="h-4 w-4" />
+              <Button variant="ghost" size="sm" onClick={() => navigate("/profile")} className="text-casino-gold p-1">
+                <Avatar className="h-7 w-7">
+                  {profile?.avatar_url && <AvatarImage src={profile.avatar_url} />}
+                  <AvatarFallback className="bg-secondary text-casino-gold text-xs">{profile?.username?.charAt(0).toUpperCase() || "?"}</AvatarFallback>
+                </Avatar>
               </Button>
               <Button variant="ghost" size="sm" onClick={signOut}>
                 <LogOut className="h-4 w-4" />
@@ -70,8 +74,11 @@ export function Header() {
                   ${profile?.balance?.toFixed(2) ?? "0.00"}
                 </span>
               </div>
-              <button className="text-casino-gold" onClick={() => navigate("/profile")}>
-                <User className="h-5 w-5" />
+              <button onClick={() => navigate("/profile")}>
+                <Avatar className="h-7 w-7">
+                  {profile?.avatar_url && <AvatarImage src={profile.avatar_url} />}
+                  <AvatarFallback className="bg-secondary text-casino-gold text-xs">{profile?.username?.charAt(0).toUpperCase() || "?"}</AvatarFallback>
+                </Avatar>
               </button>
             </>
           )}
