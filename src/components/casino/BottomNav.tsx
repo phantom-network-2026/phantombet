@@ -1,17 +1,34 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { Home, Dice5, Trophy, Users, Search } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 const navItems = [
-  { icon: Home, label: "Home", path: "/" },
-  { icon: Dice5, label: "Games", path: "/category/slots" },
-  { icon: Users, label: "Friends", path: "/friends" },
-  { icon: Trophy, label: "Promos", path: "/promotions" },
-  { icon: Search, label: "Search", path: "/search" },
+  { icon: Home, label: "Home", path: "/", requiresAuth: false },
+  { icon: Dice5, label: "Games", path: "/category/slots", requiresAuth: true },
+  { icon: Users, label: "Friends", path: "/friends", requiresAuth: true },
+  { icon: Trophy, label: "Promos", path: "/promotions", requiresAuth: true },
+  { icon: Search, label: "Search", path: "/search", requiresAuth: true },
 ];
 
 export function BottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
+
+  const handleClick = (item: typeof navItems[0]) => {
+    if (item.requiresAuth && !user) {
+      toast("Sign in required", {
+        description: "You need to log in or create an account to access this.",
+        action: {
+          label: "Sign Up",
+          onClick: () => navigate("/signup"),
+        },
+      });
+      return;
+    }
+    navigate(item.path);
+  };
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 backdrop-blur md:hidden">
@@ -21,7 +38,7 @@ export function BottomNav() {
           return (
             <button
               key={item.path}
-              onClick={() => navigate(item.path)}
+              onClick={() => handleClick(item)}
               className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors ${
                 isActive ? "text-casino-gold" : "text-muted-foreground hover:text-foreground"
               }`}

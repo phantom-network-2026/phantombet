@@ -1,4 +1,6 @@
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 interface GameCardProps {
   id: string;
@@ -9,10 +11,25 @@ interface GameCardProps {
 
 export function GameCard({ id, name, image_url, category }: GameCardProps) {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const handleClick = () => {
+    if (!user) {
+      toast("Sign in required", {
+        description: "You need to log in or create an account to play games.",
+        action: {
+          label: "Sign Up",
+          onClick: () => navigate("/signup"),
+        },
+      });
+      return;
+    }
+    navigate(`/game/${id}`);
+  };
 
   return (
     <button
-      onClick={() => navigate(`/game/${id}`)}
+      onClick={handleClick}
       className="group relative overflow-hidden rounded-xl bg-casino-surface transition-all hover:scale-105 hover:glow-purple focus:outline-none"
     >
       <div className="aspect-square overflow-hidden">
