@@ -66,6 +66,20 @@ export default function Index() {
         </div>
       </div>
 
+      {/* Live Game Chat Banner */}
+      <div className="mx-4 mt-3 rounded-xl border border-primary/30 bg-primary/8 p-4">
+        <div className="flex items-start gap-3">
+          <span className="text-2xl">💬</span>
+          <div className="space-y-1">
+            <p className="text-sm font-bold text-primary">Live Game Chat in Every Game</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Chat with other players in real-time while you play! Every game features a built-in group chat — 
+              <span className="text-[hsl(var(--casino-gold))] font-semibold"> strategize, celebrate wins, and play together.</span>
+            </p>
+          </div>
+        </div>
+      </div>
+
       <CategoryTabs activeCategory={category} onCategoryChange={setCategory} />
 
       {/* Featured Games */}
