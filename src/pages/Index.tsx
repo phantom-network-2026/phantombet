@@ -109,7 +109,7 @@ export default function Index() {
           {Object.entries(gamesByCategory).map(([cat, catGames]) => (
             <div key={cat}>
               <h3 className="font-display text-lg font-bold mb-3 capitalize">
-                {cat === "slots" ? "🎰 Slots" : cat === "table" ? "🃏 Table Games" : cat === "live" ? "🔴 Live" : cat === "jackpot" ? "💎 Jackpot" : cat}
+                {cat === "slots" ? "🎰 Slots" : cat === "table" ? "🃏 Table Games" : cat === "live" ? "🔴 Live" : cat === "jackpot" ? "💎 Jackpot" : cat === "instant" ? "⚡ Instant Wins" : cat === "scratch" ? "🎟️ Scratch Cards" : cat}
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                 {catGames.map((game) => (

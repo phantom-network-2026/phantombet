@@ -378,7 +378,13 @@ export type Database = {
     Enums: {
       app_role: "admin" | "user" | "moderator" | "staff" | "active_user"
       friendship_status: "pending" | "accepted" | "rejected"
-      game_category: "slots" | "table" | "live" | "scratch" | "jackpot"
+      game_category:
+        | "slots"
+        | "table"
+        | "live"
+        | "scratch"
+        | "jackpot"
+        | "instant"
       moderation_action:
         | "ban"
         | "unban"
@@ -516,7 +522,14 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "user", "moderator", "staff", "active_user"],
       friendship_status: ["pending", "accepted", "rejected"],
-      game_category: ["slots", "table", "live", "scratch", "jackpot"],
+      game_category: [
+        "slots",
+        "table",
+        "live",
+        "scratch",
+        "jackpot",
+        "instant",
+      ],
       moderation_action: [
         "ban",
         "unban",
