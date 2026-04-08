@@ -228,14 +228,32 @@ export default function Roulette() {
     setBets([]);
   };
 
+  const getBetTotal = (filter: (b: PlacedBet) => boolean) =>
+    bets.filter(filter).reduce((s, b) => s + b.amount, 0);
+
+  const chipOverlay = (amount: number) => {
+    if (amount <= 0) return null;
+    const label = amount < 1 ? `${Math.round(amount * 100)}¢` : `$${amount.toFixed(0)}`;
+    return (
+      <span className="absolute -top-1 -right-1 z-10 min-w-[14px] h-[14px] rounded-full flex items-center justify-center text-[6px] font-black text-[hsl(0,0%,15%)] pointer-events-none"
+        style={{
+          background: "radial-gradient(circle, hsl(43,80%,60%), hsl(43,70%,40%))",
+          boxShadow: "0 0 4px hsl(43,80%,50%,0.6)",
+          border: "1px solid hsl(43,80%,70%)",
+        }}>
+        {label}
+      </span>
+    );
+  };
+
   const numCell = (num: number) => {
-    const hasBet = bets.some(b => b.type.kind === "straight" && b.type.number === num);
+    const betAmount = getBetTotal(b => b.type.kind === "straight" && b.type.number === num);
     return (
       <button key={num} onClick={() => placeBet({ kind: "straight", number: num }, `${num}`)}
         className="relative flex items-center justify-center text-white font-bold rounded-[2px] border border-white/20 hover:brightness-125 active:scale-95 transition-all"
         style={{ background: colorHsl(getColor(num)), fontSize: 10, padding: "3px 0" }}>
         {num}
-        {hasBet && <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-[hsl(var(--casino-gold))]" />}
+        {chipOverlay(betAmount)}
       </button>
     );
   };
