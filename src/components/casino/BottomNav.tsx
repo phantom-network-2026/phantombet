@@ -3,7 +3,7 @@ import { Home, Dice5, Trophy, Users, Search } from "lucide-react";
 
 const navItems = [
   { icon: Home, label: "Home", path: "/" },
-  { icon: Dice5, label: "Slots", path: "/category/slots" },
+  { icon: Dice5, label: "Games", path: "/category/slots" },
   { icon: Users, label: "Friends", path: "/friends" },
   { icon: Trophy, label: "Promos", path: "/promotions" },
   { icon: Search, label: "Search", path: "/search" },
