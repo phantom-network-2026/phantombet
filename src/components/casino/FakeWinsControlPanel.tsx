@@ -77,17 +77,46 @@ export function FakeWinsControlPanel() {
         </div>
       </div>
 
-      <div>
-        <Label className="text-xs">New Win Interval (seconds)</Label>
-        <Input
-          type="number"
-          step="1"
-          min="1"
-          max="60"
-          value={config.intervalSeconds}
-          onChange={(e) => update({ intervalSeconds: Number(e.target.value) })}
-          className="bg-background border-border"
-        />
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label className="text-xs">Random Interval</Label>
+          <Switch
+            checked={config.randomInterval}
+            onCheckedChange={(v) => update({ randomInterval: v })}
+          />
+        </div>
+        {config.randomInterval ? (
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs">Min Delay (sec)</Label>
+              <Input
+                type="number" step="1" min="1" max="60"
+                value={config.minIntervalSeconds}
+                onChange={(e) => update({ minIntervalSeconds: Number(e.target.value) })}
+                className="bg-background border-border"
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Max Delay (sec)</Label>
+              <Input
+                type="number" step="1" min="1" max="120"
+                value={config.maxIntervalSeconds}
+                onChange={(e) => update({ maxIntervalSeconds: Number(e.target.value) })}
+                className="bg-background border-border"
+              />
+            </div>
+          </div>
+        ) : (
+          <div>
+            <Label className="text-xs">Fixed Interval (seconds)</Label>
+            <Input
+              type="number" step="1" min="1" max="60"
+              value={config.intervalSeconds}
+              onChange={(e) => update({ intervalSeconds: Number(e.target.value) })}
+              className="bg-background border-border"
+            />
+          </div>
+        )}
       </div>
 
       <div>
