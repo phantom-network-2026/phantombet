@@ -258,13 +258,17 @@ export default function Roulette() {
     );
   };
 
-  const outsideBtn = (label: string, type: BetType, bg?: string) => (
-    <button onClick={() => placeBet(type, label)}
-      className="text-white font-bold border border-white/20 hover:brightness-125 active:scale-95 transition-all text-center leading-tight"
-      style={{ background: bg || "hsl(140,30%,22%)", fontSize: 8, padding: "2px 1px" }}>
-      {label}
-    </button>
-  );
+  const outsideBtn = (label: string, type: BetType, bg?: string) => {
+    const betAmount = getBetTotal(b => JSON.stringify(b.type) === JSON.stringify(type));
+    return (
+      <button onClick={() => placeBet(type, label)}
+        className="relative text-white font-bold border border-white/20 hover:brightness-125 active:scale-95 transition-all text-center leading-tight"
+        style={{ background: bg || "hsl(140,30%,22%)", fontSize: 8, padding: "2px 1px" }}>
+        {label}
+        {chipOverlay(betAmount)}
+      </button>
+    );
+  };
 
   return (
     <AuthGuard>
