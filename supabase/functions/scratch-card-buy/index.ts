@@ -33,8 +33,8 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const betTier = Number(body.betTier);
-    const validTiers = [1, 5, 10, 25, 50, 100, 500];
-    if (!validTiers.includes(betTier)) {
+    const validTiers = [1, 2, 3, 4, 5];
+    if (!validTiers.includes(betTier) || betTier > 5) {
       return new Response(JSON.stringify({ error: "Invalid bet tier" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
