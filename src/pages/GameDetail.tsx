@@ -2,6 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Header } from "@/components/casino/Header";
 import { BottomNav } from "@/components/casino/BottomNav";
+import { AuthGuard } from "@/components/casino/AuthGuard";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Play } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,6 +17,10 @@ const GAME_ROUTES: Record<string, string> = {
 };
 
 export default function GameDetail() {
+  return <AuthGuard><GameDetailInner /></AuthGuard>;
+}
+
+function GameDetailInner() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
