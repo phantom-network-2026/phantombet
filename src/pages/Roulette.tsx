@@ -155,7 +155,7 @@ function WinSplash({ amount, onClose }: { amount: number; onClose: () => void })
 export default function Roulette() {
   const { user, profile, refreshProfile } = useAuth();
   const [bets, setBets] = useState<PlacedBet[]>([]);
-  const [selectedChip, setSelectedChip] = useState(1);
+  const [selectedChip, setSelectedChip] = useState(0.20);
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState<number | null>(null);
   const [winAmount, setWinAmount] = useState<number | null>(null);
