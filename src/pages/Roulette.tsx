@@ -253,7 +253,7 @@ export default function Roulette() {
       <div className="min-h-screen gradient-casino-bg pb-20 md:pb-4">
         <Header />
         <AnimatePresence>
-          {winAmount !== null && <WinSplash amount={winAmount} onClose={() => setWinAmount(null)} />}
+          {splashData !== null && <ResultSplash resultNumber={splashData.resultNumber} netAmount={splashData.netAmount} onClose={() => setSplashData(null)} />}
         </AnimatePresence>
 
         <div className="px-2 py-1 max-w-lg mx-auto space-y-1.5">
