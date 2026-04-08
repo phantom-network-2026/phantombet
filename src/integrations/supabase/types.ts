@@ -161,6 +161,39 @@ export type Database = {
         }
         Relationships: []
       }
+      scratch_card_pool: {
+        Row: {
+          bet_tier: number
+          claimed_at: string | null
+          claimed_by: string | null
+          created_at: string
+          id: string
+          is_winner: boolean
+          payout_multiplier: number
+          symbols: string[]
+        }
+        Insert: {
+          bet_tier: number
+          claimed_at?: string | null
+          claimed_by?: string | null
+          created_at?: string
+          id?: string
+          is_winner?: boolean
+          payout_multiplier?: number
+          symbols?: string[]
+        }
+        Update: {
+          bet_tier?: number
+          claimed_at?: string | null
+          claimed_by?: string | null
+          created_at?: string
+          id?: string
+          is_winner?: boolean
+          payout_multiplier?: number
+          symbols?: string[]
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           amount: number
