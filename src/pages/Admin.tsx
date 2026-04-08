@@ -212,8 +212,8 @@ export default function Admin() {
           ) : (
             users.map((user) => (
               <div key={user.user_id} className="rounded-xl bg-card border border-border p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <div>
+                <div className="flex items-center justify-between mb-2 gap-2">
+                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <Circle className={`h-2.5 w-2.5 ${user.is_online ? "fill-green-400 text-green-400" : "fill-muted-foreground/30 text-muted-foreground/30"}`} />
                       <p className="font-display font-bold">{user.username || "No username"}</p>
@@ -236,8 +236,8 @@ export default function Admin() {
                       )}
                     </p>
                   </div>
-                  <div className="text-right">
-                    <p className="font-display font-bold text-casino-gold">${user.balance.toFixed(2)}</p>
+                  <div className="text-right shrink-0 ml-2">
+                    <p className="font-display font-bold text-casino-gold text-sm truncate max-w-[100px]">${user.balance.toFixed(2)}</p>
                   </div>
                 </div>
 
