@@ -18,6 +18,7 @@ import CategoryPage from "./pages/CategoryPage.tsx";
 import Friends from "./pages/Friends.tsx";
 import Messages from "./pages/Messages.tsx";
 import ScratchCard from "./pages/ScratchCard.tsx";
+import Blackjack from "./pages/Blackjack.tsx";
 
 const queryClient = new QueryClient();
 
