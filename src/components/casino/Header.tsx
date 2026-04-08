@@ -6,7 +6,7 @@ import { Wallet, LogOut, Shield, Menu, X, ArrowDownToLine } from "lucide-react";
 import logo from "@/assets/bitbet-logo.svg";
 
 export function Header() {
-  const { user, profile, isAdmin, signOut } = useAuth();
+  const { user, profile, isAdmin, hasStaffAccess, signOut } = useAuth();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -34,7 +34,7 @@ export function Header() {
               <Button variant="pink" size="sm" onClick={() => navigate("/withdraw")}>
                 <ArrowDownToLine className="h-4 w-4 mr-1" /> Withdraw
               </Button>
-              {isAdmin && (
+              {hasStaffAccess && (
                 <Button variant="ghost" size="sm" onClick={() => navigate("/admin")} className="text-casino-pink">
                   <Shield className="h-4 w-4 mr-1" /> Admin
                 </Button>
@@ -80,7 +80,7 @@ export function Header() {
                   <ArrowDownToLine className="h-4 w-4 mr-1" /> Withdraw
                 </Button>
               </div>
-              {isAdmin && (
+              {hasStaffAccess && (
                 <Button variant="ghost" className="w-full text-casino-pink" onClick={() => { navigate("/admin"); setMenuOpen(false); }}>
                   <Shield className="h-4 w-4 mr-1" /> Admin Panel
                 </Button>

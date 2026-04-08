@@ -27,7 +27,7 @@ const ROLE_LABELS: Record<string, { label: string; emoji: string; color: string 
 };
 
 export default function Admin() {
-  const { isAdmin, loading } = useAuth();
+  const { isAdmin, hasStaffAccess, loading } = useAuth();
   const navigate = useNavigate();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
@@ -42,9 +42,9 @@ export default function Admin() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!loading && !isAdmin) { navigate("/"); return; }
-    if (isAdmin) fetchUsers();
-  }, [isAdmin, loading]);
+    if (!loading && !hasStaffAccess) { navigate("/"); return; }
+    if (hasStaffAccess) fetchUsers();
+  }, [hasStaffAccess, loading]);
 
   const fetchUsers = async () => {
     setLoadingUsers(true);
@@ -181,15 +181,19 @@ export default function Admin() {
                 </div>
 
                 <div className="flex gap-2 flex-wrap">
-                  <Button variant="outline" size="sm" onClick={() => setAdjustUserId(adjustUserId === user.user_id ? null : user.user_id)}>
-                    <DollarSign className="h-3 w-3 mr-1" /> Balance
-                  </Button>
+                  {isAdmin && (
+                    <Button variant="outline" size="sm" onClick={() => setAdjustUserId(adjustUserId === user.user_id ? null : user.user_id)}>
+                      <DollarSign className="h-3 w-3 mr-1" /> Balance
+                    </Button>
+                  )}
                   <Button variant="outline" size="sm" onClick={() => handleEditUser(user.user_id)}>
                     <Edit className="h-3 w-3 mr-1" /> Edit
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => setRolesUserId(rolesUserId === user.user_id ? null : user.user_id)}>
-                    <Shield className="h-3 w-3 mr-1" /> Roles
-                  </Button>
+                  {isAdmin && (
+                    <Button variant="outline" size="sm" onClick={() => setRolesUserId(rolesUserId === user.user_id ? null : user.user_id)}>
+                      <Shield className="h-3 w-3 mr-1" /> Roles
+                    </Button>
+                  )}
                 </div>
 
                 {/* Role Management */}
