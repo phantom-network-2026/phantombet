@@ -79,9 +79,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error };
   };
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error };
+  const signIn = async (username: string, password: string) => {
+    // Look up email by username from profiles table
+    const { data: profileData, error: lookupError } = await supabase
+      .from("profiles")
+      .select("user_id")
+      .eq("username", username)
+      .single();
+
+    if (lookupError || !profileData) {
+      return { error: { message: "Username not found" } };
+    }
+
+    // We need the email from auth - use admin lookup via edge function
+    // Alternative: store email in profiles, or sign in with user_id
+    // Supabase requires email for signInWithPassword, so we look it up
+    const { error } = await supabase.auth.signInWithPassword({ email: username, password });
+    
+    // If direct username login fails, the username isn't an email
+    // We need an edge function to resolve username -> email
+    if (error) {
+      // Try via edge function
+      const { data: fnData, error: fnError } = await supabase.functions.invoke("resolve-username", {
+        body: { username },
+      });
+      if (fnError || !fnData?.email) {
+        return { error: { message: "Username not found or invalid credentials" } };
+      }
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email: fnData.email, password });
+      return { error: signInError };
+    }
+    return { error: null };
   };
 
   const signOut = async () => {
