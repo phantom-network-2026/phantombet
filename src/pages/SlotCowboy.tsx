@@ -43,7 +43,7 @@ function SlotCowboyInner() {
   return (
     <div className="min-h-screen gradient-casino-bg pb-20 md:pb-0">
       <Header />
-      <div className="container max-w-4xl py-4 px-4">
+      <div className="container max-w-6xl py-4 px-4">
         <div className="flex items-center justify-between mb-4">
           <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-4 w-4 mr-1" /> Back
@@ -52,23 +52,29 @@ function SlotCowboyInner() {
             <Maximize2 className="h-4 w-4 mr-1" /> Fullscreen
           </Button>
         </div>
-        <div className="rounded-2xl overflow-hidden bg-card border border-border">
-          <div className="aspect-[16/9] w-full">
-            <iframe
-              src="/games/slot-cowboy/index.html"
-              className="w-full h-full border-0"
-              title="Slot Cowboy"
-              allow="autoplay"
-            />
-          </div>
-          <div className="p-4 text-center">
-            <h1 className="font-display text-2xl font-black text-gold">🤠 Slot Cowboy</h1>
-            <p className="text-muted-foreground text-sm mt-1">Spin the reels and ride to riches!</p>
-          </div>
-        </div>
 
-        <div className="mt-4">
-          <GameChat gameRoom="slot-cowboy" />
+        {/* Desktop: side-by-side. Mobile: stacked */}
+        <div className="md:flex md:gap-6 md:items-start">
+          <div className="md:flex-1">
+            <div className="rounded-2xl overflow-hidden bg-card border border-border">
+              <div className="aspect-[16/9] w-full">
+                <iframe
+                  src="/games/slot-cowboy/index.html"
+                  className="w-full h-full border-0"
+                  title="Slot Cowboy"
+                  allow="autoplay"
+                />
+              </div>
+              <div className="p-4 text-center">
+                <h1 className="font-display text-2xl font-black text-gold">🤠 Slot Cowboy</h1>
+                <p className="text-muted-foreground text-sm mt-1">Spin the reels and ride to riches!</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 md:mt-0 md:w-80 md:shrink-0">
+            <GameChat gameRoom="slot-cowboy" />
+          </div>
         </div>
       </div>
       <BottomNav />
