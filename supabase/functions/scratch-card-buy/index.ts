@@ -120,9 +120,9 @@ Deno.serve(async (req) => {
       success: true,
       card: {
         id: card.card_id,
-        is_winner: card.is_winner,
+        is_winner: card.is_winner && !forceActive,
         symbols: card.symbols,
-        payout_multiplier: card.payout_multiplier,
+        payout_multiplier: forceActive ? 0 : card.payout_multiplier,
         win_amount: winAmount,
       },
       remaining: count ?? 0,
