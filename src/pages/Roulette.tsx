@@ -262,23 +262,29 @@ export default function Roulette() {
                 )}
                 {/* Chips */}
                 <div className="flex gap-1">
-                  {CHIP_VALUES.map(v => (
-                    <button key={v} onClick={() => setSelectedChip(v)}
-                      className="rounded-full flex items-center justify-center font-bold transition-transform"
-                      style={{
-                        width: 30, height: 30,
-                        fontSize: 9,
-                        background: v === 1 ? "radial-gradient(circle, hsl(0,0%,95%), hsl(0,0%,70%))"
-                          : v === 2 ? "radial-gradient(circle, hsl(210,70%,55%), hsl(210,70%,35%))"
-                          : "radial-gradient(circle, hsl(280,50%,55%), hsl(280,50%,35%))",
-                        color: v === 1 ? "hsl(0,0%,15%)" : "white",
-                        border: selectedChip === v ? "2px solid hsl(43,80%,55%)" : "2px solid hsl(0,0%,30%)",
-                        boxShadow: selectedChip === v ? "0 0 8px hsl(43,80%,50%,0.5)" : "none",
-                        transform: selectedChip === v ? "scale(1.15)" : "scale(1)",
-                      }}>
-                      ${v}
-                    </button>
-                  ))}
+                  {CHIP_VALUES.map(v => {
+                    const chipLabel = v < 1 ? `${Math.round(v * 100)}¢` : `$${v}`;
+                    const chipBg = v === 0.20 ? "radial-gradient(circle, hsl(0,0%,95%), hsl(0,0%,70%))"
+                      : v === 0.50 ? "radial-gradient(circle, hsl(210,70%,55%), hsl(210,70%,35%))"
+                      : v === 1 ? "radial-gradient(circle, hsl(280,50%,55%), hsl(280,50%,35%))"
+                      : "radial-gradient(circle, hsl(43,75%,50%), hsl(43,65%,35%))";
+                    const chipColor = v === 0.20 ? "hsl(0,0%,15%)" : "white";
+                    return (
+                      <button key={v} onClick={() => setSelectedChip(v)}
+                        className="rounded-full flex items-center justify-center font-bold transition-transform"
+                        style={{
+                          width: 28, height: 28,
+                          fontSize: 8,
+                          background: chipBg,
+                          color: chipColor,
+                          border: selectedChip === v ? "2px solid hsl(43,80%,55%)" : "2px solid hsl(0,0%,30%)",
+                          boxShadow: selectedChip === v ? "0 0 8px hsl(43,80%,50%,0.5)" : "none",
+                          transform: selectedChip === v ? "scale(1.15)" : "scale(1)",
+                        }}>
+                        {chipLabel}
+                      </button>
+                    );
+                  })}
                 </div>
                 {/* History */}
                 {history.length > 0 && (
