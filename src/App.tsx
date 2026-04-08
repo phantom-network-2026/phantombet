@@ -41,6 +41,7 @@ const App = () => (
             <Route path="/category/:category" element={<CategoryPage />} />
             <Route path="/friends" element={<Friends />} />
             <Route path="/messages/:friendId" element={<Messages />} />
+            <Route path="/scratch-card" element={<ScratchCard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
