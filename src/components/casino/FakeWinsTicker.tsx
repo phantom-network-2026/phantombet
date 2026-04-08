@@ -6,6 +6,9 @@ interface FakeWinsConfig {
   minAmount: number;
   maxAmount: number;
   intervalSeconds: number;
+  randomInterval: boolean;
+  minIntervalSeconds: number;
+  maxIntervalSeconds: number;
   games: string[];
   usernames: string[];
 }
@@ -28,6 +31,9 @@ const DEFAULT_CONFIG: FakeWinsConfig = {
   minAmount: 0.1,
   maxAmount: 200,
   intervalSeconds: 4,
+  randomInterval: true,
+  minIntervalSeconds: 2,
+  maxIntervalSeconds: 8,
   games: Object.keys(GAME_WIN_RANGES),
   usernames: [
     "LuckyAce99", "CryptoKing", "BigWinner22", "SlotMaster", "JackpotJoe",
@@ -94,16 +100,20 @@ export function FakeWinsTicker() {
     setWins(initial);
   }, [config.enabled]);
 
-  // Add new wins on interval
+  // Add new wins on random or fixed interval
   useEffect(() => {
     if (!config.enabled) return;
-    intervalRef.current = window.setInterval(() => {
-      setWins((prev) => {
-        const next = [generateWin(config), ...prev];
-        return next.slice(0, 20);
-      });
-    }, config.intervalSeconds * 1000);
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+    const scheduleNext = () => {
+      const delay = config.randomInterval
+        ? (config.minIntervalSeconds + Math.random() * (config.maxIntervalSeconds - config.minIntervalSeconds)) * 1000
+        : config.intervalSeconds * 1000;
+      intervalRef.current = window.setTimeout(() => {
+        setWins((prev) => [generateWin(config), ...prev].slice(0, 20));
+        scheduleNext();
+      }, delay);
+    };
+    scheduleNext();
+    return () => { if (intervalRef.current) clearTimeout(intervalRef.current); };
   }, [config]);
 
   if (!config.enabled || wins.length === 0) return null;
