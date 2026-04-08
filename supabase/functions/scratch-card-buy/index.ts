@@ -84,9 +84,20 @@ Deno.serve(async (req) => {
       description: `scratch_card - bet $${betTier}`,
     });
 
-    // If winner, pay out
+    // Check force_loss setting
+    let forceActive = false;
+    {
+      const { data: forceLossSetting } = await admin
+        .from("site_settings")
+        .select("value")
+        .eq("key", "force_loss")
+        .maybeSingle();
+      forceActive = forceLossSetting?.value?.enabled === true;
+    }
+
+    // If winner and force_loss not active, pay out
     let winAmount = 0;
-    if (card.is_winner) {
+    if (card.is_winner && !forceActive) {
       winAmount = betTier * Number(card.payout_multiplier);
       const balAfterWin = newBalance + winAmount;
       await admin.from("profiles").update({ balance: balAfterWin }).eq("user_id", user.id);
