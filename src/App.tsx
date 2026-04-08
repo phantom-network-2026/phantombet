@@ -17,6 +17,7 @@ import SearchPage from "./pages/Search.tsx";
 import CategoryPage from "./pages/CategoryPage.tsx";
 import Friends from "./pages/Friends.tsx";
 import Messages from "./pages/Messages.tsx";
+import ScratchCard from "./pages/ScratchCard.tsx";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="/category/:category" element={<CategoryPage />} />
             <Route path="/friends" element={<Friends />} />
             <Route path="/messages/:friendId" element={<Messages />} />
+            <Route path="/scratch-card" element={<ScratchCard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
