@@ -118,17 +118,20 @@ function RouletteWheel({ spinning, result, size = 130 }: { spinning: boolean; re
   );
 }
 
-// ─── Win Splash ─────────────────────────────────────────────────
-function WinSplash({ amount, onClose }: { amount: number; onClose: () => void }) {
+// ─── Result Splash ──────────────────────────────────────────────
+function ResultSplash({ resultNumber, netAmount, onClose }: { resultNumber: number; netAmount: number; onClose: () => void }) {
   useEffect(() => {
-    const t = setTimeout(onClose, 3000);
+    const t = setTimeout(onClose, 4000);
     return () => clearTimeout(t);
   }, [onClose]);
+
+  const isWin = netAmount > 0;
+  const color = getColor(resultNumber);
 
   return (
     <motion.div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
-      <motion.div className="text-center p-6 rounded-2xl"
+      <motion.div className="text-center p-6 rounded-2xl min-w-[220px]"
         style={{
           background: "radial-gradient(ellipse, hsl(43,80%,15%), hsl(0,0%,5%))",
           border: "2px solid hsl(43,80%,50%)",
@@ -136,16 +139,40 @@ function WinSplash({ amount, onClose }: { amount: number; onClose: () => void })
         }}
         initial={{ scale: 0.3, y: 50 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.3, opacity: 0 }}
         transition={{ type: "spring", damping: 12 }}>
-        <motion.div className="text-5xl mb-1" animate={{ rotate: [0, -10, 10, -5, 5, 0] }}
-          transition={{ duration: 0.6, delay: 0.3 }}>🎉</motion.div>
-        <p className="text-sm text-[hsl(43,80%,60%)] font-semibold">YOU WON</p>
-        <motion.p className="text-4xl font-black"
-          style={{ color: "hsl(43,80%,55%)", textShadow: "0 0 20px hsl(43,80%,50%,0.5)" }}
-          initial={{ scale: 0 }} animate={{ scale: [0, 1.2, 1] }}
-          transition={{ delay: 0.2, duration: 0.5 }}>
-          ${amount.toFixed(2)}
-        </motion.p>
-        <p className="text-xs text-muted-foreground mt-2">Tap to continue</p>
+        <p className="text-xs text-[hsl(43,80%,60%)] font-semibold mb-2 uppercase tracking-wider">Ball landed on</p>
+        <motion.div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center text-2xl font-black text-white mb-3"
+          style={{ background: colorHsl(color), boxShadow: `0 0 20px ${colorHsl(color)}` }}
+          initial={{ scale: 0 }} animate={{ scale: [0, 1.3, 1] }}
+          transition={{ delay: 0.15, duration: 0.4 }}>
+          {resultNumber}
+        </motion.div>
+        <motion.div className="text-xs font-semibold mb-1" style={{ color: "hsl(43,80%,60%)" }}>
+          {color.toUpperCase()} {resultNumber}
+        </motion.div>
+        {isWin ? (
+          <>
+            <motion.div className="text-5xl mb-1" animate={{ rotate: [0, -10, 10, -5, 5, 0] }}
+              transition={{ duration: 0.6, delay: 0.3 }}>🎉</motion.div>
+            <p className="text-sm text-[hsl(43,80%,60%)] font-semibold">YOU WON</p>
+            <motion.p className="text-4xl font-black"
+              style={{ color: "hsl(140,70%,50%)", textShadow: "0 0 20px hsl(140,70%,50%,0.5)" }}
+              initial={{ scale: 0 }} animate={{ scale: [0, 1.2, 1] }}
+              transition={{ delay: 0.2, duration: 0.5 }}>
+              +${netAmount.toFixed(2)}
+            </motion.p>
+          </>
+        ) : (
+          <>
+            <p className="text-sm text-muted-foreground font-semibold mt-2">Better luck next time!</p>
+            <motion.p className="text-2xl font-bold mt-1"
+              style={{ color: "hsl(0,70%,55%)" }}
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}>
+              -${Math.abs(netAmount).toFixed(2)}
+            </motion.p>
+          </>
+        )}
+        <p className="text-xs text-muted-foreground mt-3">Tap to continue</p>
       </motion.div>
     </motion.div>
   );
