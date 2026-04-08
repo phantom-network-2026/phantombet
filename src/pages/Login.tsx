@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import logo from "@/assets/bitbet-logo.svg";
+import logo from "@/assets/phantombet-logo.svg";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -28,9 +28,9 @@ export default function Login() {
     <div className="min-h-screen gradient-casino-bg flex items-center justify-center p-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
-          <img src={logo} alt="BitBet" className="h-16 w-16 mx-auto mb-3" />
+          <img src={logo} alt="PhantomBet" className="h-16 w-16 mx-auto mb-3" />
           <h1 className="font-display text-3xl font-black text-gold">Welcome Back</h1>
-          <p className="text-muted-foreground text-sm mt-1">Log in to your BitBet account</p>
+          <p className="text-muted-foreground text-sm mt-1">Log in to your PhantomBet account</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

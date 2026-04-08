@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Wallet, LogOut, Shield, Menu, X, ArrowDownToLine, User } from "lucide-react";
 import { FakeWinsTicker } from "./FakeWinsTicker";
-import logo from "@/assets/bitbet-logo.svg";
+import logo from "@/assets/phantombet-logo.svg";
 
 export function Header() {
   const { user, profile, isAdmin, hasStaffAccess, signOut } = useAuth();
@@ -17,8 +17,8 @@ export function Header() {
       <FakeWinsTicker />
       <div className="container flex h-14 items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <img src={logo} alt="BitBet" className="h-10 w-10" />
-          <span className="font-display text-xl font-bold text-gold">BitBet</span>
+          <img src={logo} alt="PhantomBet" className="h-10 w-10" />
+          <span className="font-display text-xl font-bold text-gold">PhantomBet</span>
         </Link>
 
         {/* Desktop nav */}

@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import logo from "@/assets/bitbet-logo.svg";
+import logo from "@/assets/phantombet-logo.svg";
 
 export default function ForgotPassword() {
   const [username, setUsername] = useState("");
@@ -49,7 +49,7 @@ export default function ForgotPassword() {
     return (
       <div className="min-h-screen gradient-casino-bg flex items-center justify-center p-4">
         <div className="w-full max-w-sm space-y-6 text-center">
-          <img src={logo} alt="BitBet" className="h-16 w-16 mx-auto mb-3" />
+          <img src={logo} alt="PhantomBet" className="h-16 w-16 mx-auto mb-3" />
           <h1 className="font-display text-2xl font-black text-gold">Check Your Email</h1>
           <p className="text-muted-foreground text-sm">
             We've sent a password reset link to the email associated with your account. Check your inbox and follow the link to reset your password.
@@ -66,7 +66,7 @@ export default function ForgotPassword() {
     <div className="min-h-screen gradient-casino-bg flex items-center justify-center p-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
-          <img src={logo} alt="BitBet" className="h-16 w-16 mx-auto mb-3" />
+          <img src={logo} alt="PhantomBet" className="h-16 w-16 mx-auto mb-3" />
           <h1 className="font-display text-2xl font-black text-gold">Forgot Password</h1>
           <p className="text-muted-foreground text-sm mt-1">Enter your username and we'll send a reset link to your email</p>
         </div>
