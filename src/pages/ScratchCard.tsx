@@ -313,6 +313,22 @@ function ScratchCardInner() {
             <div className="bg-card rounded-2xl border-2 border-[hsl(var(--casino-gold))/0.3] p-4 relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--casino-gold))/0.05] via-transparent to-[hsl(var(--casino-pink))/0.05] pointer-events-none" />
 
+              {/* Logo + Title */}
+              <div className="relative flex items-center justify-center gap-2 mb-2">
+                <img src="/src/assets/bitbet-logo.svg" alt="BitBet" className="h-6 w-6" />
+                <span className="font-display text-sm font-black text-transparent bg-clip-text bg-gradient-to-r from-[hsl(var(--casino-gold))] to-[hsl(var(--casino-gold-light))]">
+                  BITBET SCRATCH & WIN
+                </span>
+              </div>
+
+              {/* How to play strip */}
+              <div className="relative mb-2 px-2 py-1 rounded-lg text-center"
+                style={{ background: "hsl(var(--casino-gold) / 0.1)", border: "1px solid hsl(var(--casino-gold) / 0.2)" }}>
+                <p className="text-[9px] text-[hsl(var(--casino-gold))] font-semibold leading-tight">
+                  Scratch 5 cells to reveal all • Match 3 symbols to win • 1 in 4 wins guaranteed • Up to 5× multiplier & $10K jackpot!
+                </p>
+              </div>
+
               <div className="grid grid-cols-3 gap-2 relative" onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
                 {card.map((cell, i) => (
                   <div
@@ -343,14 +359,17 @@ function ScratchCardInner() {
                 ))}
               </div>
 
-              {gameState === "playing" && (
-                <div className="mt-3 flex justify-between items-center">
-                  <p className="text-xs text-muted-foreground">Scratch 5 cells to reveal all</p>
-                  <Button variant="ghost" size="sm" onClick={revealAllButton} className="text-xs text-[hsl(var(--casino-pink))]">
+              {/* Bet amount badge */}
+              <div className="relative flex items-center justify-between mt-2">
+                <span className="text-[10px] font-bold text-[hsl(var(--casino-gold))] px-2 py-0.5 rounded-full" style={{ background: "hsl(var(--casino-gold) / 0.1)" }}>
+                  ${bet} CARD
+                </span>
+                {gameState === "playing" && (
+                  <Button variant="ghost" size="sm" onClick={revealAllButton} className="text-xs text-[hsl(var(--casino-pink))] h-6">
                     Reveal All
                   </Button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
             {/* Result */}
