@@ -195,13 +195,6 @@ export default function Admin() {
                     </Button>
                   )}
                 </div>
-                  <Button variant="outline" size="sm" onClick={() => handleEditUser(user.user_id)}>
-                    <Edit className="h-3 w-3 mr-1" /> Edit
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => setRolesUserId(rolesUserId === user.user_id ? null : user.user_id)}>
-                    <Shield className="h-3 w-3 mr-1" /> Roles
-                  </Button>
-                </div>
 
                 {/* Role Management */}
                 {rolesUserId === user.user_id && (
