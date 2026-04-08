@@ -206,6 +206,7 @@ export default function Roulette() {
     setSpinning(true);
     setResult(null);
     setSplashData(null);
+    setLastBets(bets);
 
     const winningNumber = Math.floor(Math.random() * 37);
     let netAmount = 0;
@@ -227,6 +228,26 @@ export default function Roulette() {
     setSplashData({ resultNumber: winningNumber, netAmount });
     setSpinning(false);
     setBets([]);
+  };
+
+  const rebet = () => {
+    if (spinning || lastBets.length === 0) return;
+    const rebetTotal = lastBets.reduce((s, b) => s + b.amount, 0);
+    if (rebetTotal > balance) { toast.error("Insufficient balance"); return; }
+    if (rebetTotal > 5) { toast.error("Maximum total bet is $5"); return; }
+    setBets(lastBets);
+  };
+
+  const respin = async () => {
+    if (spinning || lastBets.length === 0) return;
+    const rebetTotal = lastBets.reduce((s, b) => s + b.amount, 0);
+    if (rebetTotal > balance) { toast.error("Insufficient balance"); return; }
+    if (rebetTotal > 5) { toast.error("Maximum total bet is $5"); return; }
+    setBets(lastBets);
+    // Wait for state to update then spin
+    setTimeout(() => {
+      document.getElementById("spin-btn")?.click();
+    }, 50);
   };
 
   const getBetTotal = (filter: (b: PlacedBet) => boolean) =>
