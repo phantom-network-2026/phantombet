@@ -79,9 +79,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error };
   };
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error };
+  const signIn = async (username: string, password: string) => {
+    try {
+      // Resolve username to email via edge function
+      const { data: fnData, error: fnError } = await supabase.functions.invoke("resolve-username", {
+        body: { username },
+      });
+      if (fnError || !fnData?.email) {
+        return { error: { message: "Username not found" } };
+      }
+      const { error } = await supabase.auth.signInWithPassword({ email: fnData.email, password });
+      return { error };
+    } catch {
+      return { error: { message: "Login failed. Please try again." } };
+    }
   };
 
   const signOut = async () => {
