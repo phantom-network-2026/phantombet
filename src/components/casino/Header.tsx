@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Wallet, LogOut, Shield, Menu, X, ArrowDownToLine } from "lucide-react";
+import { FakeWinsTicker } from "./FakeWinsTicker";
 import logo from "@/assets/bitbet-logo.svg";
 
 export function Header() {
@@ -12,6 +13,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      <FakeWinsTicker />
       <div className="container flex h-14 items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
           <img src={logo} alt="BitBet" className="h-10 w-10" />

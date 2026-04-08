@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Header } from "@/components/casino/Header";
+import { FakeWinsControlPanel } from "@/components/casino/FakeWinsControlPanel";
 import { ArrowLeft, Users, DollarSign, Plus, Minus, Edit, Save, Shield } from "lucide-react";
 import { toast } from "sonner";
 
@@ -149,6 +150,9 @@ export default function Admin() {
             </p>
           </div>
         </div>
+
+        {/* Fake Wins Ticker Control */}
+        {isAdmin && <FakeWinsControlPanel />}
 
         {/* User List */}
         <div className="space-y-3">
