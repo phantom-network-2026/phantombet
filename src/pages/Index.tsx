@@ -13,6 +13,7 @@ import blackjackImg from "@/assets/game-blackjack.jpg";
 import treasureImg from "@/assets/game-treasure.jpg";
 import pokerImg from "@/assets/game-poker.jpg";
 import slotCowboyImg from "@/assets/game-slot-cowboy.jpg";
+import prizeReelImg from "@/assets/game-prize-reel.jpg";
 
 const defaultGames = [
   { id: "1", name: "Lucky Sevens", image_url: slotsImg, category: "slots", is_featured: true },
@@ -38,6 +39,7 @@ export default function Index() {
         if (data && data.length > 0) {
           const imageMap: Record<string, string> = {
             "Slot Cowboy": slotCowboyImg,
+            "Prize Reel": prizeReelImg,
           };
           setGames(data.map((g) => ({ ...g, image_url: imageMap[g.name] || g.image_url || slotsImg })));
         }

@@ -10,9 +10,11 @@ import blackjackImg from "@/assets/game-blackjack.jpg";
 import treasureImg from "@/assets/game-treasure.jpg";
 import pokerImg from "@/assets/game-poker.jpg";
 import slotCowboyImg from "@/assets/game-slot-cowboy.jpg";
+import prizeReelImg from "@/assets/game-prize-reel.jpg";
 
 const imageMap: Record<string, string> = {
   "Slot Cowboy": slotCowboyImg,
+  "Prize Reel": prizeReelImg,
 };
 
 const CATEGORY_LABELS: Record<string, string> = {

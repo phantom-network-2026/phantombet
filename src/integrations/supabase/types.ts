@@ -50,6 +50,39 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_spins: {
+        Row: {
+          id: string
+          is_loyalty_spin: boolean
+          prize_detail: string | null
+          prize_type: string
+          prize_value: number
+          spun_at: string
+          streak_count: number
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          is_loyalty_spin?: boolean
+          prize_detail?: string | null
+          prize_type: string
+          prize_value?: number
+          spun_at?: string
+          streak_count?: number
+          user_id: string
+        }
+        Update: {
+          id?: string
+          is_loyalty_spin?: boolean
+          prize_detail?: string | null
+          prize_type?: string
+          prize_value?: number
+          spun_at?: string
+          streak_count?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       friendships: {
         Row: {
           addressee_id: string
