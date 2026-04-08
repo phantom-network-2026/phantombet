@@ -170,7 +170,7 @@ export default function Blackjack() {
   const revealDealer = (pHand: Card[], currentDeck: Card[], currentBet?: number) => {
     setGameState("dealer");
     const activeBet = currentBet ?? bet;
-    let dHand = dealerHand.map((c) => ({ ...c, hidden: false }));
+    let dHand: Card[] = dealerHand.map((c) => ({ suit: c.suit, rank: c.rank, hidden: false }));
     setDealerHand(dHand);
     setDealerRevealed(true);
 
