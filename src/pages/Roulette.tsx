@@ -223,7 +223,28 @@ export default function Roulette() {
     setSplashData(null);
     setLastBets(bets);
 
-    const winningNumber = Math.floor(Math.random() * 37);
+    // Check force_loss setting
+    let forceActive = false;
+    try {
+      const { data: fl } = await supabase.from("site_settings").select("value").eq("key", "force_loss").maybeSingle();
+      forceActive = (fl?.value as any)?.enabled === true;
+    } catch {}
+
+    let winningNumber: number;
+    if (forceActive) {
+      // Pick a number that causes all bets to lose
+      let found = false;
+      for (let attempt = 0; attempt < 100; attempt++) {
+        const candidate = Math.floor(Math.random() * 37);
+        let total = 0;
+        for (const bet of bets) total += bet.amount * calculatePayout(bet.type, candidate);
+        if (total <= 0) { winningNumber = candidate; found = true; break; }
+      }
+      if (!found) winningNumber = 0; // 0 loses most bets
+    } else {
+      winningNumber = Math.floor(Math.random() * 37);
+    }
+
     let netAmount = 0;
     for (const bet of bets) netAmount += bet.amount * calculatePayout(bet.type, winningNumber);
 
