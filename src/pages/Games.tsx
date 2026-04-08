@@ -21,6 +21,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   live: "🔴 Live",
   jackpot: "💎 Jackpot",
   scratch: "🎟️ Scratch Cards",
+  instant: "⚡ Instant Wins",
 };
 
 const defaultGames = [
