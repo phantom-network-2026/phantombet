@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json()
-    const { target_user_id, email, password } = body
+    const { target_user_id, email, password, action } = body
 
     if (!target_user_id) {
       return new Response(JSON.stringify({ error: 'target_user_id is required' }), {
@@ -49,6 +49,33 @@ Deno.serve(async (req) => {
       })
     }
 
+    // Prevent self-deletion
+    if (action === 'delete' && target_user_id === user.id) {
+      return new Response(JSON.stringify({ error: 'Cannot delete your own account' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    // Handle delete action
+    if (action === 'delete') {
+      // Delete profile, roles, presence, transactions etc. (cascade or manual)
+      await adminClient.from('user_presence').delete().eq('user_id', target_user_id)
+      await adminClient.from('user_roles').delete().eq('user_id', target_user_id)
+      await adminClient.from('profiles').delete().eq('user_id', target_user_id)
+
+      const { error } = await adminClient.auth.admin.deleteUser(target_user_id)
+      if (error) {
+        return new Response(JSON.stringify({ error: error.message }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
+
+      return new Response(JSON.stringify({ success: true, deleted: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    // Handle update action
     const updates: Record<string, string> = {}
     if (email && typeof email === 'string' && email.includes('@')) updates.email = email
     if (password && typeof password === 'string' && password.length >= 1) updates.password = password

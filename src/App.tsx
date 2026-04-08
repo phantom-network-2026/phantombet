@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
+import { usePresence } from "@/hooks/usePresence";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Login from "./pages/Login.tsx";
@@ -28,6 +29,11 @@ import GamesPage from "./pages/Games.tsx";
 
 const queryClient = new QueryClient();
 
+function PresenceTracker({ children }: { children: React.ReactNode }) {
+  usePresence();
+  return <>{children}</>;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -35,29 +41,31 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/admin" element={<Admin />} />
-            <Route path="/game/:id" element={<GameDetail />} />
-            <Route path="/promotions" element={<Promotions />} />
-            <Route path="/deposit" element={<Deposit />} />
-            <Route path="/withdraw" element={<Withdraw />} />
-            <Route path="/search" element={<SearchPage />} />
-            <Route path="/category/:category" element={<CategoryPage />} />
-            <Route path="/games" element={<GamesPage />} />
-            <Route path="/friends" element={<Friends />} />
-            <Route path="/messages/:friendId" element={<Messages />} />
-            <Route path="/scratch-card" element={<ScratchCard />} />
-            <Route path="/blackjack" element={<Blackjack />} />
-            <Route path="/slot-cowboy" element={<SlotCowboy />} />
-            <Route path="/roulette" element={<Roulette />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <PresenceTracker>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/game/:id" element={<GameDetail />} />
+              <Route path="/promotions" element={<Promotions />} />
+              <Route path="/deposit" element={<Deposit />} />
+              <Route path="/withdraw" element={<Withdraw />} />
+              <Route path="/search" element={<SearchPage />} />
+              <Route path="/category/:category" element={<CategoryPage />} />
+              <Route path="/games" element={<GamesPage />} />
+              <Route path="/friends" element={<Friends />} />
+              <Route path="/messages/:friendId" element={<Messages />} />
+              <Route path="/scratch-card" element={<ScratchCard />} />
+              <Route path="/blackjack" element={<Blackjack />} />
+              <Route path="/slot-cowboy" element={<SlotCowboy />} />
+              <Route path="/roulette" element={<Roulette />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </PresenceTracker>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
