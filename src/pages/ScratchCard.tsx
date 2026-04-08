@@ -16,110 +16,18 @@ const SYMBOLS = ["💎", "🍒", "⭐", "🔔", "7️⃣", "🍀", "💰", "🎰
 
 interface ScratchCell {
   symbol: string;
-  multiplier: number;
   scratched: boolean;
 }
 
-function generateCard(): ScratchCell[] {
-  // ~30% chance of any cell being a winner
-  // Matching 3+ symbols = big win
-  const cells: ScratchCell[] = [];
-  
-  // Decide outcome first
-  const roll = Math.random();
-  let outcome: "jackpot" | "bigwin" | "smallwin" | "lose";
-  
-  if (roll < 0.02) outcome = "jackpot";       // 2% - 3 matching premium symbols
-  else if (roll < 0.08) outcome = "bigwin";    // 6% - 3 matching symbols
-  else if (roll < 0.30) outcome = "smallwin";  // 22% - 2 matching symbols
-  else outcome = "lose";                        // 70% - no matches
-
-  if (outcome === "jackpot") {
-    const jackpotSymbol = SYMBOLS[Math.floor(Math.random() * 3)]; // 💎⭐🍒
-    const positions = shufflePositions();
-    for (let i = 0; i < 9; i++) {
-      if (positions.indexOf(i) < 3) {
-        cells.push({ symbol: jackpotSymbol, multiplier: 10, scratched: false });
-      } else {
-        cells.push({ symbol: randomSymbolExcept(jackpotSymbol), multiplier: 0, scratched: false });
-      }
-    }
-  } else if (outcome === "bigwin") {
-    const winSymbol = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
-    const positions = shufflePositions();
-    for (let i = 0; i < 9; i++) {
-      if (positions.indexOf(i) < 3) {
-        cells.push({ symbol: winSymbol, multiplier: 5, scratched: false });
-      } else {
-        cells.push({ symbol: randomSymbolExcept(winSymbol), multiplier: 0, scratched: false });
-      }
-    }
-  } else if (outcome === "smallwin") {
-    const winSymbol = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
-    const positions = shufflePositions();
-    for (let i = 0; i < 9; i++) {
-      if (positions.indexOf(i) < 2) {
-        cells.push({ symbol: winSymbol, multiplier: 2, scratched: false });
-      } else {
-        cells.push({ symbol: randomSymbolExcept(winSymbol), multiplier: 0, scratched: false });
-      }
-    }
-  } else {
-    // All different symbols
-    const used: string[] = [];
-    for (let i = 0; i < 9; i++) {
-      let sym = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
-      // Ensure no 3 of the same
-      const count = used.filter(s => s === sym).length;
-      if (count >= 2) {
-        sym = SYMBOLS.find(s => used.filter(u => u === s).length < 2) || sym;
-      }
-      used.push(sym);
-      cells.push({ symbol: sym, multiplier: 0, scratched: false });
-    }
-  }
-
-  return cells;
-}
-
-function randomSymbolExcept(exclude: string): string {
-  const filtered = SYMBOLS.filter(s => s !== exclude);
-  return filtered[Math.floor(Math.random() * filtered.length)];
-}
-
-function shufflePositions(): number[] {
-  const arr = [0, 1, 2, 3, 4, 5, 6, 7, 8];
-  for (let i = arr.length - 1; i > 0; i--) {
+function buildDisplayCard(symbols: string[], isWinner: boolean): ScratchCell[] {
+  // Use the symbols from the server but shuffle them for visual variety
+  const cells: ScratchCell[] = symbols.map((s) => ({ symbol: s, scratched: false }));
+  // Shuffle the cells
+  for (let i = cells.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
+    [cells[i], cells[j]] = [cells[j], cells[i]];
   }
-  return arr;
-}
-
-function calculateWinnings(cells: ScratchCell[], bet: number): { amount: number; matches: string } {
-  const symbolCount: Record<string, number> = {};
-  cells.forEach(c => {
-    symbolCount[c.symbol] = (symbolCount[c.symbol] || 0) + 1;
-  });
-
-  for (const [symbol, count] of Object.entries(symbolCount)) {
-    if (count >= 3) {
-      const cell = cells.find(c => c.symbol === symbol);
-      const mult = cell?.multiplier || 5;
-      return { amount: bet * mult, matches: symbol };
-    }
-  }
-
-  for (const [symbol, count] of Object.entries(symbolCount)) {
-    if (count >= 2) {
-      const cell = cells.find(c => c.symbol === symbol);
-      if (cell?.multiplier && cell.multiplier > 0) {
-        return { amount: bet * cell.multiplier, matches: symbol };
-      }
-    }
-  }
-
-  return { amount: 0, matches: "" };
+  return cells;
 }
 
 export default function ScratchCard() {
@@ -132,10 +40,28 @@ function ScratchCardInner() {
   const [bet, setBet] = useState(5);
   const [card, setCard] = useState<ScratchCell[]>([]);
   const [gameState, setGameState] = useState<"idle" | "playing" | "revealing" | "done">("idle");
-  const [result, setResult] = useState<{ amount: number; matches: string } | null>(null);
+  const [serverResult, setServerResult] = useState<{ is_winner: boolean; win_amount: number } | null>(null);
   const [scratchedCount, setScratchedCount] = useState(0);
+  const [remaining, setRemaining] = useState<Record<number, number>>({});
   const canvasRefs = useRef<(HTMLCanvasElement | null)[]>([]);
   const isScratching = useRef(false);
+
+  // Fetch remaining card counts
+  useEffect(() => {
+    const fetchCounts = async () => {
+      const counts: Record<number, number> = {};
+      for (const tier of BET_OPTIONS) {
+        const { count } = await supabase
+          .from("scratch_card_pool")
+          .select("id", { count: "exact", head: true })
+          .eq("bet_tier", tier)
+          .is("claimed_by", null);
+        counts[tier] = count ?? 0;
+      }
+      setRemaining(counts);
+    };
+    fetchCounts();
+  }, [gameState]);
 
   const startGame = async () => {
     if (!user) { navigate("/login"); return; }
@@ -144,25 +70,35 @@ function ScratchCardInner() {
       return;
     }
 
-    // Deduct bet via edge function
-    const { error } = await supabase.functions.invoke("game-settle", {
-      body: { userId: user.id, amount: -bet, gameType: "scratch", outcome: "bet_placed" },
+    if ((remaining[bet] ?? 0) <= 0) {
+      toast.error("No cards left for this tier! Sold out.");
+      return;
+    }
+
+    // Buy card from server
+    const { data, error } = await supabase.functions.invoke("scratch-card-buy", {
+      body: { betTier: bet },
     });
 
-    if (error) { toast.error("Failed to place bet"); return; }
+    if (error || !data?.success) {
+      toast.error(data?.error || "Failed to buy card");
+      return;
+    }
 
     await refreshProfile();
 
-    const newCard = generateCard();
-    setCard(newCard);
+    const cardData = data.card;
+    setServerResult({ is_winner: cardData.is_winner, win_amount: cardData.win_amount });
+    setRemaining((prev) => ({ ...prev, [bet]: data.remaining }));
+
+    const displayCard = buildDisplayCard(cardData.symbols, cardData.is_winner);
+    setCard(displayCard);
     setGameState("playing");
-    setResult(null);
     setScratchedCount(0);
   };
 
   useEffect(() => {
     if (gameState !== "playing") return;
-    // Initialize scratch canvases
     canvasRefs.current.forEach((canvas, i) => {
       if (!canvas) return;
       const ctx = canvas.getContext("2d");
@@ -170,7 +106,6 @@ function ScratchCardInner() {
       const w = canvas.width;
       const h = canvas.height;
 
-      // Gradient scratch surface
       const grad = ctx.createLinearGradient(0, 0, w, h);
       grad.addColorStop(0, "hsl(265, 45%, 25%)");
       grad.addColorStop(0.5, "hsl(270, 50%, 30%)");
@@ -178,7 +113,6 @@ function ScratchCardInner() {
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, w, h);
 
-      // Sparkle pattern
       ctx.fillStyle = "rgba(255, 215, 0, 0.15)";
       for (let k = 0; k < 8; k++) {
         ctx.beginPath();
@@ -186,7 +120,6 @@ function ScratchCardInner() {
         ctx.fill();
       }
 
-      // Question mark
       ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
       ctx.font = `bold ${Math.floor(h * 0.5)}px sans-serif`;
       ctx.textAlign = "center";
@@ -218,7 +151,6 @@ function ScratchCardInner() {
     ctx.arc(x, y, 18, 0, Math.PI * 2);
     ctx.fill();
 
-    // Check if mostly scratched
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     let transparent = 0;
     for (let i = 3; i < imageData.data.length; i += 4) {
@@ -229,28 +161,20 @@ function ScratchCardInner() {
       const newCard = [...card];
       newCard[index] = { ...newCard[index], scratched: true };
       setCard(newCard);
-      setScratchedCount(prev => prev + 1);
+      setScratchedCount((prev) => prev + 1);
     }
   }, [gameState, card]);
 
-  const handleMouseDown = (index: number) => {
-    isScratching.current = true;
-  };
-
-  const handleMouseUp = () => {
-    isScratching.current = false;
-  };
-
+  const handleMouseDown = () => { isScratching.current = true; };
+  const handleMouseUp = () => { isScratching.current = false; };
   const handleMouseMove = (index: number, e: React.MouseEvent) => {
     if (isScratching.current) handleScratch(index, e);
   };
-
   const handleTouchMove = (index: number, e: React.TouchEvent) => {
     e.preventDefault();
     handleScratch(index, e);
   };
 
-  // Reveal all when enough scratched
   useEffect(() => {
     if (scratchedCount >= 5 && gameState === "playing") {
       revealAll();
@@ -260,7 +184,6 @@ function ScratchCardInner() {
   const revealAll = async () => {
     setGameState("revealing");
 
-    // Animate reveal of remaining cells
     for (let i = 0; i < card.length; i++) {
       if (!card[i].scratched) {
         const canvas = canvasRefs.current[i];
@@ -271,27 +194,22 @@ function ScratchCardInner() {
             ctx.fillRect(0, 0, canvas.width, canvas.height);
           }
         }
-        await new Promise(r => setTimeout(r, 120));
+        await new Promise((r) => setTimeout(r, 120));
       }
     }
 
-    const win = calculateWinnings(card, bet);
-    setResult(win);
-
-    if (win.amount > 0 && user) {
-      await supabase.functions.invoke("game-settle", {
-        body: { userId: user.id, amount: win.amount, gameType: "scratch", outcome: `win_${win.matches}x3` },
-      });
-
-      await refreshProfile();
-    }
-
+    // Balance already settled server-side, just refresh
+    await refreshProfile();
     setGameState("done");
   };
 
   const revealAllButton = () => {
     if (gameState === "playing") revealAll();
   };
+
+  const remainingForBet = remaining[bet] ?? 0;
+  const totalForBet = 2000;
+  const soldPercent = Math.round(((totalForBet - remainingForBet) / totalForBet) * 100);
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
@@ -306,16 +224,16 @@ function ScratchCardInner() {
             <Sparkles className="inline h-7 w-7 mr-2 text-[hsl(var(--casino-gold))]" />
             Scratch & Win
           </h1>
-          <p className="text-muted-foreground text-sm mt-1">Match 3 symbols to win big!</p>
+          <p className="text-muted-foreground text-sm mt-1">2,000 cards per tier — 1 in 5 is a guaranteed winner!</p>
         </div>
 
         {/* Bet Selection */}
         {gameState === "idle" && (
           <div className="space-y-4 animate-fade-in">
             <div className="bg-card rounded-2xl border border-border p-5 space-y-4">
-              <label className="text-sm font-medium text-muted-foreground">Choose your bet</label>
+              <label className="text-sm font-medium text-muted-foreground">Choose your card</label>
               <div className="flex flex-wrap gap-2">
-                {BET_OPTIONS.map(b => (
+                {BET_OPTIONS.map((b) => (
                   <button
                     key={b}
                     onClick={() => setBet(b)}
@@ -330,9 +248,23 @@ function ScratchCardInner() {
                 ))}
               </div>
 
+              {/* Remaining cards indicator */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>{remainingForBet.toLocaleString()} cards remaining</span>
+                  <span>{soldPercent}% sold</span>
+                </div>
+                <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-[hsl(var(--casino-gold))] to-[hsl(var(--casino-pink))] transition-all duration-500"
+                    style={{ width: `${soldPercent}%` }}
+                  />
+                </div>
+              </div>
+
               <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t border-border">
                 <span>Balance: <span className="text-[hsl(var(--casino-gold))] font-bold">${profile?.balance?.toFixed(2) ?? "0.00"}</span></span>
-                <span>Max win: <span className="text-[hsl(var(--casino-green))] font-bold">${(bet * 10).toLocaleString()}</span></span>
+                <span>Win pays: <span className="text-[hsl(var(--casino-green))] font-bold">${(bet * 2).toLocaleString()}</span></span>
               </div>
 
               <Button
@@ -340,27 +272,31 @@ function ScratchCardInner() {
                 size="lg"
                 className="w-full text-lg font-bold"
                 onClick={startGame}
-                disabled={!user || (profile?.balance ?? 0) < bet}
+                disabled={!user || (profile?.balance ?? 0) < bet || remainingForBet <= 0}
               >
-                {!user ? "Sign In to Play" : `Buy Card - $${bet}`}
+                {remainingForBet <= 0 ? "Sold Out!" : `Buy Card - $${bet}`}
               </Button>
             </div>
 
             {/* Payout table */}
             <div className="bg-card rounded-2xl border border-border p-4">
-              <h3 className="font-display font-bold text-sm text-muted-foreground mb-3">Payouts</h3>
+              <h3 className="font-display font-bold text-sm text-muted-foreground mb-3">How It Works</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span>3 matching symbols</span>
-                  <span className="text-[hsl(var(--casino-gold))] font-bold">5× bet</span>
+                  <span>Total cards per tier</span>
+                  <span className="font-bold">2,000</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>3 premium symbols (💎🍒⭐)</span>
-                  <span className="text-[hsl(var(--casino-pink))] font-bold">10× bet</span>
+                  <span>Winners per tier</span>
+                  <span className="text-[hsl(var(--casino-green))] font-bold">400 (1 in 5)</span>
                 </div>
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Win chance</span>
-                  <span>~30%</span>
+                <div className="flex justify-between">
+                  <span>Winner payout</span>
+                  <span className="text-[hsl(var(--casino-gold))] font-bold">2× your bet</span>
+                </div>
+                <div className="flex justify-between text-muted-foreground text-xs pt-2 border-t border-border">
+                  <span>Example: $5 card</span>
+                  <span>Wins $10</span>
                 </div>
               </div>
             </div>
@@ -371,7 +307,6 @@ function ScratchCardInner() {
         {(gameState === "playing" || gameState === "revealing" || gameState === "done") && (
           <div className="space-y-4 animate-scale-in">
             <div className="bg-card rounded-2xl border-2 border-[hsl(var(--casino-gold))/0.3] p-4 relative overflow-hidden">
-              {/* Shimmer effect */}
               <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--casino-gold))/0.05] via-transparent to-[hsl(var(--casino-pink))/0.05] pointer-events-none" />
 
               <div className="grid grid-cols-3 gap-2 relative" onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
@@ -380,7 +315,6 @@ function ScratchCardInner() {
                     key={i}
                     className="relative aspect-square rounded-xl overflow-hidden bg-secondary border border-border"
                   >
-                    {/* Symbol underneath */}
                     <div className={`absolute inset-0 flex items-center justify-center text-4xl transition-transform duration-500 ${
                       cell.scratched || gameState === "done" ? "scale-100" : "scale-75"
                     }`}>
@@ -389,17 +323,16 @@ function ScratchCardInner() {
                       </span>
                     </div>
 
-                    {/* Scratch canvas overlay */}
                     {gameState !== "done" && (
                       <canvas
-                        ref={el => { canvasRefs.current[i] = el; }}
+                        ref={(el) => { canvasRefs.current[i] = el; }}
                         width={200}
                         height={200}
                         className="absolute inset-0 w-full h-full cursor-pointer touch-none"
-                        onMouseDown={() => handleMouseDown(i)}
-                        onMouseMove={e => handleMouseMove(i, e)}
+                        onMouseDown={() => handleMouseDown()}
+                        onMouseMove={(e) => handleMouseMove(i, e)}
                         onTouchStart={() => {}}
-                        onTouchMove={e => handleTouchMove(i, e)}
+                        onTouchMove={(e) => handleTouchMove(i, e)}
                       />
                     )}
                   </div>
@@ -417,25 +350,25 @@ function ScratchCardInner() {
             </div>
 
             {/* Result */}
-            {gameState === "done" && result && (
+            {gameState === "done" && serverResult && (
               <div className={`rounded-2xl border-2 p-6 text-center animate-scale-in ${
-                result.amount > 0
+                serverResult.is_winner
                   ? "border-[hsl(var(--casino-gold))] bg-gradient-to-b from-[hsl(var(--casino-gold))/0.1] to-card"
                   : "border-border bg-card"
               }`}>
-                {result.amount > 0 ? (
+                {serverResult.is_winner ? (
                   <>
-                    <div className="text-5xl mb-2 animate-bounce">{result.matches}</div>
+                    <div className="text-5xl mb-2 animate-bounce">💰</div>
                     <p className="font-display text-2xl font-black text-[hsl(var(--casino-gold))]">
-                      YOU WON ${result.amount.toLocaleString()}!
+                      YOU WON ${serverResult.win_amount.toLocaleString()}!
                     </p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      {result.matches} × 3 match!
+                      Winner! 2× your ${bet} bet
                     </p>
                   </>
                 ) : (
                   <>
-                    <p className="font-display text-xl font-bold text-muted-foreground">No Match</p>
+                    <p className="font-display text-xl font-bold text-muted-foreground">No Win</p>
                     <p className="text-sm text-muted-foreground mt-1">Better luck next time!</p>
                   </>
                 )}
@@ -444,7 +377,7 @@ function ScratchCardInner() {
                   variant="gold"
                   size="lg"
                   className="w-full mt-4 text-lg font-bold"
-                  onClick={() => { setGameState("idle"); setCard([]); setResult(null); }}
+                  onClick={() => { setGameState("idle"); setCard([]); setServerResult(null); }}
                 >
                   <RotateCcw className="h-5 w-5 mr-2" /> Play Again
                 </Button>
