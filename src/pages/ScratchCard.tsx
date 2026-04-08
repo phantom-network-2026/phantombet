@@ -224,7 +224,7 @@ function ScratchCardInner() {
             <Sparkles className="inline h-7 w-7 mr-2 text-[hsl(var(--casino-gold))]" />
             Scratch & Win
           </h1>
-          <p className="text-muted-foreground text-sm mt-1">2,000 cards per tier — 1 in 5 is a guaranteed winner!</p>
+          <p className="text-muted-foreground text-sm mt-1">1 in every 4 is a guaranteed winner! Win up to a $10,000 jackpot or 5× multiplier!</p>
         </div>
 
         {/* Bet Selection */}
@@ -283,20 +283,24 @@ function ScratchCardInner() {
               <h3 className="font-display font-bold text-sm text-muted-foreground mb-3">How It Works</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span>Total cards per tier</span>
+                  <span>🎟️ Total cards per tier</span>
                   <span className="font-bold">2,000</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Winners per tier</span>
-                  <span className="text-[hsl(var(--casino-green))] font-bold">400 (1 in 5)</span>
+                  <span>🏆 Guaranteed winners</span>
+                  <span className="text-[hsl(var(--casino-green))] font-bold">1 in every 4</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Winner payout</span>
-                  <span className="text-[hsl(var(--casino-gold))] font-bold">2× your bet</span>
+                  <span>💰 Jackpot prize</span>
+                  <span className="text-[hsl(var(--casino-pink))] font-bold">$10,000</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>⭐ Max multiplier</span>
+                  <span className="text-[hsl(var(--casino-gold))] font-bold">Up to 5×</span>
                 </div>
                 <div className="flex justify-between text-muted-foreground text-xs pt-2 border-t border-border">
                   <span>Example: $5 card</span>
-                  <span>Wins $10</span>
+                  <span>Win up to $25 or hit the jackpot!</span>
                 </div>
               </div>
             </div>
