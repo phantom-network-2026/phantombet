@@ -48,6 +48,7 @@ const App = () => (
             <Route path="/withdraw" element={<Withdraw />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/category/:category" element={<CategoryPage />} />
+            <Route path="/games" element={<GamesPage />} />
             <Route path="/friends" element={<Friends />} />
             <Route path="/messages/:friendId" element={<Messages />} />
             <Route path="/scratch-card" element={<ScratchCard />} />
