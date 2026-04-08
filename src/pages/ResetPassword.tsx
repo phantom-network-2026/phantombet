@@ -57,7 +57,7 @@ export default function ResetPassword() {
     return (
       <div className="min-h-screen gradient-casino-bg flex items-center justify-center p-4">
         <div className="w-full max-w-sm space-y-6 text-center">
-          <img src={logo} alt="BitBet" className="h-16 w-16 mx-auto mb-3" />
+          <img src={logo} alt="PhantomBet" className="h-16 w-16 mx-auto mb-3" />
           <h1 className="font-display text-2xl font-black text-gold">Invalid Link</h1>
           <p className="text-muted-foreground text-sm">
             This password reset link is invalid or has expired. Please request a new one.
@@ -74,7 +74,7 @@ export default function ResetPassword() {
     return (
       <div className="min-h-screen gradient-casino-bg flex items-center justify-center p-4">
         <div className="w-full max-w-sm space-y-6 text-center">
-          <img src={logo} alt="BitBet" className="h-16 w-16 mx-auto mb-3" />
+          <img src={logo} alt="PhantomBet" className="h-16 w-16 mx-auto mb-3" />
           <h1 className="font-display text-2xl font-black text-gold">Password Updated!</h1>
           <p className="text-muted-foreground text-sm">Redirecting you to the homepage...</p>
         </div>
@@ -86,7 +86,7 @@ export default function ResetPassword() {
     <div className="min-h-screen gradient-casino-bg flex items-center justify-center p-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
-          <img src={logo} alt="BitBet" className="h-16 w-16 mx-auto mb-3" />
+          <img src={logo} alt="PhantomBet" className="h-16 w-16 mx-auto mb-3" />
           <h1 className="font-display text-2xl font-black text-gold">Reset Password</h1>
           <p className="text-muted-foreground text-sm mt-1">Enter your new password below</p>
         </div>
