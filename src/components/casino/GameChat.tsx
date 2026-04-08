@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, MessageCircle } from "lucide-react";
+import { Send, MessageCircle, ShieldAlert, Ban, Trash2, AlertTriangle, X } from "lucide-react";
+import { toast } from "sonner";
 
 interface ChatMessage {
   id: string;
@@ -14,16 +15,44 @@ interface ChatMessage {
 }
 
 export function GameChat({ gameRoom }: { gameRoom: string }) {
-  const { user, profile } = useAuth();
+  const { user, profile, hasStaffAccess } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const [isBanned, setIsBanned] = useState(false);
+  const [selectedMsg, setSelectedMsg] = useState<ChatMessage | null>(null);
+  const [banReason, setBanReason] = useState("");
+  const [showBanModal, setShowBanModal] = useState(false);
+  const [banTarget, setBanTarget] = useState<{ userId: string; username: string } | null>(null);
+  const [banDuration, setBanDuration] = useState<string>("permanent");
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Check if current user is banned
+  useEffect(() => {
+    if (!user) return;
+    const checkBan = async () => {
+      const now = new Date().toISOString();
+      const { data } = await supabase
+        .from("chat_bans")
+        .select("id, expires_at")
+        .eq("user_id", user.id)
+        .eq("is_active", true)
+        .or(`game_room.is.null,game_room.eq.${gameRoom}`);
+      if (data && data.length > 0) {
+        const activeBan = data.some(
+          (b: any) => !b.expires_at || new Date(b.expires_at) > new Date()
+        );
+        setIsBanned(activeBan);
+      } else {
+        setIsBanned(false);
+      }
+    };
+    checkBan();
+  }, [user, gameRoom]);
 
   useEffect(() => {
     if (!isOpen) return;
 
-    // Fetch recent messages
     supabase
       .from("game_chat")
       .select("*")
@@ -34,14 +63,17 @@ export function GameChat({ gameRoom }: { gameRoom: string }) {
         if (data) setMessages(data as ChatMessage[]);
       });
 
-    // Subscribe to new messages
     const channel = supabase
       .channel(`game-chat-${gameRoom}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "game_chat", filter: `game_room=eq.${gameRoom}` },
+        { event: "*", schema: "public", table: "game_chat", filter: `game_room=eq.${gameRoom}` },
         (payload) => {
-          setMessages((prev) => [...prev.slice(-99), payload.new as ChatMessage]);
+          if (payload.eventType === "INSERT") {
+            setMessages((prev) => [...prev.slice(-99), payload.new as ChatMessage]);
+          } else if (payload.eventType === "DELETE") {
+            setMessages((prev) => prev.filter((m) => m.id !== payload.old.id));
+          }
         }
       )
       .subscribe();
@@ -54,16 +86,79 @@ export function GameChat({ gameRoom }: { gameRoom: string }) {
   }, [messages]);
 
   const handleSend = async () => {
-    if (!newMessage.trim() || !user) return;
+    if (!newMessage.trim() || !user || isBanned) return;
     const content = newMessage.trim();
     setNewMessage("");
-
     await supabase.from("game_chat").insert({
       user_id: user.id,
       game_room: gameRoom,
       username: profile?.username || "Anonymous",
       content,
     });
+  };
+
+  const handleDeleteMessage = async (msg: ChatMessage) => {
+    if (!user) return;
+    await supabase.from("game_chat").delete().eq("id", msg.id);
+    await supabase.from("moderation_log").insert({
+      action_type: "delete_message",
+      target_user_id: msg.user_id,
+      moderator_id: user.id,
+      reason: "Message deleted by moderator",
+      game_room: gameRoom,
+      metadata: { message_content: msg.content, message_id: msg.id },
+    } as any);
+    setMessages((prev) => prev.filter((m) => m.id !== msg.id));
+    setSelectedMsg(null);
+    toast.success("Message deleted");
+  };
+
+  const openBanModal = (userId: string, username: string) => {
+    setBanTarget({ userId, username });
+    setBanReason("");
+    setBanDuration("permanent");
+    setShowBanModal(true);
+    setSelectedMsg(null);
+  };
+
+  const handleBanUser = async () => {
+    if (!user || !banTarget) return;
+    const expiresAt = banDuration === "permanent"
+      ? null
+      : banDuration === "1h"
+        ? new Date(Date.now() + 3600000).toISOString()
+        : banDuration === "24h"
+          ? new Date(Date.now() + 86400000).toISOString()
+          : banDuration === "7d"
+            ? new Date(Date.now() + 604800000).toISOString()
+            : null;
+
+    const { error } = await supabase.from("chat_bans").insert({
+      user_id: banTarget.userId,
+      banned_by: user.id,
+      reason: banReason || "No reason provided",
+      game_room: banDuration === "global" ? null : gameRoom,
+      expires_at: banDuration === "global" ? null : expiresAt,
+      is_active: true,
+    } as any);
+
+    if (error) {
+      toast.error("Failed to ban user");
+      return;
+    }
+
+    await supabase.from("moderation_log").insert({
+      action_type: "ban",
+      target_user_id: banTarget.userId,
+      moderator_id: user.id,
+      reason: banReason || "No reason provided",
+      game_room: gameRoom,
+      metadata: { duration: banDuration },
+    } as any);
+
+    toast.success(`${banTarget.username} has been banned from chat`);
+    setShowBanModal(false);
+    setBanTarget(null);
   };
 
   if (!isOpen) {
@@ -79,11 +174,46 @@ export function GameChat({ gameRoom }: { gameRoom: string }) {
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card overflow-hidden">
+    <div className="rounded-xl border border-border bg-card overflow-hidden relative">
+      {/* Ban Modal */}
+      {showBanModal && banTarget && (
+        <div className="absolute inset-0 z-20 bg-background/95 backdrop-blur-sm flex flex-col p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-bold flex items-center gap-1.5 text-destructive">
+              <Ban className="h-4 w-4" /> Ban {banTarget.username}
+            </h4>
+            <button onClick={() => setShowBanModal(false)}><X className="h-4 w-4" /></button>
+          </div>
+          <Input
+            value={banReason}
+            onChange={(e) => setBanReason(e.target.value)}
+            placeholder="Reason for ban..."
+            className="bg-secondary border-border text-xs h-8"
+          />
+          <select
+            value={banDuration}
+            onChange={(e) => setBanDuration(e.target.value)}
+            className="bg-secondary border border-border rounded-md text-xs px-2 py-1.5 text-foreground"
+          >
+            <option value="1h">1 Hour</option>
+            <option value="24h">24 Hours</option>
+            <option value="7d">7 Days</option>
+            <option value="permanent">Permanent</option>
+            <option value="global">Global Ban (All Chats)</option>
+          </select>
+          <Button variant="destructive" size="sm" onClick={handleBanUser} className="text-xs">
+            <Ban className="h-3 w-3 mr-1" /> Confirm Ban
+          </Button>
+        </div>
+      )}
+
       <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-secondary/50">
         <div className="flex items-center gap-2">
           <MessageCircle className="h-4 w-4 text-[hsl(var(--casino-gold))]" />
           <span className="text-sm font-bold">Game Chat</span>
+          {hasStaffAccess && (
+            <ShieldAlert className="h-3.5 w-3.5 text-casino-pink" />
+          )}
         </div>
         <button onClick={() => setIsOpen(false)} className="text-xs text-muted-foreground hover:text-foreground">
           Minimize
@@ -97,18 +227,38 @@ export function GameChat({ gameRoom }: { gameRoom: string }) {
         {messages.map((msg) => {
           const isMine = msg.user_id === user?.id;
           return (
-            <div key={msg.id} className={`flex flex-col ${isMine ? "items-end" : "items-start"}`}>
+            <div key={msg.id} className={`group flex flex-col ${isMine ? "items-end" : "items-start"}`}>
               <span className="text-[10px] text-muted-foreground mb-0.5">
                 {isMine ? "You" : msg.username || "Anon"}
               </span>
-              <div
-                className={`max-w-[80%] rounded-lg px-3 py-1.5 text-xs break-words ${
-                  isMine
-                    ? "bg-[hsl(var(--casino-gold))] text-accent-foreground"
-                    : "bg-secondary text-foreground"
-                }`}
-              >
-                {msg.content}
+              <div className="flex items-center gap-1">
+                {hasStaffAccess && !isMine && (
+                  <div className="hidden group-hover:flex items-center gap-0.5 order-first">
+                    <button
+                      onClick={() => handleDeleteMessage(msg)}
+                      className="p-0.5 rounded hover:bg-destructive/20 text-destructive"
+                      title="Delete message"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                    <button
+                      onClick={() => openBanModal(msg.user_id, msg.username || "Unknown")}
+                      className="p-0.5 rounded hover:bg-destructive/20 text-destructive"
+                      title="Ban user"
+                    >
+                      <Ban className="h-3 w-3" />
+                    </button>
+                  </div>
+                )}
+                <div
+                  className={`max-w-[80%] rounded-lg px-3 py-1.5 text-xs break-words ${
+                    isMine
+                      ? "bg-[hsl(var(--casino-gold))] text-accent-foreground"
+                      : "bg-secondary text-foreground"
+                  }`}
+                >
+                  {msg.content}
+                </div>
               </div>
             </div>
           );
@@ -116,7 +266,11 @@ export function GameChat({ gameRoom }: { gameRoom: string }) {
         <div ref={bottomRef} />
       </div>
 
-      {user ? (
+      {isBanned ? (
+        <div className="border-t border-border p-2 text-center text-xs text-destructive flex items-center justify-center gap-1">
+          <Ban className="h-3 w-3" /> You are banned from this chat
+        </div>
+      ) : user ? (
         <div className="border-t border-border p-2 flex gap-2">
           <Input
             value={newMessage}
