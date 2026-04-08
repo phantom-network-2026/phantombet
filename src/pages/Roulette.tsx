@@ -349,9 +349,17 @@ export default function Roulette() {
               {/* RIGHT: Betting table — matching reference layout */}
               <div className="flex-1 min-w-0">
                 {/* Zero at top spanning full width */}
-                <button onClick={() => placeBet({ kind: "straight", number: 0 }, "0")}
-                  className="w-full py-1 rounded-t-md text-white font-bold text-xs border border-white/20 hover:brightness-125 mb-[2px]"
-                  style={{ background: "hsl(140,60%,30%)" }}>0</button>
+                {(() => {
+                  const zeroAmount = getBetTotal(b => b.type.kind === "straight" && b.type.number === 0);
+                  return (
+                    <button onClick={() => placeBet({ kind: "straight", number: 0 }, "0")}
+                      className="relative w-full py-1 rounded-t-md text-white font-bold text-xs border border-white/20 hover:brightness-125 mb-[2px]"
+                      style={{ background: "hsl(140,60%,30%)" }}>
+                      0
+                      {chipOverlay(zeroAmount)}
+                    </button>
+                  );
+                })()}
 
                 {/* Main layout: outside-left | numbers | 2:1 right */}
                 <div className="flex gap-[2px]">
