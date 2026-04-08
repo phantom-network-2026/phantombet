@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      chat_bans: {
+        Row: {
+          banned_by: string
+          created_at: string
+          expires_at: string | null
+          game_room: string | null
+          id: string
+          is_active: boolean
+          reason: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          banned_by: string
+          created_at?: string
+          expires_at?: string | null
+          game_room?: string | null
+          id?: string
+          is_active?: boolean
+          reason?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          banned_by?: string
+          created_at?: string
+          expires_at?: string | null
+          game_room?: string | null
+          id?: string
+          is_active?: boolean
+          reason?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       friendships: {
         Row: {
           addressee_id: string
@@ -125,6 +161,39 @@ export type Database = {
           is_read?: boolean
           receiver_id?: string
           sender_id?: string
+        }
+        Relationships: []
+      }
+      moderation_log: {
+        Row: {
+          action_type: Database["public"]["Enums"]["moderation_action"]
+          created_at: string
+          game_room: string | null
+          id: string
+          metadata: Json | null
+          moderator_id: string
+          reason: string | null
+          target_user_id: string
+        }
+        Insert: {
+          action_type: Database["public"]["Enums"]["moderation_action"]
+          created_at?: string
+          game_room?: string | null
+          id?: string
+          metadata?: Json | null
+          moderator_id: string
+          reason?: string | null
+          target_user_id: string
+        }
+        Update: {
+          action_type?: Database["public"]["Enums"]["moderation_action"]
+          created_at?: string
+          game_room?: string | null
+          id?: string
+          metadata?: Json | null
+          moderator_id?: string
+          reason?: string | null
+          target_user_id?: string
         }
         Relationships: []
       }
@@ -286,6 +355,14 @@ export type Database = {
       app_role: "admin" | "user" | "moderator" | "staff" | "active_user"
       friendship_status: "pending" | "accepted" | "rejected"
       game_category: "slots" | "table" | "live" | "scratch" | "jackpot"
+      moderation_action:
+        | "ban"
+        | "unban"
+        | "mute"
+        | "unmute"
+        | "warn"
+        | "kick"
+        | "delete_message"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -416,6 +493,15 @@ export const Constants = {
       app_role: ["admin", "user", "moderator", "staff", "active_user"],
       friendship_status: ["pending", "accepted", "rejected"],
       game_category: ["slots", "table", "live", "scratch", "jackpot"],
+      moderation_action: [
+        "ban",
+        "unban",
+        "mute",
+        "unmute",
+        "warn",
+        "kick",
+        "delete_message",
+      ],
     },
   },
 } as const
