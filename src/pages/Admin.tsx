@@ -229,6 +229,29 @@ export default function Admin() {
         {/* Fake Wins Ticker Control */}
         {isAdmin && <FakeWinsControlPanel />}
 
+        {/* Force Loss Toggle */}
+        {isAdmin && (
+          <div className="rounded-xl bg-card border border-border p-4 mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <ShieldAlert className="h-5 w-5 text-destructive" />
+                <div>
+                  <p className="font-display font-bold text-sm">Force Loss Mode</p>
+                  <p className="text-xs text-muted-foreground">When ON, every bet a player places will be a loss. No wins issued.</p>
+                </div>
+              </div>
+              <Switch
+                checked={forceLoss}
+                onCheckedChange={handleToggleForceLoss}
+                disabled={forceLossLoading}
+              />
+            </div>
+            {forceLoss && (
+              <p className="text-xs text-destructive mt-2 font-medium">⚠️ ACTIVE — All player bets will result in losses</p>
+            )}
+          </div>
+        )}
+
         {/* User List */}
         <div className="space-y-3">
           <h2 className="font-display text-lg font-bold">User Management</h2>
