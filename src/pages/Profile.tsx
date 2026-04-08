@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
   ArrowLeft, Trophy, Save, User, Link as LinkIcon,
-  Twitter, Instagram, MessageCircle, Globe, Sparkles, Crown,
+  Twitter, Instagram, MessageCircle, Globe, Sparkles, Crown, Camera,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -33,6 +33,8 @@ export default function Profile() {
     twitter: "", instagram: "", tiktok: "", discord: "", website: "",
   });
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!user) { navigate("/login"); return; }
@@ -65,6 +67,32 @@ export default function Profile() {
       await refreshProfile();
     }
     setSaving(false);
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Image must be under 2MB");
+      return;
+    }
+    setUploading(true);
+    const ext = file.name.split(".").pop();
+    const path = `${user.id}/avatar.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(path, file, { upsert: true });
+    if (uploadError) {
+      toast.error("Upload failed");
+      setUploading(false);
+      return;
+    }
+    const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+    const avatar_url = `${urlData.publicUrl}?t=${Date.now()}`;
+    await supabase.from("profiles").update({ avatar_url } as any).eq("user_id", user.id);
+    toast.success("Profile picture updated!");
+    await refreshProfile();
+    setUploading(false);
   };
 
   const handlePurchaseAnimatedAvatar = async () => {
