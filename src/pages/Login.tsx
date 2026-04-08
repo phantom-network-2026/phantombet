@@ -49,6 +49,9 @@ export default function Login() {
         </form>
 
         <p className="text-center text-sm text-muted-foreground">
+          <Link to="/forgot-password" className="text-casino-gold hover:underline">Forgot password?</Link>
+        </p>
+        <p className="text-center text-sm text-muted-foreground">
           Don't have an account?{" "}
           <Link to="/signup" className="text-casino-gold hover:underline">Sign up</Link>
         </p>
