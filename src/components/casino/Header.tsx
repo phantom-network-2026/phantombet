@@ -55,10 +55,20 @@ export function Header() {
           )}
         </div>
 
-        {/* Mobile menu toggle */}
-        <button className="md:hidden text-foreground" onClick={() => setMenuOpen(!menuOpen)}>
-          {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
+        {/* Mobile: balance + menu toggle */}
+        <div className="flex md:hidden items-center gap-2">
+          {user && (
+            <div className="flex items-center gap-1.5 rounded-lg bg-secondary px-2.5 py-1">
+              <Wallet className="h-3.5 w-3.5 text-casino-gold" />
+              <span className="font-display text-sm font-bold text-casino-gold">
+                ${profile?.balance?.toFixed(2) ?? "0.00"}
+              </span>
+            </div>
+          )}
+          <button className="text-foreground" onClick={() => setMenuOpen(!menuOpen)}>
+            {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile menu */}
