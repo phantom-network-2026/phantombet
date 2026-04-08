@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import logo from "@/assets/bitbet-logo.svg";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,7 +18,7 @@ export default function Login() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    const { error } = await signIn(email, password);
+    const { error } = await signIn(username, password);
     setLoading(false);
     if (error) setError(error.message);
     else navigate("/");
@@ -35,8 +35,8 @@ export default function Login() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="bg-secondary border-border" />
+            <Label htmlFor="username">Username</Label>
+            <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} required className="bg-secondary border-border" placeholder="Enter your username" />
           </div>
           <div>
             <Label htmlFor="password">Password</Label>
