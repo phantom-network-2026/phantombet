@@ -187,6 +187,7 @@ export default function Roulette() {
   const [result, setResult] = useState<number | null>(null);
   const [splashData, setSplashData] = useState<{ resultNumber: number; netAmount: number } | null>(null);
   const [history, setHistory] = useState<number[]>([]);
+  const [lastBets, setLastBets] = useState<PlacedBet[]>([]);
 
   const totalBet = bets.reduce((s, b) => s + b.amount, 0);
   const balance = profile?.balance ?? 0;
@@ -205,6 +206,7 @@ export default function Roulette() {
     setSpinning(true);
     setResult(null);
     setSplashData(null);
+    setLastBets(bets);
 
     const winningNumber = Math.floor(Math.random() * 37);
     let netAmount = 0;
@@ -226,6 +228,26 @@ export default function Roulette() {
     setSplashData({ resultNumber: winningNumber, netAmount });
     setSpinning(false);
     setBets([]);
+  };
+
+  const rebet = () => {
+    if (spinning || lastBets.length === 0) return;
+    const rebetTotal = lastBets.reduce((s, b) => s + b.amount, 0);
+    if (rebetTotal > balance) { toast.error("Insufficient balance"); return; }
+    if (rebetTotal > 5) { toast.error("Maximum total bet is $5"); return; }
+    setBets(lastBets);
+  };
+
+  const respin = async () => {
+    if (spinning || lastBets.length === 0) return;
+    const rebetTotal = lastBets.reduce((s, b) => s + b.amount, 0);
+    if (rebetTotal > balance) { toast.error("Insufficient balance"); return; }
+    if (rebetTotal > 5) { toast.error("Maximum total bet is $5"); return; }
+    setBets(lastBets);
+    // Wait for state to update then spin
+    setTimeout(() => {
+      document.getElementById("spin-btn")?.click();
+    }, 50);
   };
 
   const getBetTotal = (filter: (b: PlacedBet) => boolean) =>
@@ -409,14 +431,22 @@ export default function Roulette() {
           {/* Controls row */}
           <div className="flex items-center justify-between">
             <div className="flex gap-1">
-              <Button variant="outline" size="icon" className="h-7 w-7" onClick={clearBets} disabled={spinning || bets.length === 0}>
-                <Trash2 className="h-3 w-3" />
+              <Button variant="outline" size="sm" className="h-7 text-[10px] px-2" onClick={clearBets} disabled={spinning || bets.length === 0}>
+                <Trash2 className="h-3 w-3 mr-0.5" /> Clear
+              </Button>
+              <Button variant="outline" size="sm" className="h-7 text-[10px] px-2" onClick={rebet} disabled={spinning || lastBets.length === 0 || bets.length > 0}>
+                <RotateCw className="h-3 w-3 mr-0.5" /> Rebet
               </Button>
             </div>
-            <Button variant="gold" className="px-6 h-8 text-xs" onClick={spin} disabled={spinning || bets.length === 0}>
-              {spinning && <RotateCw className="h-3 w-3 animate-spin mr-1" />}
-              {spinning ? "Spinning..." : "SPIN"}
-            </Button>
+            <div className="flex gap-1">
+              <Button variant="outline" size="sm" className="h-7 text-[10px] px-2" onClick={respin} disabled={spinning || lastBets.length === 0 || bets.length > 0}>
+                <RotateCw className="h-3 w-3 mr-0.5" /> Respin
+              </Button>
+              <Button id="spin-btn" variant="gold" className="px-6 h-8 text-xs" onClick={spin} disabled={spinning || bets.length === 0}>
+                {spinning && <RotateCw className="h-3 w-3 animate-spin mr-1" />}
+                {spinning ? "Spinning..." : "SPIN"}
+              </Button>
+            </div>
           </div>
 
           {/* Active bets */}
