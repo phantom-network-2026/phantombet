@@ -185,7 +185,7 @@ export default function Roulette() {
   const [selectedChip, setSelectedChip] = useState(0.20);
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState<number | null>(null);
-  const [winAmount, setWinAmount] = useState<number | null>(null);
+  const [splashData, setSplashData] = useState<{ resultNumber: number; netAmount: number } | null>(null);
   const [history, setHistory] = useState<number[]>([]);
 
   const totalBet = bets.reduce((s, b) => s + b.amount, 0);
