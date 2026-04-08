@@ -108,7 +108,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       card: {
-        id: card.id,
+        id: card.card_id,
         is_winner: card.is_winner,
         symbols: card.symbols,
         payout_multiplier: card.payout_multiplier,
