@@ -171,11 +171,23 @@ export default function Profile() {
         {/* Profile Card */}
         <div className="rounded-xl bg-card border border-border p-5 text-center space-y-3">
           <div className="flex justify-center">
-            <div className={`relative w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold bg-secondary text-casino-gold ${profile.has_animated_border && profile.border_style !== "none" ? `${BORDER_STYLES.find(b => b.id === profile.border_style)?.preview || ""} ring-4` : "ring-2 ring-border"} ${profile.has_animated_avatar ? "animate-pulse" : ""}`}>
-              {profile.username?.charAt(0).toUpperCase() || "?"}
+            <div className={`relative w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold bg-secondary text-casino-gold overflow-hidden ${profile.has_animated_border && profile.border_style !== "none" ? `${BORDER_STYLES.find(b => b.id === profile.border_style)?.preview || ""} ring-4` : "ring-2 ring-border"} ${profile.has_animated_avatar ? "animate-pulse" : ""}`}>
+              {profile.avatar_url ? (
+                <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                profile.username?.charAt(0).toUpperCase() || "?"
+              )}
               {profile.has_animated_avatar && (
                 <Sparkles className="absolute -top-1 -right-1 h-5 w-5 text-casino-gold animate-spin" style={{ animationDuration: "3s" }} />
               )}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="absolute bottom-0 right-0 bg-primary rounded-full p-1 shadow-lg hover:bg-primary/80 transition-colors"
+              >
+                <Camera className="h-3 w-3 text-primary-foreground" />
+              </button>
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
             </div>
           </div>
           <h2 className="font-display text-xl font-bold">{profile.username}</h2>
