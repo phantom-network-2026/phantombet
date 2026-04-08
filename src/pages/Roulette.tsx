@@ -55,7 +55,7 @@ function calculatePayout(bet: BetType, result: number): number {
   }
 }
 
-const CHIP_VALUES = [1, 2, 5];
+const CHIP_VALUES = [0.20, 0.50, 1, 5];
 
 // ─── Wheel ──────────────────────────────────────────────────────
 function RouletteWheel({ spinning, result, size = 130 }: { spinning: boolean; result: number | null; size?: number }) {
