@@ -8,6 +8,7 @@ interface AuthContextType {
   loading: boolean;
   profile: { username: string; balance: number; avatar_url: string | null; crypto_address: string | null } | null;
   isAdmin: boolean;
+  hasStaffAccess: boolean;
   signUp: (email: string, password: string, username: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -22,6 +23,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<AuthContextType["profile"]>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [hasStaffAccess, setHasStaffAccess] = useState(false);
 
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
@@ -35,7 +37,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .from("user_roles")
       .select("role")
       .eq("user_id", userId);
-    setIsAdmin(roles?.some((r) => r.role === "admin") ?? false);
+    const userRoles = roles?.map((r) => r.role) ?? [];
+    setIsAdmin(userRoles.includes("admin"));
+    setHasStaffAccess(userRoles.some((r) => ["admin", "moderator", "staff"].includes(r)));
   };
 
   const refreshProfile = async () => {
@@ -51,6 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setProfile(null);
         setIsAdmin(false);
+        setHasStaffAccess(false);
       }
       setLoading(false);
     });
@@ -83,10 +88,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut();
     setProfile(null);
     setIsAdmin(false);
+    setHasStaffAccess(false);
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, profile, isAdmin, signUp, signIn, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ user, session, loading, profile, isAdmin, hasStaffAccess, signUp, signIn, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );
