@@ -14,6 +14,7 @@ const GAME_ROUTES: Record<string, string> = {
   "Blackjack": "/blackjack",
   "Lucky Scratch Card": "/scratch-card",
   "Slot Cowboy": "/slot-cowboy",
+  "Roulette": "/roulette",
 };
 
 export default function GameDetail() {
