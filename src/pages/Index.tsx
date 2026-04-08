@@ -51,6 +51,21 @@ export default function Index() {
     <div className="min-h-screen gradient-casino-bg pb-20 md:pb-0">
       <Header />
       <HeroBanner />
+
+      {/* Non-KYC Banner */}
+      <div className="mx-4 mt-3 rounded-xl border border-[hsl(var(--casino-green))/0.3] bg-[hsl(var(--casino-green))/0.08] p-4">
+        <div className="flex items-start gap-3">
+          <span className="text-2xl">🔒</span>
+          <div className="space-y-1">
+            <p className="text-sm font-bold text-[hsl(var(--casino-green))]">100% Non-KYC Casino</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              No ID verification required — deposit and withdraw freely with full privacy. 
+              <span className="text-[hsl(var(--casino-gold))] font-semibold"> Unlimited withdrawals</span> with no caps or restrictions.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <CategoryTabs activeCategory={category} onCategoryChange={setCategory} />
 
       {/* Featured Games */}
