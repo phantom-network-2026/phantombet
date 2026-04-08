@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/casino/Header";
 import { BottomNav } from "@/components/casino/BottomNav";
+import { GameChat } from "@/components/casino/GameChat";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Maximize2, Minimize2 } from "lucide-react";
 import { useState } from "react";
@@ -55,6 +56,10 @@ export default function SlotCowboy() {
             <h1 className="font-display text-2xl font-black text-gold">🤠 Slot Cowboy</h1>
             <p className="text-muted-foreground text-sm mt-1">Spin the reels and ride to riches!</p>
           </div>
+        </div>
+
+        <div className="mt-4">
+          <GameChat gameRoom="slot-cowboy" />
         </div>
       </div>
       <BottomNav />

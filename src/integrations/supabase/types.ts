@@ -41,6 +41,33 @@ export type Database = {
         }
         Relationships: []
       }
+      game_chat: {
+        Row: {
+          content: string
+          created_at: string
+          game_room: string
+          id: string
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          game_room: string
+          id?: string
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          game_room?: string
+          id?: string
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
       games: {
         Row: {
           category: Database["public"]["Enums"]["game_category"]
