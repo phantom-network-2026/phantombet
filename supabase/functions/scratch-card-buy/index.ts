@@ -70,19 +70,7 @@ Deno.serve(async (req) => {
 
     const card = cards[0];
 
-    // Claim the card
-    const { error: updateErr } = await admin
-      .from("scratch_card_pool")
-      .update({ claimed_by: user.id, claimed_at: new Date().toISOString() })
-      .eq("id", card.id)
-      .is("claimed_by", null); // Ensure not double-claimed
-
-    if (updateErr) {
-      return new Response(JSON.stringify({ error: "Failed to claim card, try again" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    // Card already claimed atomically by the RPC function
 
     // Deduct bet from balance
     const newBalance = Number(profile.balance) - betTier;
