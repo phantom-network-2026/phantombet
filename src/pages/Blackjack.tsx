@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/casino/Header";
 import { BottomNav } from "@/components/casino/BottomNav";
 import { GameChat } from "@/components/casino/GameChat";
+import { AuthGuard } from "@/components/casino/AuthGuard";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, RotateCcw } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -98,6 +99,10 @@ function PlayingCard({ card, index, flipping }: { card: Card; index: number; fli
 type GameState = "betting" | "playing" | "dealer" | "result";
 
 export default function Blackjack() {
+  return <AuthGuard><BlackjackInner /></AuthGuard>;
+}
+
+function BlackjackInner() {
   const navigate = useNavigate();
   const { user, profile, refreshProfile } = useAuth();
   const [bet, setBet] = useState(10);

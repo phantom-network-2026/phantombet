@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/casino/Header";
 import { BottomNav } from "@/components/casino/BottomNav";
 import { GameChat } from "@/components/casino/GameChat";
+import { AuthGuard } from "@/components/casino/AuthGuard";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Sparkles, RotateCcw } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -122,6 +123,10 @@ function calculateWinnings(cells: ScratchCell[], bet: number): { amount: number;
 }
 
 export default function ScratchCard() {
+  return <AuthGuard><ScratchCardInner /></AuthGuard>;
+}
+
+function ScratchCardInner() {
   const navigate = useNavigate();
   const { user, profile, refreshProfile } = useAuth();
   const [bet, setBet] = useState(5);
