@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/casino/Header";
 import { BottomNav } from "@/components/casino/BottomNav";
+import { GameChat } from "@/components/casino/GameChat";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, RotateCcw } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -359,6 +360,10 @@ export default function Blackjack() {
               </Button>
             </div>
           )}
+        </div>
+
+        <div className="mt-4">
+          <GameChat gameRoom="blackjack" />
         </div>
       </div>
       <BottomNav />
