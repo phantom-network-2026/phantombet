@@ -7,12 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   ArrowLeft, Trophy, Save, User, Link as LinkIcon,
-  Twitter, Instagram, MessageCircle, Globe, Sparkles, Crown, Camera,
+  Twitter, Instagram, MessageCircle, Globe, Sparkles, Crown, Camera, Circle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { usePresence, getStatusColor, getStatusLabel, type AppearanceStatus } from "@/hooks/usePresence";
 
 const BORDER_STYLES = [
   { id: "none", label: "None", price: 0, preview: "" },
@@ -27,6 +28,7 @@ const ANIMATED_AVATAR_PRICE = 10;
 
 export default function Profile() {
   const { user, profile, refreshProfile } = useAuth();
+  const { appearanceStatus, setAppearanceStatus } = usePresence();
   const navigate = useNavigate();
   const [bio, setBio] = useState("");
   const [socialLinks, setSocialLinks] = useState<Record<string, string>>({
@@ -190,8 +192,32 @@ export default function Profile() {
               <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
             </div>
           </div>
-          <h2 className="font-display text-xl font-bold">{profile.username}</h2>
+          <div className="flex items-center justify-center gap-2">
+            <Circle className={`h-3 w-3 ${getStatusColor(appearanceStatus)}`} />
+            <h2 className="font-display text-xl font-bold">{profile.username}</h2>
+          </div>
           {profile.bio && <p className="text-sm text-muted-foreground">{profile.bio}</p>}
+
+          {/* Online Status Selector */}
+          <div className="flex items-center justify-center gap-3 pt-1">
+            <Label className="text-xs text-muted-foreground">Status:</Label>
+            <Select value={appearanceStatus} onValueChange={(v) => setAppearanceStatus(v as AppearanceStatus)}>
+              <SelectTrigger className="w-[130px] h-8 text-xs bg-secondary border-border">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="online">
+                  <span className="flex items-center gap-2"><Circle className="h-2 w-2 fill-green-400 text-green-400" /> Online</span>
+                </SelectItem>
+                <SelectItem value="idle">
+                  <span className="flex items-center gap-2"><Circle className="h-2 w-2 fill-yellow-400 text-yellow-400" /> Idle</span>
+                </SelectItem>
+                <SelectItem value="offline">
+                  <span className="flex items-center gap-2"><Circle className="h-2 w-2 fill-muted-foreground/30 text-muted-foreground/30" /> Appear Offline</span>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           {/* Biggest Win */}
           <div className="flex items-center justify-center gap-2 rounded-lg bg-secondary/50 p-3">

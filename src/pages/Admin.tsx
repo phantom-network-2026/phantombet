@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Header } from "@/components/casino/Header";
 import { FakeWinsControlPanel } from "@/components/casino/FakeWinsControlPanel";
 import { ArrowLeft, Users, DollarSign, Plus, Minus, Edit, Save, Shield, Trash2, Circle } from "lucide-react";
+import { getStatusColor, getStatusLabel } from "@/hooks/usePresence";
 import { toast } from "sonner";
 
 interface UserProfile {
@@ -17,6 +18,7 @@ interface UserProfile {
   created_at: string;
   roles: string[];
   is_online: boolean;
+  appearance_status: string;
   last_seen: string | null;
 }
 
@@ -69,6 +71,7 @@ export default function Admin() {
           created_at: p.created_at,
           roles: roles?.filter((r) => r.user_id === p.user_id).map((r) => r.role) || [],
           is_online: !!isOnline,
+          appearance_status: userPresence?.appearance_status || "offline",
           last_seen: userPresence?.last_seen || null,
         };
       });
@@ -212,12 +215,17 @@ export default function Admin() {
           ) : (
             users.map((user) => (
               <div key={user.user_id} className="rounded-xl bg-card border border-border p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <div>
+                <div className="flex items-center justify-between mb-2 gap-2">
+                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <Circle className={`h-2.5 w-2.5 ${user.is_online ? "fill-green-400 text-green-400" : "fill-muted-foreground/30 text-muted-foreground/30"}`} />
-                      <p className="font-display font-bold">{user.username || "No username"}</p>
-                      {user.is_online && <span className="text-[10px] text-green-400 font-medium">ONLINE</span>}
+                      <Circle className={`h-2.5 w-2.5 ${getStatusColor(user.is_online ? (user.appearance_status || "online") : "offline")}`} />
+                      <p className="font-display font-bold truncate">{user.username || "No username"}</p>
+                      {user.is_online && (
+                        <span className={`text-[10px] font-medium ${user.appearance_status === "idle" ? "text-yellow-400" : user.appearance_status === "offline" ? "text-muted-foreground" : "text-green-400"}`}>
+                          {getStatusLabel(user.appearance_status || "online").toUpperCase()}
+                          {user.appearance_status !== "online" && " (actually online)"}
+                        </span>
+                      )}
                     </div>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {user.roles.map((role) => {
@@ -236,8 +244,8 @@ export default function Admin() {
                       )}
                     </p>
                   </div>
-                  <div className="text-right">
-                    <p className="font-display font-bold text-casino-gold">${user.balance.toFixed(2)}</p>
+                  <div className="text-right shrink-0 ml-2">
+                    <p className="font-display font-bold text-casino-gold text-sm truncate max-w-[100px]">${user.balance.toFixed(2)}</p>
                   </div>
                 </div>
 
