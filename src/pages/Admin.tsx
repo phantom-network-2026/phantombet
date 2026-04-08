@@ -48,6 +48,8 @@ export default function Admin() {
   const [editUsername, setEditUsername] = useState("");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [forceLoss, setForceLoss] = useState(false);
+  const [forceLossLoading, setForceLossLoading] = useState(false);
 
   useEffect(() => {
     if (!loading && !hasStaffAccess) { navigate("/"); return; }
