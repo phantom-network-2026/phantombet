@@ -138,20 +138,12 @@ export default function ScratchCard() {
       return;
     }
 
-    // Deduct bet
-    const { error } = await supabase
-      .from("profiles")
-      .update({ balance: (profile?.balance ?? 0) - bet })
-      .eq("user_id", user.id);
+    // Deduct bet via edge function
+    const { error } = await supabase.functions.invoke("game-settle", {
+      body: { userId: user.id, amount: -bet, gameType: "scratch", outcome: "bet_placed" },
+    });
 
     if (error) { toast.error("Failed to place bet"); return; }
-
-    await supabase.from("transactions").insert({
-      user_id: user.id,
-      amount: -bet,
-      type: "scratch_bet",
-      description: `Scratch card bet: $${bet}`,
-    });
 
     await refreshProfile();
 
@@ -281,16 +273,8 @@ export default function ScratchCard() {
     setResult(win);
 
     if (win.amount > 0 && user) {
-      await supabase
-        .from("profiles")
-        .update({ balance: (profile?.balance ?? 0) + win.amount })
-        .eq("user_id", user.id);
-
-      await supabase.from("transactions").insert({
-        user_id: user.id,
-        amount: win.amount,
-        type: "scratch_win",
-        description: `Scratch card win (${win.matches}×3): $${win.amount}`,
+      await supabase.functions.invoke("game-settle", {
+        body: { userId: user.id, amount: win.amount, gameType: "scratch", outcome: `win_${win.matches}x3` },
       });
 
       await refreshProfile();
