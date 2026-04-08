@@ -44,8 +44,15 @@ export default function Index() {
       });
   }, []);
 
-  const filtered = category === "all" ? games : games.filter((g) => g.category === category);
+  const filtered = category === "all" ? games : category === "games" ? games : games.filter((g) => g.category === category);
   const featured = games.filter((g) => g.is_featured);
+
+  // Group games by category for the "games" tab
+  const gamesByCategory = games.reduce<Record<string, typeof games>>((acc, g) => {
+    if (!acc[g.category]) acc[g.category] = [];
+    acc[g.category].push(g);
+    return acc;
+  }, {});
 
   return (
     <div className="min-h-screen gradient-casino-bg pb-20 md:pb-0">
@@ -96,20 +103,37 @@ export default function Index() {
         </section>
       )}
 
-      {/* All Games Grid */}
-      <section className="px-4">
-        <h3 className="font-display text-lg font-bold mb-3">
-          {category === "all" ? "All Games" : `${category.charAt(0).toUpperCase() + category.slice(1)} Games`}
-        </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-          {filtered.map((game) => (
-            <GameCard key={game.id} {...game} />
+      {/* Games Tab - Categorised sections */}
+      {category === "games" ? (
+        <section className="px-4 space-y-6">
+          {Object.entries(gamesByCategory).map(([cat, catGames]) => (
+            <div key={cat}>
+              <h3 className="font-display text-lg font-bold mb-3 capitalize">
+                {cat === "slots" ? "🎰 Slots" : cat === "table" ? "🃏 Table Games" : cat === "live" ? "🔴 Live" : cat === "jackpot" ? "💎 Jackpot" : cat}
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                {catGames.map((game) => (
+                  <GameCard key={game.id} {...game} />
+                ))}
+              </div>
+            </div>
           ))}
-        </div>
-        {filtered.length === 0 && (
-          <p className="text-center text-muted-foreground py-12">No games in this category yet.</p>
-        )}
-      </section>
+        </section>
+      ) : (
+        <section className="px-4">
+          <h3 className="font-display text-lg font-bold mb-3">
+            {category === "all" ? "All Games" : `${category.charAt(0).toUpperCase() + category.slice(1)} Games`}
+          </h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            {filtered.map((game) => (
+              <GameCard key={game.id} {...game} />
+            ))}
+          </div>
+          {filtered.length === 0 && (
+            <p className="text-center text-muted-foreground py-12">No games in this category yet.</p>
+          )}
+        </section>
+      )}
 
       <BottomNav />
     </div>

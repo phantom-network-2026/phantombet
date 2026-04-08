@@ -2,6 +2,7 @@ import { useState } from "react";
 
 const categories = [
   { id: "all", label: "Home" },
+  { id: "games", label: "Games" },
   { id: "slots", label: "Slots" },
   { id: "table", label: "Table" },
   { id: "live", label: "Live" },
