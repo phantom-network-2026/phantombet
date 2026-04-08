@@ -16,21 +16,24 @@ export function HeroBanner() {
         </h2>
         <p className="text-sm text-foreground/80 mt-1 mb-3">Up to $500 welcome bonus!</p>
         <div className="flex gap-2">
-          <Button
-            variant="gold"
-            size="sm"
-            onClick={() => navigate(user ? "/deposit" : "/signup")}
-          >
-            {user ? "Deposit" : "Join Now"}
-          </Button>
-          {user && (
-            <Button
-              variant="pink"
-              size="sm"
-              onClick={() => navigate("/withdraw")}
-            >
-              Withdraw
-            </Button>
+          {user ? (
+            <>
+              <Button variant="gold" size="sm" onClick={() => navigate("/deposit")}>
+                Deposit
+              </Button>
+              <Button variant="pink" size="sm" onClick={() => navigate("/withdraw")}>
+                Withdraw
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="gold" size="sm" onClick={() => navigate("/signup")}>
+                Sign Up & Get $100 Free
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => navigate("/login")}>
+                Log In
+              </Button>
+            </>
           )}
         </div>
       </div>
