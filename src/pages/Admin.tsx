@@ -5,9 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Header } from "@/components/casino/Header";
 import { FakeWinsControlPanel } from "@/components/casino/FakeWinsControlPanel";
-import { ArrowLeft, Users, DollarSign, Plus, Minus, Edit, Save, Shield, Trash2, Circle } from "lucide-react";
+import { ArrowLeft, Users, DollarSign, Plus, Minus, Edit, Save, Shield, Trash2, Circle, ShieldAlert } from "lucide-react";
 import { getStatusColor, getStatusLabel } from "@/hooks/usePresence";
 import { toast } from "sonner";
 
@@ -47,11 +48,32 @@ export default function Admin() {
   const [editUsername, setEditUsername] = useState("");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [forceLoss, setForceLoss] = useState(false);
+  const [forceLossLoading, setForceLossLoading] = useState(false);
 
   useEffect(() => {
     if (!loading && !hasStaffAccess) { navigate("/"); return; }
     if (hasStaffAccess) fetchUsers();
+    if (isAdmin) fetchForceLoss();
   }, [hasStaffAccess, loading]);
+
+  const fetchForceLoss = async () => {
+    const { data } = await supabase.from("site_settings").select("value").eq("key", "force_loss").maybeSingle();
+    setForceLoss(data?.value === true || (data?.value as any)?.enabled === true);
+  };
+
+  const handleToggleForceLoss = async (checked: boolean) => {
+    setForceLossLoading(true);
+    const { data: existing } = await supabase.from("site_settings").select("id").eq("key", "force_loss").maybeSingle();
+    if (existing) {
+      await supabase.from("site_settings").update({ value: { enabled: checked } as any }).eq("key", "force_loss");
+    } else {
+      await supabase.from("site_settings").insert({ key: "force_loss", value: { enabled: checked } as any });
+    }
+    setForceLoss(checked);
+    setForceLossLoading(false);
+    toast.success(checked ? "Force Loss ON — all bets will lose" : "Force Loss OFF — casino runs normally");
+  };
 
   const fetchUsers = async () => {
     setLoadingUsers(true);
@@ -206,6 +228,29 @@ export default function Admin() {
 
         {/* Fake Wins Ticker Control */}
         {isAdmin && <FakeWinsControlPanel />}
+
+        {/* Force Loss Toggle */}
+        {isAdmin && (
+          <div className="rounded-xl bg-card border border-border p-4 mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <ShieldAlert className="h-5 w-5 text-destructive" />
+                <div>
+                  <p className="font-display font-bold text-sm">Force Loss Mode</p>
+                  <p className="text-xs text-muted-foreground">When ON, every bet a player places will be a loss. No wins issued.</p>
+                </div>
+              </div>
+              <Switch
+                checked={forceLoss}
+                onCheckedChange={handleToggleForceLoss}
+                disabled={forceLossLoading}
+              />
+            </div>
+            {forceLoss && (
+              <p className="text-xs text-destructive mt-2 font-medium">⚠️ ACTIVE — All player bets will result in losses</p>
+            )}
+          </div>
+        )}
 
         {/* User List */}
         <div className="space-y-3">
