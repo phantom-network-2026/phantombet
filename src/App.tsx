@@ -43,6 +43,7 @@ const App = () => (
             <Route path="/friends" element={<Friends />} />
             <Route path="/messages/:friendId" element={<Messages />} />
             <Route path="/scratch-card" element={<ScratchCard />} />
+            <Route path="/blackjack" element={<Blackjack />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

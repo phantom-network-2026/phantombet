@@ -128,7 +128,7 @@ export default function Blackjack() {
 
     // Check for player blackjack
     if (isBlackjack(pCards)) {
-      const revealedDealer = dCards.map((c) => ({ ...c, hidden: false }));
+      const revealedDealer = dCards.map((c) => ({ suit: c.suit, rank: c.rank, hidden: false }));
       setDealerHand(revealedDealer);
       setDealerRevealed(true);
       if (isBlackjack(revealedDealer)) {
