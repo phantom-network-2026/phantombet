@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Wallet, LogOut, Shield, Menu, X, ArrowDownToLine } from "lucide-react";
+import { Wallet, LogOut, Shield, Menu, X, ArrowDownToLine, User } from "lucide-react";
 import { FakeWinsTicker } from "./FakeWinsTicker";
 import logo from "@/assets/bitbet-logo.svg";
 
@@ -41,6 +41,9 @@ export function Header() {
                   <Shield className="h-4 w-4 mr-1" /> Admin
                 </Button>
               )}
+              <Button variant="ghost" size="sm" onClick={() => navigate("/profile")} className="text-casino-gold">
+                <User className="h-4 w-4" />
+              </Button>
               <Button variant="ghost" size="sm" onClick={signOut}>
                 <LogOut className="h-4 w-4" />
               </Button>
@@ -57,15 +60,20 @@ export function Header() {
           )}
         </div>
 
-        {/* Mobile: balance + menu toggle */}
+        {/* Mobile: balance + profile + menu toggle */}
         <div className="flex md:hidden items-center gap-2">
           {user && (
-            <div className="flex items-center gap-1.5 rounded-lg bg-secondary px-2.5 py-1">
-              <Wallet className="h-3.5 w-3.5 text-casino-gold" />
-              <span className="font-display text-sm font-bold text-casino-gold">
-                ${profile?.balance?.toFixed(2) ?? "0.00"}
-              </span>
-            </div>
+            <>
+              <div className="flex items-center gap-1.5 rounded-lg bg-secondary px-2.5 py-1">
+                <Wallet className="h-3.5 w-3.5 text-casino-gold" />
+                <span className="font-display text-sm font-bold text-casino-gold">
+                  ${profile?.balance?.toFixed(2) ?? "0.00"}
+                </span>
+              </div>
+              <button className="text-casino-gold" onClick={() => navigate("/profile")}>
+                <User className="h-5 w-5" />
+              </button>
+            </>
           )}
           <button className="text-foreground" onClick={() => setMenuOpen(!menuOpen)}>
             {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -78,12 +86,9 @@ export function Header() {
         <div className="md:hidden border-t border-border bg-background p-4 space-y-3 animate-slide-up">
           {user ? (
             <>
-              <div className="flex items-center gap-2 rounded-lg bg-secondary px-3 py-2">
-                <Wallet className="h-4 w-4 text-casino-gold" />
-                <span className="font-display font-bold text-casino-gold">
-                  ${profile?.balance?.toFixed(2) ?? "0.00"}
-                </span>
-              </div>
+              <Button variant="outline" className="w-full" onClick={() => { navigate("/profile"); setMenuOpen(false); }}>
+                <User className="h-4 w-4 mr-1" /> My Profile
+              </Button>
               <div className="flex gap-2">
                 <Button variant="gold" className="flex-1" onClick={() => { navigate("/deposit"); setMenuOpen(false); }}>
                   Deposit

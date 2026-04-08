@@ -2,11 +2,25 @@ import { useState, useEffect, createContext, useContext } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
+interface ProfileData {
+  username: string;
+  balance: number;
+  avatar_url: string | null;
+  crypto_address: string | null;
+  bio: string;
+  biggest_win: number;
+  biggest_win_game: string;
+  social_links: Record<string, string>;
+  has_animated_avatar: boolean;
+  has_animated_border: boolean;
+  border_style: string;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  profile: { username: string; balance: number; avatar_url: string | null; crypto_address: string | null } | null;
+  profile: ProfileData | null;
   isAdmin: boolean;
   hasStaffAccess: boolean;
   signUp: (email: string, password: string, username: string) => Promise<{ error: any }>;
@@ -28,10 +42,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
-      .select("username, balance, avatar_url, crypto_address")
+      .select("username, balance, avatar_url, crypto_address, bio, biggest_win, biggest_win_game, social_links, has_animated_avatar, has_animated_border, border_style")
       .eq("user_id", userId)
       .single();
-    if (data) setProfile({ username: data.username || "", balance: Number(data.balance), avatar_url: data.avatar_url, crypto_address: data.crypto_address });
+    if (data) setProfile({
+      username: data.username || "",
+      balance: Number(data.balance),
+      avatar_url: data.avatar_url,
+      crypto_address: data.crypto_address,
+      bio: (data as any).bio || "",
+      biggest_win: Number((data as any).biggest_win) || 0,
+      biggest_win_game: (data as any).biggest_win_game || "",
+      social_links: (data as any).social_links || {},
+      has_animated_avatar: (data as any).has_animated_avatar || false,
+      has_animated_border: (data as any).has_animated_border || false,
+      border_style: (data as any).border_style || "none",
+    });
 
     const { data: roles } = await supabase
       .from("user_roles")
