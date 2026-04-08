@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Trophy } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
-interface FakeWinsConfig {
+export interface FakeWinsConfig {
   enabled: boolean;
   minAmount: number;
   maxAmount: number;
@@ -26,8 +27,10 @@ const GAME_WIN_RANGES: Record<string, { min: number; max: number; bigChance: num
 
 const DEFAULT_GAME_FALLBACK = { min: 0.10, max: 10, bigChance: 0.05, bigMax: 50 };
 
-const DEFAULT_CONFIG: FakeWinsConfig = {
-  enabled: false,
+export const SETTINGS_KEY = "fake_wins_config";
+
+export const DEFAULT_CONFIG: FakeWinsConfig = {
+  enabled: true,
   minAmount: 0.1,
   maxAmount: 200,
   intervalSeconds: 4,
@@ -43,19 +46,44 @@ const DEFAULT_CONFIG: FakeWinsConfig = {
   ],
 };
 
-export const FAKE_WINS_STORAGE_KEY = "bitbet_fake_wins_config";
-
-export function getFakeWinsConfig(): FakeWinsConfig {
+// Fetch config from DB, fallback to defaults
+export async function fetchFakeWinsConfig(): Promise<FakeWinsConfig> {
   try {
-    const stored = localStorage.getItem(FAKE_WINS_STORAGE_KEY);
-    if (stored) return { ...DEFAULT_CONFIG, ...JSON.parse(stored) };
+    const { data } = await supabase
+      .from("site_settings")
+      .select("value")
+      .eq("key", SETTINGS_KEY)
+      .maybeSingle();
+    if (data?.value) {
+      return { ...DEFAULT_CONFIG, ...(data.value as unknown as Partial<FakeWinsConfig>) };
+    }
   } catch {}
   return DEFAULT_CONFIG;
 }
 
-export function saveFakeWinsConfig(config: FakeWinsConfig) {
-  localStorage.setItem(FAKE_WINS_STORAGE_KEY, JSON.stringify(config));
+// Save config to DB (admin only - upsert)
+export async function saveFakeWinsConfig(config: FakeWinsConfig): Promise<boolean> {
+  // Try update first
+  const { data: existing } = await supabase
+    .from("site_settings")
+    .select("id")
+    .eq("key", SETTINGS_KEY)
+    .maybeSingle();
+
+  if (existing) {
+    const { error } = await supabase
+      .from("site_settings")
+      .update({ value: config as any })
+      .eq("key", SETTINGS_KEY);
+    if (error) { console.error("Save failed:", error); return false; }
+  } else {
+    const { error } = await supabase
+      .from("site_settings")
+      .insert({ key: SETTINGS_KEY, value: config as any });
+    if (error) { console.error("Save failed:", error); return false; }
+  }
   window.dispatchEvent(new Event("fake-wins-config-change"));
+  return true;
 }
 
 function randomBetween(min: number, max: number) {
@@ -66,43 +94,49 @@ function generateWin(config: FakeWinsConfig) {
   const username = config.usernames[Math.floor(Math.random() * config.usernames.length)];
   const game = config.games[Math.floor(Math.random() * config.games.length)];
   const range = GAME_WIN_RANGES[game] || DEFAULT_GAME_FALLBACK;
-  // Most wins are small; rare big wins
   const isBig = Math.random() < range.bigChance;
   const raw = isBig
     ? randomBetween(range.max, range.bigMax)
     : randomBetween(range.min, range.max);
-  // Weighted toward lower end for realism
   const skewed = isBig ? raw : range.min + (raw - range.min) * Math.random();
   const amount = Math.round(skewed * 100) / 100;
   return { username, game, amount, id: Date.now() + Math.random() };
 }
 
 export function FakeWinsTicker() {
-  const [config, setConfig] = useState<FakeWinsConfig>(getFakeWinsConfig);
+  const [config, setConfig] = useState<FakeWinsConfig>(DEFAULT_CONFIG);
   const [wins, setWins] = useState<ReturnType<typeof generateWin>[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const intervalRef = useRef<number | null>(null);
 
-  // Listen for config changes
+  // Load config from DB on mount
   useEffect(() => {
-    const handler = () => setConfig(getFakeWinsConfig());
-    window.addEventListener("fake-wins-config-change", handler);
-    window.addEventListener("storage", handler);
-    return () => {
-      window.removeEventListener("fake-wins-config-change", handler);
-      window.removeEventListener("storage", handler);
+    fetchFakeWinsConfig().then((c) => {
+      setConfig(c);
+      setLoaded(true);
+    });
+  }, []);
+
+  // Listen for local config change events (after admin saves)
+  useEffect(() => {
+    const handler = () => {
+      fetchFakeWinsConfig().then(setConfig);
     };
+    window.addEventListener("fake-wins-config-change", handler);
+    return () => window.removeEventListener("fake-wins-config-change", handler);
   }, []);
 
   // Seed initial wins
   useEffect(() => {
+    if (!loaded) return;
     if (!config.enabled) { setWins([]); return; }
     const initial = Array.from({ length: 6 }, () => generateWin(config));
     setWins(initial);
-  }, [config.enabled]);
+  }, [config.enabled, loaded]);
 
-  // Add new wins on random or fixed interval
+  // Add new wins on interval
   useEffect(() => {
-    if (!config.enabled) return;
+    if (!config.enabled || !loaded) return;
     const scheduleNext = () => {
       const delay = config.randomInterval
         ? (config.minIntervalSeconds + Math.random() * (config.maxIntervalSeconds - config.minIntervalSeconds)) * 1000
@@ -114,7 +148,7 @@ export function FakeWinsTicker() {
     };
     scheduleNext();
     return () => { if (intervalRef.current) clearTimeout(intervalRef.current); };
-  }, [config]);
+  }, [config, loaded]);
 
   if (!config.enabled || wins.length === 0) return null;
 
