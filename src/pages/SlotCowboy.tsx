@@ -2,11 +2,20 @@ import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/casino/Header";
 import { BottomNav } from "@/components/casino/BottomNav";
 import { GameChat } from "@/components/casino/GameChat";
+import { AuthGuard } from "@/components/casino/AuthGuard";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Maximize2, Minimize2 } from "lucide-react";
 import { useState } from "react";
 
 export default function SlotCowboy() {
+  return (
+    <AuthGuard>
+      <SlotCowboyInner />
+    </AuthGuard>
+  );
+}
+
+function SlotCowboyInner() {
   const navigate = useNavigate();
   const [fullscreen, setFullscreen] = useState(false);
 
