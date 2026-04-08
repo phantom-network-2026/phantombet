@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 const navItems = [
   { icon: Home, label: "Home", path: "/", requiresAuth: false },
-  { icon: Dice5, label: "Games", path: "/category/slots", requiresAuth: true },
+  { icon: Dice5, label: "Games", path: "/games", requiresAuth: false },
   { icon: Users, label: "Friends", path: "/friends", requiresAuth: true },
   { icon: Trophy, label: "Promos", path: "/promotions", requiresAuth: true },
   { icon: Search, label: "Search", path: "/search", requiresAuth: true },

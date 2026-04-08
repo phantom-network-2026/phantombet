@@ -24,6 +24,7 @@ import Blackjack from "./pages/Blackjack.tsx";
 import SlotCowboy from "./pages/SlotCowboy.tsx";
 import Roulette from "./pages/Roulette.tsx";
 import Profile from "./pages/Profile.tsx";
+import GamesPage from "./pages/Games.tsx";
 
 const queryClient = new QueryClient();
 
