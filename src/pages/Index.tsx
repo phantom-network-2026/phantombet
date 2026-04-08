@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Gift, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/casino/Header";
 import { BottomNav } from "@/components/casino/BottomNav";
@@ -88,6 +90,9 @@ export default function Index() {
           </div>
         </div>
       </div>
+
+      {/* Prize Reel Banner */}
+      <PrizeReelBanner />
 
       <CategoryTabs activeCategory={category} onCategoryChange={setCategory} />
 
