@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { RotateCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const WHEEL_ORDER = [
   0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26
@@ -181,6 +182,7 @@ function ResultSplash({ resultNumber, netAmount, onClose }: { resultNumber: numb
 // ─── Main ───────────────────────────────────────────────────────
 export default function Roulette() {
   const { user, profile, refreshProfile } = useAuth();
+  const isMobile = useIsMobile();
   const [bets, setBets] = useState<PlacedBet[]>([]);
   const [selectedChip, setSelectedChip] = useState(0.20);
   const [spinning, setSpinning] = useState(false);
@@ -191,6 +193,19 @@ export default function Roulette() {
 
   const totalBet = bets.reduce((s, b) => s + b.amount, 0);
   const balance = profile?.balance ?? 0;
+
+  // Responsive sizes
+  const wheelSize = isMobile ? 130 : 220;
+  const numFontSize = isMobile ? 10 : 14;
+  const outsideFontSize = isMobile ? 8 : 11;
+  const chipSize = isMobile ? 28 : 40;
+  const chipFontSize = isMobile ? 8 : 11;
+  const outsideW = isMobile ? 22 : 32;
+  const colW = isMobile ? 20 : 28;
+  const chipBadgeSize = isMobile ? 14 : 18;
+  const chipBadgeFontSize = isMobile ? 6 : 8;
+  const historyDotSize = isMobile ? 14 : 20;
+  const historyFontSize = isMobile ? 6 : 9;
 
   const placeBet = useCallback((type: BetType, label: string) => {
     if (spinning) return;
@@ -244,7 +259,6 @@ export default function Roulette() {
     if (rebetTotal > balance) { toast.error("Insufficient balance"); return; }
     if (rebetTotal > 5) { toast.error("Maximum total bet is $5"); return; }
     setBets(lastBets);
-    // Wait for state to update then spin
     setTimeout(() => {
       document.getElementById("spin-btn")?.click();
     }, 50);
@@ -257,8 +271,11 @@ export default function Roulette() {
     if (amount <= 0) return null;
     const label = amount < 1 ? `${Math.round(amount * 100)}¢` : `$${amount.toFixed(0)}`;
     return (
-      <span className="absolute -top-1 -right-1 z-10 min-w-[14px] h-[14px] rounded-full flex items-center justify-center text-[6px] font-black text-[hsl(0,0%,15%)] pointer-events-none"
+      <span className="absolute -top-1 -right-1 z-10 rounded-full flex items-center justify-center font-black text-[hsl(0,0%,15%)] pointer-events-none"
         style={{
+          minWidth: chipBadgeSize,
+          height: chipBadgeSize,
+          fontSize: chipBadgeFontSize,
           background: "radial-gradient(circle, hsl(43,80%,60%), hsl(43,70%,40%))",
           boxShadow: "0 0 4px hsl(43,80%,50%,0.6)",
           border: "1px solid hsl(43,80%,70%)",
@@ -273,7 +290,7 @@ export default function Roulette() {
     return (
       <button key={num} onClick={() => placeBet({ kind: "straight", number: num }, `${num}`)}
         className="relative flex items-center justify-center text-white font-bold rounded-[2px] border border-white/20 hover:brightness-125 active:scale-95 transition-all"
-        style={{ background: colorHsl(getColor(num)), fontSize: 10, padding: "3px 0" }}>
+        style={{ background: colorHsl(getColor(num)), fontSize: numFontSize, padding: isMobile ? "3px 0" : "6px 0" }}>
         {num}
         {chipOverlay(betAmount)}
       </button>
@@ -285,12 +302,173 @@ export default function Roulette() {
     return (
       <button onClick={() => placeBet(type, label)}
         className="relative text-white font-bold border border-white/20 hover:brightness-125 active:scale-95 transition-all text-center leading-tight"
-        style={{ background: bg || "hsl(140,30%,22%)", fontSize: 8, padding: "2px 1px" }}>
+        style={{ background: bg || "hsl(140,30%,22%)", fontSize: outsideFontSize, padding: isMobile ? "2px 1px" : "4px 2px" }}>
         {label}
         {chipOverlay(betAmount)}
       </button>
     );
   };
+
+  // Desktop layout: game area left, chat right. Mobile: stacked.
+  const gameContent = (
+    <div className="space-y-1.5 md:space-y-3">
+      {/* Balance bar */}
+      <div className="flex items-center justify-between text-[10px] md:text-sm">
+        <span className="px-2 py-0.5 md:px-3 md:py-1 rounded-full bg-secondary/80 border border-border">
+          <span className="text-muted-foreground">Bal </span>
+          <span className="font-bold text-[hsl(var(--casino-gold))]">${balance.toFixed(2)}</span>
+        </span>
+        <span className="px-2 py-0.5 md:px-3 md:py-1 rounded-full bg-secondary/80 border border-border">
+          <span className="text-muted-foreground">Bet </span>
+          <span className="font-bold text-foreground">${totalBet.toFixed(2)}</span>
+        </span>
+      </div>
+
+      {/* GAME AREA: Wheel left + Table right */}
+      <div className="rounded-xl p-2 md:p-4"
+        style={{
+          background: "linear-gradient(180deg, hsl(80,30%,28%), hsl(80,25%,20%))",
+          border: "1px solid hsl(43,50%,35%)",
+        }}>
+        <div className="flex gap-2 md:gap-4 items-start">
+          {/* LEFT: Wheel + chips */}
+          <div className="flex flex-col items-center gap-2 md:gap-3 shrink-0">
+            <RouletteWheel spinning={spinning} result={result} size={wheelSize} />
+            {result !== null && !spinning && (
+              <motion.span initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }}
+                className="px-2 py-0.5 md:px-3 md:py-1 rounded-full font-bold text-white text-xs md:text-sm"
+                style={{ background: colorHsl(getColor(result)) }}>
+                {result}
+              </motion.span>
+            )}
+            {/* Chips */}
+            <div className="flex gap-1 md:gap-2">
+              {CHIP_VALUES.map(v => {
+                const chipLabel = v < 1 ? `${Math.round(v * 100)}¢` : `$${v}`;
+                const chipBg = v === 0.20 ? "radial-gradient(circle, hsl(0,0%,95%), hsl(0,0%,70%))"
+                  : v === 0.50 ? "radial-gradient(circle, hsl(210,70%,55%), hsl(210,70%,35%))"
+                  : v === 1 ? "radial-gradient(circle, hsl(280,50%,55%), hsl(280,50%,35%))"
+                  : "radial-gradient(circle, hsl(43,75%,50%), hsl(43,65%,35%))";
+                const chipColor = v === 0.20 ? "hsl(0,0%,15%)" : "white";
+                return (
+                  <button key={v} onClick={() => setSelectedChip(v)}
+                    className="rounded-full flex items-center justify-center font-bold transition-transform"
+                    style={{
+                      width: chipSize, height: chipSize,
+                      fontSize: chipFontSize,
+                      background: chipBg,
+                      color: chipColor,
+                      border: selectedChip === v ? "2px solid hsl(43,80%,55%)" : "2px solid hsl(0,0%,30%)",
+                      boxShadow: selectedChip === v ? "0 0 8px hsl(43,80%,50%,0.5)" : "none",
+                      transform: selectedChip === v ? "scale(1.15)" : "scale(1)",
+                    }}>
+                    {chipLabel}
+                  </button>
+                );
+              })}
+            </div>
+            {/* History */}
+            {history.length > 0 && (
+              <div className="flex gap-[2px] md:gap-1 flex-wrap justify-center" style={{ maxWidth: wheelSize }}>
+                {history.slice(0, 10).map((n, i) => (
+                  <span key={i} className="rounded-full flex items-center justify-center font-bold text-white"
+                    style={{ width: historyDotSize, height: historyDotSize, fontSize: historyFontSize, background: colorHsl(getColor(n)) }}>{n}</span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* RIGHT: Betting table */}
+          <div className="flex-1 min-w-0">
+            {(() => {
+              const zeroAmount = getBetTotal(b => b.type.kind === "straight" && b.type.number === 0);
+              return (
+                <button onClick={() => placeBet({ kind: "straight", number: 0 }, "0")}
+                  className="relative w-full rounded-t-md text-white font-bold border border-white/20 hover:brightness-125 mb-[2px]"
+                  style={{ background: "hsl(140,60%,30%)", fontSize: numFontSize, padding: isMobile ? "2px 0" : "6px 0" }}>
+                  0
+                  {chipOverlay(zeroAmount)}
+                </button>
+              );
+            })()}
+
+            <div className="flex gap-[2px]">
+              {/* Outside bets LEFT */}
+              <div className="flex flex-col gap-[2px] shrink-0" style={{ width: outsideW }}>
+                {outsideBtn("1-18", { kind: "low" })}
+                {outsideBtn("1st", { kind: "dozen", dozen: 1 })}
+                {outsideBtn("EVN", { kind: "even" })}
+                {outsideBtn("◆", { kind: "red" }, "hsl(0,65%,42%)")}
+                {outsideBtn("2nd", { kind: "dozen", dozen: 2 })}
+                {outsideBtn("◆", { kind: "black" }, "hsl(0,0%,15%)")}
+                {outsideBtn("ODD", { kind: "odd" })}
+                {outsideBtn("3rd", { kind: "dozen", dozen: 3 })}
+                {outsideBtn("19+", { kind: "high" })}
+              </div>
+
+              {/* Number grid 12 rows × 3 cols */}
+              <div className="flex-1 grid grid-cols-3 gap-[2px]">
+                {Array.from({ length: 12 }, (_, row) =>
+                  [1, 2, 3].map(col => numCell(row * 3 + col))
+                )}
+              </div>
+
+              {/* 2:1 column bets RIGHT */}
+              <div className="flex flex-col shrink-0" style={{ width: colW }}>
+                <button onClick={() => placeBet({ kind: "column", column: 1 }, "Col1")}
+                  className="flex-1 text-white font-bold border border-white/20 hover:brightness-125 active:scale-95"
+                  style={{ background: "hsl(140,30%,22%)", fontSize: isMobile ? 7 : 10, writingMode: "vertical-rl" }}>
+                  2to1
+                </button>
+                <button onClick={() => placeBet({ kind: "column", column: 2 }, "Col2")}
+                  className="flex-1 text-white font-bold border border-white/20 hover:brightness-125 active:scale-95 mt-[2px]"
+                  style={{ background: "hsl(140,30%,22%)", fontSize: isMobile ? 7 : 10, writingMode: "vertical-rl" }}>
+                  2to1
+                </button>
+                <button onClick={() => placeBet({ kind: "column", column: 3 }, "Col3")}
+                  className="flex-1 text-white font-bold border border-white/20 hover:brightness-125 active:scale-95 mt-[2px]"
+                  style={{ background: "hsl(140,30%,22%)", fontSize: isMobile ? 7 : 10, writingMode: "vertical-rl" }}>
+                  2to1
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Controls row */}
+      <div className="flex items-center justify-between">
+        <div className="flex gap-1 md:gap-2">
+          <Button variant="outline" size="sm" className="h-7 md:h-9 text-[10px] md:text-sm px-2 md:px-4" onClick={clearBets} disabled={spinning || bets.length === 0}>
+            <Trash2 className="h-3 w-3 md:h-4 md:w-4 mr-0.5 md:mr-1" /> Clear
+          </Button>
+          <Button variant="outline" size="sm" className="h-7 md:h-9 text-[10px] md:text-sm px-2 md:px-4" onClick={rebet} disabled={spinning || lastBets.length === 0 || bets.length > 0}>
+            <RotateCw className="h-3 w-3 md:h-4 md:w-4 mr-0.5 md:mr-1" /> Rebet
+          </Button>
+        </div>
+        <div className="flex gap-1 md:gap-2">
+          <Button variant="outline" size="sm" className="h-7 md:h-9 text-[10px] md:text-sm px-2 md:px-4" onClick={respin} disabled={spinning || lastBets.length === 0 || bets.length > 0}>
+            <RotateCw className="h-3 w-3 md:h-4 md:w-4 mr-0.5 md:mr-1" /> Respin
+          </Button>
+          <Button id="spin-btn" variant="gold" className="px-6 md:px-10 h-8 md:h-10 text-xs md:text-base" onClick={spin} disabled={spinning || bets.length === 0}>
+            {spinning && <RotateCw className="h-3 w-3 md:h-4 md:w-4 animate-spin mr-1" />}
+            {spinning ? "Spinning..." : "SPIN"}
+          </Button>
+        </div>
+      </div>
+
+      {/* Active bets */}
+      {bets.length > 0 && (
+        <div className="flex flex-wrap gap-0.5 md:gap-1">
+          {bets.map((b, i) => (
+            <span key={i} className="px-1.5 py-0.5 md:px-2 md:py-1 rounded-full bg-secondary text-[9px] md:text-xs text-muted-foreground">
+              ${b.amount} {b.label}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <AuthGuard>
@@ -300,168 +478,16 @@ export default function Roulette() {
           {splashData !== null && <ResultSplash resultNumber={splashData.resultNumber} netAmount={splashData.netAmount} onClose={() => setSplashData(null)} />}
         </AnimatePresence>
 
-        <div className="px-2 py-1 max-w-lg mx-auto space-y-1.5">
-          {/* Balance bar */}
-          <div className="flex items-center justify-between text-[10px]">
-            <span className="px-2 py-0.5 rounded-full bg-secondary/80 border border-border">
-              <span className="text-muted-foreground">Bal </span>
-              <span className="font-bold text-[hsl(var(--casino-gold))]">${balance.toFixed(2)}</span>
-            </span>
-            <span className="px-2 py-0.5 rounded-full bg-secondary/80 border border-border">
-              <span className="text-muted-foreground">Bet </span>
-              <span className="font-bold text-foreground">${totalBet.toFixed(2)}</span>
-            </span>
-          </div>
-
-          {/* GAME AREA: Wheel left + Table right — side by side like the reference */}
-          <div className="rounded-xl p-2"
-            style={{
-              background: "linear-gradient(180deg, hsl(80,30%,28%), hsl(80,25%,20%))",
-              border: "1px solid hsl(43,50%,35%)",
-            }}>
-            <div className="flex gap-2 items-start">
-              {/* LEFT: Wheel + chips */}
-              <div className="flex flex-col items-center gap-2 shrink-0">
-                <RouletteWheel spinning={spinning} result={result} size={130} />
-                {/* Result badge */}
-                {result !== null && !spinning && (
-                  <motion.span initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }}
-                    className="px-2 py-0.5 rounded-full font-bold text-white text-xs"
-                    style={{ background: colorHsl(getColor(result)) }}>
-                    {result}
-                  </motion.span>
-                )}
-                {/* Chips */}
-                <div className="flex gap-1">
-                  {CHIP_VALUES.map(v => {
-                    const chipLabel = v < 1 ? `${Math.round(v * 100)}¢` : `$${v}`;
-                    const chipBg = v === 0.20 ? "radial-gradient(circle, hsl(0,0%,95%), hsl(0,0%,70%))"
-                      : v === 0.50 ? "radial-gradient(circle, hsl(210,70%,55%), hsl(210,70%,35%))"
-                      : v === 1 ? "radial-gradient(circle, hsl(280,50%,55%), hsl(280,50%,35%))"
-                      : "radial-gradient(circle, hsl(43,75%,50%), hsl(43,65%,35%))";
-                    const chipColor = v === 0.20 ? "hsl(0,0%,15%)" : "white";
-                    return (
-                      <button key={v} onClick={() => setSelectedChip(v)}
-                        className="rounded-full flex items-center justify-center font-bold transition-transform"
-                        style={{
-                          width: 28, height: 28,
-                          fontSize: 8,
-                          background: chipBg,
-                          color: chipColor,
-                          border: selectedChip === v ? "2px solid hsl(43,80%,55%)" : "2px solid hsl(0,0%,30%)",
-                          boxShadow: selectedChip === v ? "0 0 8px hsl(43,80%,50%,0.5)" : "none",
-                          transform: selectedChip === v ? "scale(1.15)" : "scale(1)",
-                        }}>
-                        {chipLabel}
-                      </button>
-                    );
-                  })}
-                </div>
-                {/* History */}
-                {history.length > 0 && (
-                  <div className="flex gap-[2px] flex-wrap justify-center max-w-[130px]">
-                    {history.slice(0, 10).map((n, i) => (
-                      <span key={i} className="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[6px] font-bold text-white"
-                        style={{ background: colorHsl(getColor(n)) }}>{n}</span>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* RIGHT: Betting table — matching reference layout */}
-              <div className="flex-1 min-w-0">
-                {/* Zero at top spanning full width */}
-                {(() => {
-                  const zeroAmount = getBetTotal(b => b.type.kind === "straight" && b.type.number === 0);
-                  return (
-                    <button onClick={() => placeBet({ kind: "straight", number: 0 }, "0")}
-                      className="relative w-full py-1 rounded-t-md text-white font-bold text-xs border border-white/20 hover:brightness-125 mb-[2px]"
-                      style={{ background: "hsl(140,60%,30%)" }}>
-                      0
-                      {chipOverlay(zeroAmount)}
-                    </button>
-                  );
-                })()}
-
-                {/* Main layout: outside-left | numbers | 2:1 right */}
-                <div className="flex gap-[2px]">
-                  {/* Outside bets LEFT column: 1-18, 1st12, EVEN, ◆red, 2nd12, ◆blk, ODD, 3rd12, 19-36 */}
-                  <div className="flex flex-col gap-[2px] shrink-0" style={{ width: 22 }}>
-                    {outsideBtn("1-18", { kind: "low" })}
-                    {outsideBtn("1st", { kind: "dozen", dozen: 1 })}
-                    {outsideBtn("EVN", { kind: "even" })}
-                    {outsideBtn("◆", { kind: "red" }, "hsl(0,65%,42%)")}
-                    {outsideBtn("2nd", { kind: "dozen", dozen: 2 })}
-                    {outsideBtn("◆", { kind: "black" }, "hsl(0,0%,15%)")}
-                    {outsideBtn("ODD", { kind: "odd" })}
-                    {outsideBtn("3rd", { kind: "dozen", dozen: 3 })}
-                    {outsideBtn("19+", { kind: "high" })}
-                  </div>
-
-                  {/* Number grid 12 rows × 3 cols */}
-                  <div className="flex-1 grid grid-cols-3 gap-[2px]">
-                    {Array.from({ length: 12 }, (_, row) =>
-                      [1, 2, 3].map(col => numCell(row * 3 + col))
-                    )}
-                  </div>
-
-                  {/* 2:1 column bets RIGHT */}
-                  <div className="flex flex-col shrink-0" style={{ width: 20 }}>
-                    <button onClick={() => placeBet({ kind: "column", column: 1 }, "Col1")}
-                      className="flex-1 text-white font-bold border border-white/20 hover:brightness-125 active:scale-95"
-                      style={{ background: "hsl(140,30%,22%)", fontSize: 7, writingMode: "vertical-rl" }}>
-                      2to1
-                    </button>
-                    <button onClick={() => placeBet({ kind: "column", column: 2 }, "Col2")}
-                      className="flex-1 text-white font-bold border border-white/20 hover:brightness-125 active:scale-95 mt-[2px]"
-                      style={{ background: "hsl(140,30%,22%)", fontSize: 7, writingMode: "vertical-rl" }}>
-                      2to1
-                    </button>
-                    <button onClick={() => placeBet({ kind: "column", column: 3 }, "Col3")}
-                      className="flex-1 text-white font-bold border border-white/20 hover:brightness-125 active:scale-95 mt-[2px]"
-                      style={{ background: "hsl(140,30%,22%)", fontSize: 7, writingMode: "vertical-rl" }}>
-                      2to1
-                    </button>
-                  </div>
-                </div>
-              </div>
+        {/* Mobile: stacked. Desktop: side-by-side game + chat */}
+        <div className="px-2 py-1 md:px-6 md:py-4 max-w-lg md:max-w-6xl mx-auto">
+          <div className="md:flex md:gap-6 md:items-start">
+            <div className="md:flex-1">
+              {gameContent}
+            </div>
+            <div className="mt-1.5 md:mt-0 md:w-80 md:shrink-0">
+              <GameChat gameRoom="roulette" />
             </div>
           </div>
-
-          {/* Controls row */}
-          <div className="flex items-center justify-between">
-            <div className="flex gap-1">
-              <Button variant="outline" size="sm" className="h-7 text-[10px] px-2" onClick={clearBets} disabled={spinning || bets.length === 0}>
-                <Trash2 className="h-3 w-3 mr-0.5" /> Clear
-              </Button>
-              <Button variant="outline" size="sm" className="h-7 text-[10px] px-2" onClick={rebet} disabled={spinning || lastBets.length === 0 || bets.length > 0}>
-                <RotateCw className="h-3 w-3 mr-0.5" /> Rebet
-              </Button>
-            </div>
-            <div className="flex gap-1">
-              <Button variant="outline" size="sm" className="h-7 text-[10px] px-2" onClick={respin} disabled={spinning || lastBets.length === 0 || bets.length > 0}>
-                <RotateCw className="h-3 w-3 mr-0.5" /> Respin
-              </Button>
-              <Button id="spin-btn" variant="gold" className="px-6 h-8 text-xs" onClick={spin} disabled={spinning || bets.length === 0}>
-                {spinning && <RotateCw className="h-3 w-3 animate-spin mr-1" />}
-                {spinning ? "Spinning..." : "SPIN"}
-              </Button>
-            </div>
-          </div>
-
-          {/* Active bets */}
-          {bets.length > 0 && (
-            <div className="flex flex-wrap gap-0.5">
-              {bets.map((b, i) => (
-                <span key={i} className="px-1.5 py-0.5 rounded-full bg-secondary text-[9px] text-muted-foreground">
-                  ${b.amount} {b.label}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {/* Chat */}
-          <GameChat gameRoom="roulette" />
         </div>
         <BottomNav />
       </div>
