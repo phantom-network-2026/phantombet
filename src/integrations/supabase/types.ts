@@ -132,9 +132,16 @@ export type Database = {
         Row: {
           avatar_url: string | null
           balance: number
+          biggest_win: number | null
+          biggest_win_game: string | null
+          bio: string | null
+          border_style: string | null
           created_at: string
           crypto_address: string | null
+          has_animated_avatar: boolean | null
+          has_animated_border: boolean | null
           id: string
+          social_links: Json | null
           updated_at: string
           user_id: string
           username: string | null
@@ -142,9 +149,16 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           balance?: number
+          biggest_win?: number | null
+          biggest_win_game?: string | null
+          bio?: string | null
+          border_style?: string | null
           created_at?: string
           crypto_address?: string | null
+          has_animated_avatar?: boolean | null
+          has_animated_border?: boolean | null
           id?: string
+          social_links?: Json | null
           updated_at?: string
           user_id: string
           username?: string | null
@@ -152,9 +166,16 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           balance?: number
+          biggest_win?: number | null
+          biggest_win_game?: string | null
+          bio?: string | null
+          border_style?: string | null
           created_at?: string
           crypto_address?: string | null
+          has_animated_avatar?: boolean | null
+          has_animated_border?: boolean | null
           id?: string
+          social_links?: Json | null
           updated_at?: string
           user_id?: string
           username?: string | null
