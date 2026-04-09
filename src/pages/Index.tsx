@@ -73,27 +73,57 @@ function PrizeReelBanner() {
 export default function Index() {
   const [games, setGames] = useState(defaultGames);
   const [category, setCategory] = useState("all");
+  const [announcement, setAnnouncement] = useState<{ active: boolean; text: string } | null>(null);
+  const [maintenanceMode, setMaintenanceMode] = useState<{ enabled: boolean; message: string } | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    supabase
-      .from("games")
-      .select("*")
-      .eq("is_active", true)
-      .then(({ data }) => {
-        if (data && data.length > 0) {
-          const imageMap: Record<string, string> = {
-            "Slot Cowboy": slotCowboyImg,
-            "Prize Reel": prizeReelImg,
-          };
-          setGames(data.map((g) => ({ ...g, image_url: imageMap[g.name] || g.image_url || slotsImg })));
-        }
-      });
+    // Check admin status
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) {
+        supabase.from("user_roles").select("role").eq("user_id", data.user.id).eq("role", "admin").then(({ data: roles }) => {
+          setIsAdmin(!!(roles && roles.length > 0));
+        });
+      }
+    });
+
+    // Fetch games
+    supabase.from("games").select("*").eq("is_active", true).then(({ data }) => {
+      if (data && data.length > 0) {
+        const imageMap: Record<string, string> = {
+          "Slot Cowboy": slotCowboyImg,
+          "Prize Reel": prizeReelImg,
+        };
+        setGames(data.map((g) => ({ ...g, image_url: imageMap[g.name] || g.image_url || slotsImg })));
+      }
+    });
+
+    // Fetch announcement & maintenance
+    supabase.from("site_settings").select("key, value").in("key", ["announcement", "maintenance_mode"]).then(({ data }) => {
+      if (data) {
+        const ann = data.find(d => d.key === "announcement");
+        const maint = data.find(d => d.key === "maintenance_mode");
+        if (ann?.value) setAnnouncement(ann.value as any);
+        if (maint?.value) setMaintenanceMode(maint.value as any);
+      }
+    });
   }, []);
+
+  // Show maintenance page for non-admins
+  if (maintenanceMode?.enabled && !isAdmin) {
+    return (
+      <div className="min-h-screen gradient-casino-bg flex items-center justify-center p-6">
+        <div className="text-center max-w-md">
+          <div className="text-6xl mb-4">🔧</div>
+          <h1 className="font-display text-3xl font-black text-casino-gold mb-4">Under Maintenance</h1>
+          <p className="text-muted-foreground">{maintenanceMode.message || "We're performing scheduled maintenance. Please check back soon."}</p>
+        </div>
+      </div>
+    );
+  }
 
   const filtered = category === "all" ? games : category === "games" ? games : games.filter((g) => g.category === category);
   const featured = games.filter((g) => g.is_featured);
-
-  // Group games by category for the "games" tab
   const gamesByCategory = games.reduce<Record<string, typeof games>>((acc, g) => {
     if (!acc[g.category]) acc[g.category] = [];
     acc[g.category].push(g);
@@ -103,6 +133,15 @@ export default function Index() {
   return (
     <div className="min-h-screen gradient-casino-bg pb-20 md:pb-0">
       <Header />
+
+      {/* Announcement Banner */}
+      {announcement?.active && announcement.text && (
+        <div className="mx-4 mt-3 rounded-xl bg-casino-gold/10 border border-casino-gold/30 p-3 flex items-center gap-2">
+          <span className="text-lg">📢</span>
+          <p className="text-sm font-medium flex-1">{announcement.text}</p>
+        </div>
+      )}
+
       <HeroBanner />
 
       {/* Non-KYC Banner */}
