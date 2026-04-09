@@ -204,6 +204,11 @@ export default function Admin() {
           <h1 className="font-display text-2xl font-black text-gold flex items-center gap-2">
             <Users className="h-6 w-6" /> Admin Panel
           </h1>
+          {isAdmin && (
+            <Button variant="outline" size="sm" className="ml-auto" onClick={() => navigate("/cpanel")}>
+              <Shield className="h-3 w-3 mr-1" /> cPanel
+            </Button>
+          )}
         </div>
 
         {/* Stats */}
