@@ -100,12 +100,14 @@ function RouletteWheel({ spinning, result, size = 130 }: { spinning: boolean; re
             </div>
           );
         })}
-        <div className="absolute rounded-full"
+        <div className="absolute rounded-full overflow-hidden flex items-center justify-center"
           style={{
             inset: "32%",
             background: "radial-gradient(circle, hsl(30,50%,45%), hsl(30,40%,25%))",
           }}
-        />
+        >
+          <img src={phantomLogo} alt="PhantomBet" className="w-3/5 h-3/5 object-contain" style={{ filter: "brightness(1.3)" }} />
+        </div>
       </motion.div>
       <div className="absolute left-1/2 -translate-x-1/2 z-10" style={{ top: -2 }}>
         <div className="w-0 h-0"
