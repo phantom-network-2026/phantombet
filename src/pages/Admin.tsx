@@ -223,10 +223,10 @@ export default function Admin() {
               <Circle className="h-3 w-3 fill-green-400 text-green-400" /> {onlineCount}
             </p>
           </div>
-          <div className="rounded-xl bg-card p-4 border border-border">
+          <div className="rounded-xl bg-card p-4 border border-border overflow-hidden">
             <p className="text-sm text-muted-foreground">Total Balance</p>
-            <p className="font-display text-2xl font-bold text-casino-green">
-              ${users.reduce((sum, u) => sum + u.balance, 0).toFixed(2)}
+            <p className="font-display text-lg font-bold text-casino-green truncate">
+              ${users.reduce((sum, u) => sum + u.balance, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
         </div>
