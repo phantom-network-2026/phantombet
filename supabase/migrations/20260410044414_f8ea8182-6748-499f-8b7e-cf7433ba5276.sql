@@ -1,0 +1,2 @@
+INSERT INTO public.games (name, description, category, is_active, is_featured)
+VALUES ('Penny Roulette', 'Classic European roulette with low stakes. Bet from $0.20 with a $5 max. Spin the wheel with PhantomBet!', 'table', true, true);
