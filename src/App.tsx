@@ -28,6 +28,7 @@ import Profile from "./pages/Profile.tsx";
 import GamesPage from "./pages/Games.tsx";
 import PrizeReel from "./pages/PrizeReel.tsx";
 import CPanel from "./pages/CPanel.tsx";
+import PennyRoulette from "./pages/PennyRoulette.tsx";
 
 const queryClient = new QueryClient();
 
@@ -67,6 +68,7 @@ const App = () => (
               <Route path="/profile" element={<Profile />} />
               <Route path="/prize-reel" element={<PrizeReel />} />
               <Route path="/cpanel" element={<CPanel />} />
+              <Route path="/penny-roulette" element={<PennyRoulette />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </PresenceTracker>
