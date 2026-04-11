@@ -6,6 +6,7 @@
     <title>Marvel Casino Royale</title>
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="../bridge.js"></script>
     <style>
         @import url(https://fonts.bunny.net/css?family=jura:300,500,700|inter:400,600);
 
@@ -951,5 +952,35 @@
             if (event.target.classList.contains('modal-overlay')) closeModals();
         }
     </script>
+<script>
+// ========== PhantomBet Bridge Integration ==========
+PhantomBridge.init('Marvel Betting');
+(function() {
+  var _lastBalance = balance;
+  PhantomBridge.onReady(function(bal) {
+    balance = bal;
+    _lastBalance = bal;
+    updateBalanceUI();
+  });
+  PhantomBridge.onBalanceChange(function(bal) {
+    balance = bal;
+    _lastBalance = bal;
+    updateBalanceUI();
+  });
+  var origUpdateBalanceUI = updateBalanceUI;
+  updateBalanceUI = function() {
+    origUpdateBalanceUI();
+    if (balance !== _lastBalance) {
+      var delta = balance - _lastBalance;
+      _lastBalance = balance;
+      if (delta < 0) {
+        PhantomBridge.deductBet(Math.abs(delta));
+      } else if (delta > 0) {
+        PhantomBridge.creditWin(delta, 'Marvel Betting Win');
+      }
+    }
+  };
+})();
+</script>
 </body>
 </html>

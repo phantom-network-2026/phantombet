@@ -9,6 +9,7 @@
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <script src="../bridge.js"></script>
     <style>
         :root {
             --bg-dark: #0f172a;
@@ -1029,6 +1030,35 @@
 
     // Init
     const game = new GameLogic();
+
+// ========== PhantomBet Bridge Integration ==========
+PhantomBridge.init('Stack Up Casino');
+(function() {
+  var _lastBalance = game.balance;
+  PhantomBridge.onReady(function(bal) {
+    game.balance = bal;
+    _lastBalance = bal;
+    game.updateUI();
+  });
+  PhantomBridge.onBalanceChange(function(bal) {
+    game.balance = bal;
+    _lastBalance = bal;
+    game.updateUI();
+  });
+  var origUpdateUI = game.updateUI.bind(game);
+  game.updateUI = function() {
+    origUpdateUI();
+    if (game.balance !== _lastBalance) {
+      var delta = game.balance - _lastBalance;
+      _lastBalance = game.balance;
+      if (delta < 0) {
+        PhantomBridge.deductBet(Math.abs(delta));
+      } else if (delta > 0) {
+        PhantomBridge.creditWin(delta, 'Stack Up Casino Win');
+      }
+    }
+  };
+})();
 </script>
 
 </body>
