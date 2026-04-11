@@ -15,8 +15,9 @@ import {
   RefreshCw, Search, Table, FileText, Eye, ChevronRight,
   File, Image, Music, Video, Archive, Code, Globe, Shield,
   AlertTriangle, Activity, Lock, Megaphone, HardDrive, Clock,
-  Ban, Users, BarChart3, Wrench, Power, Bell
+  Ban, Users, BarChart3, Wrench, Power, Bell, Percent
 } from "lucide-react";
+import { HouseEdgePanel } from "@/components/casino/HouseEdgePanel";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
@@ -754,6 +755,7 @@ export default function CPanel() {
             <TabsTrigger value="security" className="text-xs gap-1"><Lock className="h-3 w-3" /> Security</TabsTrigger>
             <TabsTrigger value="maintenance" className="text-xs gap-1"><Wrench className="h-3 w-3" /> Maintenance</TabsTrigger>
             <TabsTrigger value="logs" className="text-xs gap-1"><AlertTriangle className="h-3 w-3" /> Logs</TabsTrigger>
+            <TabsTrigger value="house-edge" className="text-xs gap-1"><Percent className="h-3 w-3" /> House Edge</TabsTrigger>
           </TabsList>
 
           <TabsContent value="analytics"><AnalyticsDashboard /></TabsContent>
@@ -763,6 +765,7 @@ export default function CPanel() {
           <TabsContent value="security"><SecurityCenter /></TabsContent>
           <TabsContent value="maintenance"><MaintenancePanel /></TabsContent>
           <TabsContent value="logs"><ErrorLogs /></TabsContent>
+          <TabsContent value="house-edge"><HouseEdgePanel /></TabsContent>
         </Tabs>
       </div>
     </div>

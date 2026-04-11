@@ -23,7 +23,6 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    // Verify the calling user via getClaims
     const userClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -38,10 +37,8 @@ Deno.serve(async (req) => {
     }
 
     const authenticatedUserId = claimsData.claims.sub;
-
     const { userId, amount, gameType, outcome } = await req.json();
 
-    // Validate: user can only settle their own games
     if (userId !== authenticatedUserId) {
       return new Response(JSON.stringify({ error: "Forbidden" }), {
         status: 403,
@@ -49,7 +46,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Validate amount bounds
     if (typeof amount !== "number" || Math.abs(amount) > 20000) {
       return new Response(JSON.stringify({ error: "Invalid amount" }), {
         status: 400,
@@ -59,7 +55,7 @@ Deno.serve(async (req) => {
 
     const admin = createClient(supabaseUrl, serviceKey);
 
-    // Check force_loss setting — if enabled and this is a win, convert to loss
+    // Check force_loss setting
     if (amount > 0) {
       const { data: forceLossSetting } = await admin
         .from("site_settings")
@@ -68,10 +64,42 @@ Deno.serve(async (req) => {
         .maybeSingle();
       const forceActive = forceLossSetting?.value?.enabled === true;
       if (forceActive) {
-        // Player tried to win — convert to a loss of their original bet instead
         return new Response(JSON.stringify({ success: true, balance: null, forced_loss: true }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
+      }
+    }
+
+    // Apply house edge on wins
+    let adjustedAmount = amount;
+    if (amount > 0) {
+      const { data: edgeSetting } = await admin
+        .from("site_settings")
+        .select("value")
+        .eq("key", "house_edge_config")
+        .maybeSingle();
+
+      if (edgeSetting?.value) {
+        const cfg = edgeSetting.value as any;
+        if (cfg.globalEnabled) {
+          let edgePercent = cfg.globalEdge ?? 0;
+
+          // Check for per-game override
+          const perGame = (cfg.perGame || []) as any[];
+          const gameOverride = perGame.find(
+            (g: any) => g.enabled && g.name?.toLowerCase() === (gameType || "").toLowerCase()
+          );
+          if (gameOverride) {
+            edgePercent = gameOverride.edge;
+          }
+
+          // Apply edge: positive edge = house takes %, negative = player gets bonus
+          // e.g. 10% edge means player gets 90% of their win
+          if (edgePercent !== 0) {
+            const multiplier = 1 - edgePercent / 100;
+            adjustedAmount = Math.max(0.01, Math.round(amount * multiplier * 100) / 100);
+          }
+        }
       }
     }
 
@@ -89,7 +117,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const newBalance = Number(profile.balance) + amount;
+    const newBalance = Number(profile.balance) + adjustedAmount;
     if (newBalance < 0) {
       return new Response(JSON.stringify({ error: "Insufficient balance" }), {
         status: 400,
@@ -97,19 +125,18 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Update balance
     const updateData: Record<string, any> = { balance: newBalance };
 
-    // Track biggest win automatically
-    if (amount > 0) {
+    // Track biggest win
+    if (adjustedAmount > 0) {
       const { data: currentProfile } = await admin
         .from("profiles")
         .select("biggest_win")
         .eq("user_id", userId)
         .single();
       const currentBiggest = Number(currentProfile?.biggest_win) || 0;
-      if (amount > currentBiggest) {
-        updateData.biggest_win = amount;
+      if (adjustedAmount > currentBiggest) {
+        updateData.biggest_win = adjustedAmount;
         updateData.biggest_win_game = gameType || "Unknown";
       }
     }
@@ -119,11 +146,11 @@ Deno.serve(async (req) => {
       .update(updateData)
       .eq("user_id", userId);
 
-    // Record transaction
+    // Record transaction with adjusted amount
     await admin.from("transactions").insert({
       user_id: userId,
-      amount,
-      type: amount >= 0 ? "game_win" : "game_loss",
+      amount: adjustedAmount,
+      type: adjustedAmount >= 0 ? "game_win" : "game_loss",
       description: `${gameType} - ${outcome}`,
     });
 
