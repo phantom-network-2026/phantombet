@@ -285,3 +285,28 @@
                 setTimeout(() => t.remove(), 500);
             }, 2500);
         }
+// ========== PhantomBet Bridge Integration ==========
+PhantomBridge.init('Cut Wire Pro');
+(function() {
+  let _lastWallet = wallet;
+  PhantomBridge.onReady(function(bal) {
+    wallet = bal;
+    _lastWallet = bal;
+    updateUI();
+  });
+  PhantomBridge.onBalanceChange(function(bal) {
+    wallet = bal;
+    _lastWallet = bal;
+    updateUI();
+  });
+  const origUpdateUI = updateUI;
+  updateUI = function() {
+    origUpdateUI();
+    if (wallet !== _lastWallet) {
+      const delta = wallet - _lastWallet;
+      _lastWallet = wallet;
+      if (delta < 0) PhantomBridge.deductBet(Math.abs(delta));
+      else if (delta > 0) PhantomBridge.creditWin(delta, 'Cut Wire Pro Win');
+    }
+  };
+})();

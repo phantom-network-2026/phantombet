@@ -329,3 +329,35 @@
     drawGrid();
     refreshControls();
     updateKpis();
+// ========== PhantomBet Bridge Integration ==========
+PhantomBridge.init('Stake Mines');
+(function() {
+  let _lastBalance = STATE.balance;
+  PhantomBridge.onReady(function(bal) {
+    STATE.balance = bal;
+    _lastBalance = bal;
+    updateKpis();
+    refreshControls();
+  });
+  PhantomBridge.onBalanceChange(function(bal) {
+    STATE.balance = bal;
+    _lastBalance = bal;
+    updateKpis();
+  });
+  // Intercept balance changes
+  const origUpdateKpis = updateKpis;
+  updateKpis = function() {
+    origUpdateKpis();
+    if (STATE.balance !== _lastBalance) {
+      const delta = STATE.balance - _lastBalance;
+      _lastBalance = STATE.balance;
+      if (delta < 0) {
+        PhantomBridge.deductBet(Math.abs(delta));
+      } else if (delta > 0) {
+        PhantomBridge.creditWin(delta, 'Mines Win');
+      }
+    }
+  };
+  // Disable add funds
+  if (addFunds) addFunds.style.display = 'none';
+})();

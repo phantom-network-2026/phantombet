@@ -1014,3 +1014,35 @@ class UIController {
 }
 
 const ui = new UIController();
+// ========== PhantomBet Bridge Integration ==========
+PhantomBridge.init('Plinko Pro');
+(function() {
+  // Wait for ui to be available (it's created in DOMContentLoaded)
+  function hookBridge() {
+    if (typeof window.plinkoUI === 'undefined' && typeof ui === 'undefined') {
+      setTimeout(hookBridge, 500);
+      return;
+    }
+    const uiObj = window.plinkoUI || ui;
+    if (!uiObj) return;
+    let _lastBal = uiObj.balance;
+    PhantomBridge.onReady(function(bal) {
+      uiObj.balance = bal;
+      _lastBal = bal;
+      uiObj.updateBalanceUI();
+    });
+    PhantomBridge.onBalanceChange(function(bal) {
+      uiObj.balance = bal;
+      _lastBal = bal;
+      uiObj.updateBalanceUI();
+    });
+    const origUpdateBalance = uiObj.updateBalance.bind(uiObj);
+    uiObj.updateBalance = function(amount) {
+      origUpdateBalance(amount);
+      if (amount < 0) PhantomBridge.deductBet(Math.abs(amount));
+      else if (amount > 0) PhantomBridge.creditWin(amount, 'Plinko Pro Win');
+      _lastBal = uiObj.balance;
+    };
+  }
+  hookBridge();
+})();

@@ -559,3 +559,28 @@
             root.style.setProperty(key, value);
         }
     }
+// ========== PhantomBet Bridge Integration ==========
+PhantomBridge.init('Royal Derby');
+(function() {
+  let _lastWallet = wallet;
+  PhantomBridge.onReady(function(bal) {
+    wallet = bal;
+    _lastWallet = bal;
+    updateWallet();
+  });
+  PhantomBridge.onBalanceChange(function(bal) {
+    wallet = bal;
+    _lastWallet = bal;
+    updateWallet();
+  });
+  const origUpdateWallet = updateWallet;
+  updateWallet = function() {
+    origUpdateWallet();
+    if (wallet !== _lastWallet) {
+      const delta = wallet - _lastWallet;
+      _lastWallet = wallet;
+      if (delta < 0) PhantomBridge.deductBet(Math.abs(delta));
+      else if (delta > 0) PhantomBridge.creditWin(delta, 'Royal Derby Win');
+    }
+  };
+})();

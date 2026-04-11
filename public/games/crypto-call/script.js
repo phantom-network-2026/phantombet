@@ -720,3 +720,30 @@ const Chart = {
 
 // Start
 window.onload = () => Game.init();
+
+// ========== PhantomBet Bridge Integration ==========
+PhantomBridge.init('Crypto Call');
+(function() {
+  let _lastBal = Game.balance;
+  PhantomBridge.onReady(function(bal) {
+    Game.balance = bal;
+    _lastBal = bal;
+    Game.saveStorage();
+    Game.updateUI();
+  });
+  PhantomBridge.onBalanceChange(function(bal) {
+    Game.balance = bal;
+    _lastBal = bal;
+    Game.updateUI();
+  });
+  const origUpdateUI = Game.updateUI;
+  Game.updateUI = function(timeLeft) {
+    origUpdateUI.call(Game, timeLeft);
+    if (Game.balance !== _lastBal) {
+      const delta = Game.balance - _lastBal;
+      _lastBal = Game.balance;
+      if (delta < 0) PhantomBridge.deductBet(Math.abs(delta));
+      else if (delta > 0) PhantomBridge.creditWin(delta, 'Crypto Call Win');
+    }
+  };
+})();

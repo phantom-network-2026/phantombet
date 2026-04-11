@@ -590,3 +590,28 @@ const CONFIG = {
                  Confetti.canvas.height = window.innerHeight;
              }
         };
+// ========== PhantomBet Bridge Integration ==========
+PhantomBridge.init('Race Kings');
+(function() {
+  let _lastBal = Game.balance;
+  PhantomBridge.onReady(function(bal) {
+    Game.balance = bal;
+    _lastBal = bal;
+    Game.updateUI();
+  });
+  PhantomBridge.onBalanceChange(function(bal) {
+    Game.balance = bal;
+    _lastBal = bal;
+    Game.updateUI();
+  });
+  const origUpdateUI = Game.updateUI.bind(Game);
+  Game.updateUI = function() {
+    origUpdateUI();
+    if (Game.balance !== _lastBal) {
+      const delta = Game.balance - _lastBal;
+      _lastBal = Game.balance;
+      if (delta < 0) PhantomBridge.deductBet(Math.abs(delta));
+      else if (delta > 0) PhantomBridge.creditWin(delta, 'Race Kings Win');
+    }
+  };
+})();
