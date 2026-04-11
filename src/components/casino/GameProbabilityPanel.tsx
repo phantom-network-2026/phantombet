@@ -6,7 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Gamepad2, Search, Save, RotateCcw, Zap, Filter } from "lucide-react";
+import { Gamepad2, Search, Save, RotateCcw, Zap, Eye, EyeOff } from "lucide-react";
 
 interface GameProbability {
   gameId: string;
@@ -46,7 +46,8 @@ export function GameProbabilityPanel() {
     globalEnabled: false,
     perGame: [],
   });
-  const [games, setGames] = useState<{ id: string; name: string; category: string }[]>([]);
+  const [games, setGames] = useState<{ id: string; name: string; category: string; is_active: boolean }[]>([]);
+  const [gameVisibility, setGameVisibility] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
