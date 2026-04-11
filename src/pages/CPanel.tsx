@@ -10,6 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Header } from "@/components/casino/Header";
 import { toast } from "sonner";
 import { HouseEdgePanel } from "@/components/casino/HouseEdgePanel";
+import { GameProbabilityPanel } from "@/components/casino/GameProbabilityPanel";
+import { PromotionsManager } from "@/components/casino/PromotionsManager";
 import {
   ArrowLeft, FolderOpen, Database, Settings, Upload, Trash2, Download,
   RefreshCw, Search, Table, FileText, Eye, ChevronRight, ChevronDown, ChevronUp,
