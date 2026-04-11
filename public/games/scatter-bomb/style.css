@@ -1,0 +1,94 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    background: radial-gradient(circle, #111, #000);
+    color: white;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    min-height: 100vh;
+    padding: 10px;
+}
+h1 { font-size: 1.6rem; margin: 10px 0; }
+#slot {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+    max-width: 560px;
+    margin: 10px auto;
+    padding: 0 5px;
+}
+.reel {
+    aspect-ratio: 1;
+    background: #222;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(20px, 5vw, 34px);
+    box-shadow: inset 0 0 10px #000;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.reel.win {
+    box-shadow: 0 0 15px gold;
+    transform: scale(1.1);
+}
+#ui { margin-top: 15px; }
+#bet-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+#bet-controls label { font-size: 14px; }
+#betInput {
+    width: 70px;
+    padding: 6px;
+    border-radius: 6px;
+    border: 1px solid #555;
+    background: #222;
+    color: white;
+    text-align: center;
+    font-size: 14px;
+}
+.quick-bets { display: flex; gap: 4px; }
+.quick-bets button {
+    padding: 6px 10px;
+    background: #333;
+    color: #ccc;
+    border: 1px solid #555;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+}
+.quick-bets button:hover { background: #444; }
+#spinBtn {
+    padding: 12px 30px;
+    background: gold;
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+}
+#spinBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+#balance { margin-top: 10px; font-size: 18px; color: #0f0; }
+#winText { margin-top: 5px; font-size: 16px; color: gold; min-height: 22px; }
+#overlay {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%) scale(0);
+    background: linear-gradient(135deg, #ff6a00, #ee0979);
+    padding: 20px 40px;
+    font-size: 32px;
+    border-radius: 20px;
+    transition: 0.3s;
+    z-index: 100;
+    font-weight: bold;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+#overlay.show {
+    transform: translate(-50%,-50%) scale(1.2);
+}
