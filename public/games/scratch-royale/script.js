@@ -713,3 +713,33 @@ const app = {
         };
 
         window.addEventListener('load', () => app.init());
+// ========== PhantomBet Bridge Integration ==========
+PhantomBridge.init('Scratch Royale');
+(function() {
+  function hookBridge() {
+    if (!app || !app.wallet) { setTimeout(hookBridge, 500); return; }
+    let _lastBal = app.wallet.balance;
+    PhantomBridge.onReady(function(bal) {
+      app.wallet.balance = bal;
+      _lastBal = bal;
+      app.wallet.save();
+      app.ui.updateBalance();
+    });
+    PhantomBridge.onBalanceChange(function(bal) {
+      app.wallet.balance = bal;
+      _lastBal = bal;
+      app.ui.updateBalance();
+    });
+    const origSave = app.wallet.save.bind(app.wallet);
+    app.wallet.save = function() {
+      origSave();
+      if (app.wallet.balance !== _lastBal) {
+        const delta = app.wallet.balance - _lastBal;
+        _lastBal = app.wallet.balance;
+        if (delta < 0) PhantomBridge.deductBet(Math.abs(delta));
+        else if (delta > 0) PhantomBridge.creditWin(delta, 'Scratch Royale Win');
+      }
+    };
+  }
+  hookBridge();
+})();

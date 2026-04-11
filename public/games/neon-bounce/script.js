@@ -648,3 +648,33 @@
         }
 
         window.onload = () => window.game = new Game();
+// ========== PhantomBet Bridge Integration ==========
+PhantomBridge.init('Neon Bounce');
+(function() {
+  function hookBridge() {
+    if (!window.game) { setTimeout(hookBridge, 500); return; }
+    const g = window.game;
+    let _lastWallet = g.wallet;
+    PhantomBridge.onReady(function(bal) {
+      g.wallet = bal;
+      _lastWallet = bal;
+      g.updateWallet();
+    });
+    PhantomBridge.onBalanceChange(function(bal) {
+      g.wallet = bal;
+      _lastWallet = bal;
+      g.updateWallet();
+    });
+    const origUpdateWallet = g.updateWallet.bind(g);
+    g.updateWallet = function() {
+      origUpdateWallet();
+      if (g.wallet !== _lastWallet) {
+        const delta = g.wallet - _lastWallet;
+        _lastWallet = g.wallet;
+        if (delta < 0) PhantomBridge.deductBet(Math.abs(delta));
+        else if (delta > 0) PhantomBridge.creditWin(delta, 'Neon Bounce Win');
+      }
+    };
+  }
+  hookBridge();
+})();
