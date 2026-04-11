@@ -6,7 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Gamepad2, Search, Save, RotateCcw, Zap, Filter } from "lucide-react";
+import { Gamepad2, Search, Save, RotateCcw, Zap, Eye, EyeOff } from "lucide-react";
 
 interface GameProbability {
   gameId: string;
@@ -46,7 +46,8 @@ export function GameProbabilityPanel() {
     globalEnabled: false,
     perGame: [],
   });
-  const [games, setGames] = useState<{ id: string; name: string; category: string }[]>([]);
+  const [games, setGames] = useState<{ id: string; name: string; category: string; is_active: boolean }[]>([]);
+  const [gameVisibility, setGameVisibility] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -59,12 +60,15 @@ export function GameProbabilityPanel() {
   const fetchData = async () => {
     setLoading(true);
     const [gamesRes, settingRes] = await Promise.all([
-      supabase.from("games").select("id, name, category").eq("is_active", true).order("category").order("name"),
+      supabase.from("games").select("id, name, category, is_active").order("category").order("name"),
       supabase.from("site_settings").select("value").eq("key", "game_win_probability").maybeSingle(),
     ]);
 
-    const gameList = (gamesRes.data || []) as { id: string; name: string; category: string }[];
+    const gameList = (gamesRes.data || []) as { id: string; name: string; category: string; is_active: boolean }[];
     setGames(gameList);
+    const visMap: Record<string, boolean> = {};
+    gameList.forEach((g) => { visMap[g.id] = g.is_active; });
+    setGameVisibility(visMap);
 
     if (settingRes.data?.value) {
       const saved = settingRes.data.value as any;
@@ -143,6 +147,18 @@ export function GameProbabilityPanel() {
         g.gameId === gameId ? { ...g, enabled } : g
       ),
     }));
+  };
+
+  const toggleGameVisibility = async (gameId: string) => {
+    const newVal = !gameVisibility[gameId];
+    setGameVisibility((prev) => ({ ...prev, [gameId]: newVal }));
+    const { error } = await supabase.from("games").update({ is_active: newVal }).eq("id", gameId);
+    if (error) {
+      setGameVisibility((prev) => ({ ...prev, [gameId]: !newVal }));
+      toast.error("Failed to update game visibility");
+    } else {
+      toast.success(`${games.find((g) => g.id === gameId)?.name} ${newVal ? "enabled" : "disabled"}`);
+    }
   };
 
   const resetAll = () => {
@@ -294,9 +310,11 @@ export function GameProbabilityPanel() {
           <div
             key={game.gameId}
             className={`rounded-lg border p-3 transition-all ${
-              game.enabled
-                ? getProbabilityBg(game.probability)
-                : "bg-card border-border"
+              !gameVisibility[game.gameId]
+                ? "bg-red-950/20 border-red-500/20 opacity-60"
+                : game.enabled
+                  ? getProbabilityBg(game.probability)
+                  : "bg-card border-border"
             }`}
           >
             <div className="flex items-center justify-between mb-1">
@@ -306,6 +324,14 @@ export function GameProbabilityPanel() {
                 <span className="text-[10px] text-muted-foreground uppercase shrink-0">{game.category}</span>
               </div>
               <div className="flex items-center gap-2 shrink-0">
+                {/* Visibility toggle */}
+                <button
+                  onClick={() => toggleGameVisibility(game.gameId)}
+                  className={`p-1 rounded transition-colors ${gameVisibility[game.gameId] ? "text-green-400 hover:text-green-300" : "text-red-400 hover:text-red-300"}`}
+                  title={gameVisibility[game.gameId] ? "Visible to players — click to hide" : "Hidden from players — click to show"}
+                >
+                  {gameVisibility[game.gameId] ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                </button>
                 {game.enabled && (
                   <span className={`font-mono text-sm font-bold ${getProbabilityColor(game.probability)}`}>
                     {game.probability}%
