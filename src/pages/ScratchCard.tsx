@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-const BET_OPTIONS = [1, 5, 10, 25, 50];
+const BET_OPTIONS = [0.10, 0.20, 0.50, 1, 2, 5, 10];
 
 const SYMBOLS = ["💎", "🍒", "⭐", "🔔", "7️⃣", "🍀", "💰", "🎰", "👑"];
 

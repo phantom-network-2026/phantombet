@@ -57,7 +57,7 @@ function calculatePayout(bet: BetType, result: number): number {
   }
 }
 
-const CHIP_VALUES = [0.20, 0.50, 1, 5];
+const CHIP_VALUES = [0.10, 0.20, 0.50, 1, 2, 5, 10];
 
 // ─── Wheel ──────────────────────────────────────────────────────
 function RouletteWheel({ spinning, result, size = 130 }: { spinning: boolean; result: number | null; size?: number }) {
@@ -185,7 +185,7 @@ export default function Roulette() {
   const { user, profile, refreshProfile } = useAuth();
   const isMobile = useIsMobile();
   const [bets, setBets] = useState<PlacedBet[]>([]);
-  const [selectedChip, setSelectedChip] = useState(0.20);
+  const [selectedChip, setSelectedChip] = useState(0.10);
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState<number | null>(null);
   const [splashData, setSplashData] = useState<{ resultNumber: number; netAmount: number } | null>(null);
@@ -211,7 +211,7 @@ export default function Roulette() {
   const placeBet = useCallback((type: BetType, label: string) => {
     if (spinning) return;
     if (totalBet + selectedChip > balance) { toast.error("Insufficient balance"); return; }
-    if (totalBet + selectedChip > 5) { toast.error("Maximum total bet is $5"); return; }
+    if (totalBet + selectedChip > 50) { toast.error("Maximum total bet is $50"); return; }
     setBets((prev) => [...prev, { type, amount: selectedChip, label }]);
   }, [spinning, selectedChip, totalBet, balance]);
 
@@ -271,7 +271,7 @@ export default function Roulette() {
     if (spinning || lastBets.length === 0) return;
     const rebetTotal = lastBets.reduce((s, b) => s + b.amount, 0);
     if (rebetTotal > balance) { toast.error("Insufficient balance"); return; }
-    if (rebetTotal > 5) { toast.error("Maximum total bet is $5"); return; }
+    if (rebetTotal > 50) { toast.error("Maximum total bet is $50"); return; }
     setBets(lastBets);
   };
 
@@ -279,7 +279,7 @@ export default function Roulette() {
     if (spinning || lastBets.length === 0) return;
     const rebetTotal = lastBets.reduce((s, b) => s + b.amount, 0);
     if (rebetTotal > balance) { toast.error("Insufficient balance"); return; }
-    if (rebetTotal > 5) { toast.error("Maximum total bet is $5"); return; }
+    if (rebetTotal > 50) { toast.error("Maximum total bet is $50"); return; }
     setBets(lastBets);
     setTimeout(() => {
       document.getElementById("spin-btn")?.click();
@@ -367,11 +367,14 @@ export default function Roulette() {
             <div className="flex gap-1 md:gap-2">
               {CHIP_VALUES.map(v => {
                 const chipLabel = v < 1 ? `${Math.round(v * 100)}¢` : `$${v}`;
-                const chipBg = v === 0.20 ? "radial-gradient(circle, hsl(0,0%,95%), hsl(0,0%,70%))"
+                const chipBg = v === 0.10 ? "radial-gradient(circle, hsl(0,0%,95%), hsl(0,0%,70%))"
+                  : v === 0.20 ? "radial-gradient(circle, hsl(0,60%,50%), hsl(0,60%,35%))"
                   : v === 0.50 ? "radial-gradient(circle, hsl(210,70%,55%), hsl(210,70%,35%))"
                   : v === 1 ? "radial-gradient(circle, hsl(280,50%,55%), hsl(280,50%,35%))"
-                  : "radial-gradient(circle, hsl(43,75%,50%), hsl(43,65%,35%))";
-                const chipColor = v === 0.20 ? "hsl(0,0%,15%)" : "white";
+                  : v === 2 ? "radial-gradient(circle, hsl(30,80%,50%), hsl(30,80%,35%))"
+                  : v === 5 ? "radial-gradient(circle, hsl(43,75%,50%), hsl(43,65%,35%))"
+                  : "radial-gradient(circle, hsl(150,60%,40%), hsl(150,60%,28%))";
+                const chipColor = v === 0.10 ? "hsl(0,0%,15%)" : "white";
                 return (
                   <button key={v} onClick={() => setSelectedChip(v)}
                     className="rounded-full flex items-center justify-center font-bold transition-transform"
