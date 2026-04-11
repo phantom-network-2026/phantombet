@@ -19,7 +19,7 @@ import {
   AlertTriangle, Activity, Lock, Megaphone, HardDrive, Clock,
   Ban, Users, BarChart3, Wrench, Power, Bell, Percent, Trophy,
   Gamepad2, CreditCard, MessageSquare, UserCheck, Zap, LayoutGrid,
-  Info, Server, Hash
+  Info, Server, Hash, Gift
 } from "lucide-react";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
