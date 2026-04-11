@@ -315,7 +315,7 @@ function ScratchCardInner() {
 
               {/* Logo + Title */}
               <div className="relative flex items-center justify-center gap-2 mb-2">
-                <img src="/src/assets/phantombet-logo.svg" alt="PhantomBet" className="h-6 w-6" />
+                <img src={new URL("@/assets/phantombet-logo.png", import.meta.url).href} alt="PhantomBet" className="h-6 w-6" />
                 <span className="font-display text-sm font-black text-transparent bg-clip-text bg-gradient-to-r from-[hsl(var(--casino-gold))] to-[hsl(var(--casino-gold-light))]">
                   PHANTOMBET SCRATCH & WIN
                 </span>
