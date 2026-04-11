@@ -54,7 +54,7 @@
 
     // ---------- Game State ----------
     const STATE = {
-      balance: 1000,
+      balance: 0,
       bet: 10,
       mines: 3,
       total: 25,

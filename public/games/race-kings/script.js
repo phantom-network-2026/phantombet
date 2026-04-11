@@ -3,7 +3,7 @@ const CONFIG = {
             baseSpeed: 5,
             trackLengthPercent: 90, 
             minBet: 0.1,
-            initialBalance: 1000,
+            initialBalance: 0,
             raceDurationMin: 4000, 
             raceDurationMax: 6000  
         };

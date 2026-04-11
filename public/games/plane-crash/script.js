@@ -43,7 +43,7 @@ const THEMES = [
 ];
 
 const STATE = {
-    balance: parseFloat(localStorage.getItem('crash_balance')) || 1000.00,
+    balance: parseFloat(localStorage.getItem('crash_balance')) || 0,
     phase: 'IDLE', currentMultiplier: 1.00, crashPoint: 0, startTime: 0,
     history: JSON.parse(localStorage.getItem('crash_history')) || [],
     bets: { 1: { active: false, amount: 0, cashedOut: false }, 2: { active: false, amount: 0, cashedOut: false } },

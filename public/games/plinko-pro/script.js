@@ -30,7 +30,7 @@ const GAME_CONFIG = {
     pegRadius: 4,
     ballRadius: 10, // Default ball size
     slotHeight: 32,
-    startBalance: 1000,
+    startBalance: 0,
     // Colors are now handled by CSS variables for themes, these are fallbacks or specific elements
     colors: {
         ball: '#ef4444'
