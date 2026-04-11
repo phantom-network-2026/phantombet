@@ -54,7 +54,7 @@
 
     // ---------- Game State ----------
     const STATE = {
-      balance: 1000,
+      balance: 0,
       bet: 10,
       mines: 3,
       total: 25,
@@ -320,7 +320,7 @@
     startBtn.addEventListener('click', newRound);
     cashoutBtn.addEventListener('click', cashout);
     revealAllBtn.addEventListener('click', ()=>{ revealAll(); });
-    addFunds.addEventListener('click', ()=>{ STATE.balance += 1000; updateKpis(); toast('Funds added'); });
+    // Add funds disabled - uses bridge balance
 
     el('autoStart').addEventListener('click', startAuto);
     el('autoStop').addEventListener('click', stopAuto);

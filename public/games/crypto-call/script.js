@@ -475,7 +475,7 @@ const Game = {
     },
     
     claimAdReward() {
-        this.balance += 100;
+        // disabled - uses bridge
         this.saveStorage();
         this.updateUI();
         this.closeAdModal();

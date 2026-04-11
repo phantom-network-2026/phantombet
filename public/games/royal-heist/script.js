@@ -197,7 +197,7 @@
 
         function getDailyBonus() {
             state.balance += 250;
-            alert("250 Coins Added as Bonus!");
+            alert("Bonus not available");
             playSound('win');
             save();
             updateUI();
@@ -238,7 +238,7 @@
         }
 
         function claimAdReward() {
-            state.balance += 100;
+            // disabled - uses bridge
             document.getElementById('ad-modal').style.display = 'none';
             playSound('win');
             save();

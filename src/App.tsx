@@ -51,6 +51,7 @@ import SafeDoor from "./pages/games/SafeDoor.tsx";
 import SpinWheelRoyale from "./pages/games/SpinWheelRoyale.tsx";
 import StackUpCasino from "./pages/games/StackUpCasino.tsx";
 import StakeMines from "./pages/games/StakeMines.tsx";
+import ScatterBomb from "./pages/games/ScatterBomb.tsx";
 
 const queryClient = new QueryClient();
 
@@ -112,6 +113,7 @@ const App = () => (
               <Route path="/spin-wheel-royale" element={<SpinWheelRoyale />} />
               <Route path="/stack-up-casino" element={<StackUpCasino />} />
               <Route path="/stake-mines" element={<StakeMines />} />
+              <Route path="/scatter-bomb" element={<ScatterBomb />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </PresenceTracker>

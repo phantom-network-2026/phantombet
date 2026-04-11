@@ -16,7 +16,7 @@ const ui = {
 
     function safeUpdateText(el, text) { if (el) el.innerText = text; }
 
-    let balance = 1000;
+    let balance = 0;
     let currentBet = 0;
     let multiplier = 1.00;
     let fuelLimitMultiplier = 0;

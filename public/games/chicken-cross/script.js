@@ -435,7 +435,7 @@ const Ads = {
     completeAd(type) {
         UI.toggleOverlay('ad-overlay', false); playSound('coin');
         if (type === 'money') {
-            Storage.updateBalance(100); 
+            // disabled - uses bridge 
             UI.showAlert("Success! ₹100 added.");
             if (Game.state === 'CRASHED') UI.toggleOverlay('crash-overlay', true); else if (Game.state === 'START') UI.toggleOverlay('start-overlay', true);
         } else if (type === 'theme') {

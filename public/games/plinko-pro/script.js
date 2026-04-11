@@ -30,7 +30,7 @@ const GAME_CONFIG = {
     pegRadius: 4,
     ballRadius: 10, // Default ball size
     slotHeight: 32,
-    startBalance: 1000,
+    startBalance: 0,
     // Colors are now handled by CSS variables for themes, these are fallbacks or specific elements
     colors: {
         ball: '#ef4444'
@@ -689,8 +689,8 @@ class UIController {
 
         document.getElementById('dailyBonusBtn').onclick = () => {
              // Simple daily bonus sim
-             this.updateBalance(1000);
-             this.showToast("+$1000 Bonus Claimed!", "success");
+             // disabled - uses bridge
+             // bonus disabled
              document.getElementById('dailyBonusBtn').disabled = true;
              setTimeout(() => { document.getElementById('dailyBonusBtn').disabled = false; }, 60000); // 1 min cooldown for demo
         };

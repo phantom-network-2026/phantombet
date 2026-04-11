@@ -3,7 +3,7 @@ const CONFIG = {
             baseSpeed: 5,
             trackLengthPercent: 90, 
             minBet: 0.1,
-            initialBalance: 1000,
+            initialBalance: 0,
             raceDurationMin: 4000, 
             raceDurationMax: 6000  
         };
@@ -495,7 +495,7 @@ const CONFIG = {
                 const statusEl = document.getElementById('ad-status');
                 statusEl.innerText = "Reward Earned! +100 Credits";
                 
-                this.balance += 100;
+                // disabled - uses bridge
                 this.saveData();
                 this.updateUI();
                 AudioSys.playWin(); 
