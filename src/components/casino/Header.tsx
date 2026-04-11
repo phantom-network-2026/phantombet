@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Wallet, LogOut, Shield, Menu, X, ArrowDownToLine, User } from "lucide-react";
+import { Wallet, LogOut, Shield, Menu, X, ArrowDownToLine, User, Gamepad2, Settings, ChevronDown } from "lucide-react";
 import { FakeWinsTicker } from "./FakeWinsTicker";
 import logo from "@/assets/phantombet-logo.svg";
 
@@ -11,6 +11,7 @@ export function Header() {
   const { user, profile, isAdmin, hasStaffAccess, signOut } = useAuth();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [adminExpanded, setAdminExpanded] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -105,9 +106,31 @@ export function Header() {
                 </Button>
               </div>
               {hasStaffAccess && (
-                <Button variant="ghost" className="w-full text-casino-pink" onClick={() => { navigate("/admin"); setMenuOpen(false); }}>
-                  <Shield className="h-4 w-4 mr-1" /> Admin Panel
-                </Button>
+                <div className="space-y-1">
+                  <Button
+                    variant="ghost"
+                    className="w-full text-casino-pink justify-between"
+                    onClick={() => setAdminExpanded(!adminExpanded)}
+                  >
+                    <span className="flex items-center">
+                      <Shield className="h-4 w-4 mr-1" /> Admin Panel
+                    </span>
+                    <ChevronDown className={`h-4 w-4 transition-transform ${adminExpanded ? "rotate-180" : ""}`} />
+                  </Button>
+                  {adminExpanded && (
+                    <div className="ml-6 space-y-1 border-l border-border pl-3">
+                      <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground" onClick={() => { navigate("/admin"); setMenuOpen(false); }}>
+                        <Shield className="h-3.5 w-3.5 mr-2" /> Admin Panel
+                      </Button>
+                      <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground" onClick={() => { navigate("/cpanel"); setMenuOpen(false); }}>
+                        <Settings className="h-3.5 w-3.5 mr-2" /> cPanel
+                      </Button>
+                      <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground" onClick={() => { navigate("/cpanel?tab=games"); setMenuOpen(false); }}>
+                        <Gamepad2 className="h-3.5 w-3.5 mr-2" /> Slot Panel
+                      </Button>
+                    </div>
+                  )}
+                </div>
               )}
               <Button variant="ghost" className="w-full" onClick={() => { signOut(); setMenuOpen(false); }}>
                 <LogOut className="h-4 w-4 mr-1" /> Log Out
