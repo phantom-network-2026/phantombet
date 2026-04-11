@@ -37,6 +37,7 @@ const GAME_ROUTES: Record<string, string> = {
   "Spin Wheel Royale": "/spin-wheel-royale",
   "Stack Up Casino": "/stack-up-casino",
   "Stake Mines": "/stake-mines",
+  "Scatter Bomb": "/scatter-bomb",
 };
 
 export default function GameDetail() {
