@@ -571,3 +571,26 @@ function resolveLosses() {
 // Kickoff
 requestAnimationFrame(gameLoop);
 startRound();
+// ========== PhantomBet Bridge Integration ==========
+PhantomBridge.init('Plane Crash');
+(function() {
+  PhantomBridge.onReady(function(bal) {
+    STATE.balance = bal;
+    localStorage.setItem('crash_balance', bal);
+    updateBalanceDisplay();
+  });
+  PhantomBridge.onBalanceChange(function(bal) {
+    STATE.balance = bal;
+    localStorage.setItem('crash_balance', bal);
+    updateBalanceDisplay();
+  });
+  const origUpdateBalance = updateBalance;
+  updateBalance = function(change) {
+    origUpdateBalance(change);
+    if (change < 0) {
+      PhantomBridge.deductBet(Math.abs(change));
+    } else if (change > 0) {
+      PhantomBridge.creditWin(change, 'Plane Crash Win');
+    }
+  };
+})();

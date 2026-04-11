@@ -419,3 +419,26 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             checkLayout();
         });
+// ========== PhantomBet Bridge Integration ==========
+PhantomBridge.init('Meter Crash');
+(function() {
+  PhantomBridge.onReady(function(bal) {
+    Game.balance = bal;
+    updateBalance();
+  });
+  PhantomBridge.onBalanceChange(function(bal) {
+    Game.balance = bal;
+    updateBalance();
+  });
+  const origUpdateBalance = updateBalance;
+  let _lastBal = Game.balance;
+  updateBalance = function() {
+    origUpdateBalance();
+    if (Game.balance !== _lastBal) {
+      const delta = Game.balance - _lastBal;
+      _lastBal = Game.balance;
+      if (delta < 0) PhantomBridge.deductBet(Math.abs(delta));
+      else if (delta > 0) PhantomBridge.creditWin(delta, 'Meter Crash Win');
+    }
+  };
+})();

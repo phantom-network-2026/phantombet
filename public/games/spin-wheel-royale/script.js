@@ -216,3 +216,28 @@ const UI = {
 };
 
 let currentRotation = 0; window.game = Game; window.onload = Menu.init; Game.init();
+// ========== PhantomBet Bridge Integration ==========
+PhantomBridge.init('Spin Wheel Royale');
+(function() {
+  let _lastBal = STATE.balance;
+  PhantomBridge.onReady(function(bal) {
+    STATE.balance = bal;
+    _lastBal = bal;
+    Game.updateUI();
+  });
+  PhantomBridge.onBalanceChange(function(bal) {
+    STATE.balance = bal;
+    _lastBal = bal;
+    Game.updateUI();
+  });
+  const origUpdateUI = Game.updateUI;
+  Game.updateUI = function() {
+    origUpdateUI.call(Game);
+    if (STATE.balance !== _lastBal) {
+      const delta = STATE.balance - _lastBal;
+      _lastBal = STATE.balance;
+      if (delta < 0) PhantomBridge.deductBet(Math.abs(delta));
+      else if (delta > 0) PhantomBridge.creditWin(delta, 'Spin Wheel Win');
+    }
+  };
+})();

@@ -302,3 +302,30 @@
             this.innerHTML = state.isMuted ? '<i data-lucide="volume-x"></i>' : '<i data-lucide="volume-2"></i>';
             lucide.createIcons();
         };
+// ========== PhantomBet Bridge Integration ==========
+PhantomBridge.init('Royal Heist');
+(function() {
+  let _lastBal = state.balance;
+  PhantomBridge.onReady(function(bal) {
+    state.balance = bal;
+    _lastBal = bal;
+    updateUI();
+  });
+  PhantomBridge.onBalanceChange(function(bal) {
+    state.balance = bal;
+    _lastBal = bal;
+    updateUI();
+  });
+  const origUpdateUI = updateUI;
+  updateUI = function() {
+    origUpdateUI();
+    if (state.balance !== _lastBal) {
+      const delta = state.balance - _lastBal;
+      _lastBal = state.balance;
+      if (delta < 0) PhantomBridge.deductBet(Math.abs(delta));
+      else if (delta > 0) PhantomBridge.creditWin(delta, 'Royal Heist Win');
+    }
+  };
+  const origSave = save;
+  save = function() { origSave(); };
+})();

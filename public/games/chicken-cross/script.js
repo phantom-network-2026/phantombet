@@ -477,3 +477,28 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             osc.type = 'sine'; osc.frequency.setValueAtTime(1000, now); osc.frequency.exponentialRampToValueAtTime(1500, now + 0.1); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now + 0.1); osc.start(now); osc.stop(now + 0.1);
         }
     };
+// ========== PhantomBet Bridge Integration ==========
+PhantomBridge.init('Chicken Cross');
+(function() {
+  let _lastBal = Storage.data.balance;
+  PhantomBridge.onReady(function(bal) {
+    Storage.data.balance = bal;
+    _lastBal = bal;
+    Storage.save();
+  });
+  PhantomBridge.onBalanceChange(function(bal) {
+    Storage.data.balance = bal;
+    _lastBal = bal;
+    Storage.save();
+  });
+  const origSave = Storage.save.bind(Storage);
+  Storage.save = function() {
+    origSave();
+    if (Storage.data.balance !== _lastBal) {
+      const delta = Storage.data.balance - _lastBal;
+      _lastBal = Storage.data.balance;
+      if (delta < 0) PhantomBridge.deductBet(Math.abs(delta));
+      else if (delta > 0) PhantomBridge.creditWin(delta, 'Chicken Cross Win');
+    }
+  };
+})();

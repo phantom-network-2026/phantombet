@@ -348,3 +348,28 @@ const ui = {
         camera.updateProjectionMatrix(); 
         renderer.setSize(container.clientWidth, container.clientHeight); 
     });
+// ========== PhantomBet Bridge Integration ==========
+PhantomBridge.init('Jackpot Highway');
+(function() {
+  let _lastBal = balance;
+  PhantomBridge.onReady(function(bal) {
+    balance = bal;
+    _lastBal = bal;
+    updateBalanceUI();
+  });
+  PhantomBridge.onBalanceChange(function(bal) {
+    balance = bal;
+    _lastBal = bal;
+    updateBalanceUI();
+  });
+  const origUpdateBal = updateBalanceUI;
+  updateBalanceUI = function() {
+    origUpdateBal();
+    if (balance !== _lastBal) {
+      const delta = balance - _lastBal;
+      _lastBal = balance;
+      if (delta < 0) PhantomBridge.deductBet(Math.abs(delta));
+      else if (delta > 0) PhantomBridge.creditWin(delta, 'Jackpot Highway Win');
+    }
+  };
+})();

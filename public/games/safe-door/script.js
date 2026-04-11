@@ -310,3 +310,28 @@
         }
 
         init();
+// ========== PhantomBet Bridge Integration ==========
+PhantomBridge.init('Safe Door');
+(function() {
+  let _lastBal = state.balance;
+  PhantomBridge.onReady(function(bal) {
+    state.balance = bal;
+    _lastBal = bal;
+    updateWalletUI();
+  });
+  PhantomBridge.onBalanceChange(function(bal) {
+    state.balance = bal;
+    _lastBal = bal;
+    updateWalletUI();
+  });
+  const origUpdateWallet = updateWalletUI;
+  updateWalletUI = function() {
+    origUpdateWallet();
+    if (state.balance !== _lastBal) {
+      const delta = state.balance - _lastBal;
+      _lastBal = state.balance;
+      if (delta < 0) PhantomBridge.deductBet(Math.abs(delta));
+      else if (delta > 0) PhantomBridge.creditWin(delta, 'Safe Door Win');
+    }
+  };
+})();
