@@ -60,12 +60,15 @@ export function GameProbabilityPanel() {
   const fetchData = async () => {
     setLoading(true);
     const [gamesRes, settingRes] = await Promise.all([
-      supabase.from("games").select("id, name, category").eq("is_active", true).order("category").order("name"),
+      supabase.from("games").select("id, name, category, is_active").order("category").order("name"),
       supabase.from("site_settings").select("value").eq("key", "game_win_probability").maybeSingle(),
     ]);
 
-    const gameList = (gamesRes.data || []) as { id: string; name: string; category: string }[];
+    const gameList = (gamesRes.data || []) as { id: string; name: string; category: string; is_active: boolean }[];
     setGames(gameList);
+    const visMap: Record<string, boolean> = {};
+    gameList.forEach((g) => { visMap[g.id] = g.is_active; });
+    setGameVisibility(visMap);
 
     if (settingRes.data?.value) {
       const saved = settingRes.data.value as any;
