@@ -149,6 +149,18 @@ export function GameProbabilityPanel() {
     }));
   };
 
+  const toggleGameVisibility = async (gameId: string) => {
+    const newVal = !gameVisibility[gameId];
+    setGameVisibility((prev) => ({ ...prev, [gameId]: newVal }));
+    const { error } = await supabase.from("games").update({ is_active: newVal }).eq("id", gameId);
+    if (error) {
+      setGameVisibility((prev) => ({ ...prev, [gameId]: !newVal }));
+      toast.error("Failed to update game visibility");
+    } else {
+      toast.success(`${games.find((g) => g.id === gameId)?.name} ${newVal ? "enabled" : "disabled"}`);
+    }
+  };
+
   const resetAll = () => {
     setConfig((prev) => ({
       ...prev,
