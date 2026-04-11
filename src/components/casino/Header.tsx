@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Wallet, LogOut, Shield, Menu, X, ArrowDownToLine, User, Gamepad2, Settings, ChevronDown } from "lucide-react";
 import { FakeWinsTicker } from "./FakeWinsTicker";
-import logo from "@/assets/phantombet-logo.svg";
+import logo from "@/assets/phantombet-logo.png";
 
 export function Header() {
   const { user, profile, isAdmin, hasStaffAccess, signOut } = useAuth();

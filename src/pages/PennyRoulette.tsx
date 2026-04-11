@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { RotateCw, X, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import phantomLogo from "@/assets/phantombet-logo.svg";
+import phantomLogo from "@/assets/phantombet-logo.png";
 
 // ─── Constants ──────────────────────────────────────────────────
 const WHEEL_ORDER = [
