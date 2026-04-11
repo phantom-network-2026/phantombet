@@ -6,6 +6,7 @@
     <title>Dream Eleven Casino</title>
     <!-- Google Fonts for Modern Look -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <script src="../bridge.js"></script>
     <style>
         :root {
             --bg-dark: #0a0a0a;
@@ -1099,5 +1100,35 @@
             renderer.setSize(container.clientWidth, container.clientHeight);
         }
     </script>
+<script>
+// ========== PhantomBet Bridge Integration ==========
+PhantomBridge.init('Dream Eleven');
+(function() {
+  var _lastBalance = wallet;
+  PhantomBridge.onReady(function(bal) {
+    wallet = bal;
+    _lastBalance = bal;
+    updateWalletUI();
+  });
+  PhantomBridge.onBalanceChange(function(bal) {
+    wallet = bal;
+    _lastBalance = bal;
+    updateWalletUI();
+  });
+  var origUpdateWalletUI = updateWalletUI;
+  updateWalletUI = function() {
+    origUpdateWalletUI();
+    if (wallet !== _lastBalance) {
+      var delta = wallet - _lastBalance;
+      _lastBalance = wallet;
+      if (delta < 0) {
+        PhantomBridge.deductBet(Math.abs(delta));
+      } else if (delta > 0) {
+        PhantomBridge.creditWin(delta, 'Dream Eleven Win');
+      }
+    }
+  };
+})();
+</script>
 </body>
 </html>

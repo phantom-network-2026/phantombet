@@ -11,6 +11,7 @@
     <!-- Phosphor Icons (for lightweight modern icons) -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
+    <script src="../bridge.js"></script>
     <style>
         :root {
             --bg-dark: #0f111a;
@@ -941,5 +942,33 @@
         window.onload = () => game.init();
 
     </script>
+<script>
+// ========== PhantomBet Bridge Integration ==========
+PhantomBridge.init('Head and Tail');
+(function() {
+  var _lastBalance = game.balance;
+  PhantomBridge.onReady(function(bal) {
+    game.balance = bal;
+    _lastBalance = bal;
+    document.getElementById('wallet-balance').textContent = bal.toFixed(2);
+  });
+  PhantomBridge.onBalanceChange(function(bal) {
+    game.balance = bal;
+    _lastBalance = bal;
+    document.getElementById('wallet-balance').textContent = bal.toFixed(2);
+  });
+  var origUpdateBalance = game.updateBalance.bind(game);
+  game.updateBalance = function(amt) {
+    origUpdateBalance(amt);
+    var delta = game.balance - _lastBalance;
+    _lastBalance = game.balance;
+    if (delta < 0) {
+      PhantomBridge.deductBet(Math.abs(delta));
+    } else if (delta > 0) {
+      PhantomBridge.creditWin(delta, 'Head and Tail Win');
+    }
+  };
+})();
+</script>
 </body>
 </html>
