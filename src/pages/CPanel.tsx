@@ -953,6 +953,12 @@ export default function CPanel() {
                 <Button variant="outline" size="sm" className="w-full justify-start text-xs" onClick={() => setActivePanel("house-edge")}>
                   <Percent className="h-3 w-3 mr-2" /> House Edge
                 </Button>
+                <Button variant="outline" size="sm" className="w-full justify-start text-xs" onClick={() => setActivePanel("game-probability")}>
+                  <LayoutGrid className="h-3 w-3 mr-2" /> Win Probability
+                </Button>
+                <Button variant="outline" size="sm" className="w-full justify-start text-xs" onClick={() => setActivePanel("promotions")}>
+                  <Gift className="h-3 w-3 mr-2" /> Promotions
+                </Button>
                 <Button variant="outline" size="sm" className="w-full justify-start text-xs" onClick={() => setActivePanel("maintenance")}>
                   <Wrench className="h-3 w-3 mr-2" /> Maintenance Mode
                 </Button>
