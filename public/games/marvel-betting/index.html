@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Marvel Casino Royale</title>
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url(https://fonts.bunny.net/css?family=jura:300,500,700|inter:400,600);
+
+        :root {
+            --primary: #ffd700;
+            --primary-glow: rgba(255, 215, 0, 0.4);
+            --accent: #00f3ff;
+            --danger: #ef4444; /* Red color for loss */
+            --success: #22c55e; /* Green color for win */
+            --bg-dark: #09090b;
+            --panel-bg: rgba(20, 20, 23, 0.95);
+            --border: rgba(255, 255, 255, 0.1);
+            
+            --carousel-depth: 300px;
+            --card-width: 90px;
+            --card-height: 135px;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-dark);
+            color: white;
+            font-family: "Inter", sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- Splash Screen --- */
+        #splash-screen {
+            position: fixed;
+            inset: 0;
+            background-color: #000;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease-out;
+        }
+
+        .splash-icon {
+            width: 200px;
+            height: 200px;
+            object-fit: contain;
+            margin-bottom: 2rem;
+            animation: pulse 2s infinite;
+            background: #111;
+            border-radius: 20px;
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 30px var(--primary-glow);
+        }
+
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255,255,255,0.1);
+            border-top: 5px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        .loading-text {
+            color: #888;
+            font-family: "Jura", sans-serif;
+            letter-spacing: 2px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        /* --- Navbar --- */
+        .navbar {
+            height: 50px;
+            background: rgba(0,0,0,0.8);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1rem;
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            flex-shrink: 0;
+        }
+
+        .logo {
+            font-family: "Jura", sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .wallet-display {
+            background: rgba(255,255,255,0.05);
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            color: var(--success);
+            font-size: 0.85rem;
+        }
+
+        .btn-nav {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: #ccc;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-nav span { display: none; }
+        @media (min-width: 600px) {
+            .btn-nav span { display: inline; }
+            .logo { font-size: 1.2rem; }
+            .navbar { padding: 0 1.5rem; }
+        }
+
+        .btn-nav:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border-color: rgba(255,255,255,0.3);
+        }
+
+        .btn-ad {
+            background: linear-gradient(135deg, #6366f1, #3b82f6);
+            border: none;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        /* --- Main Layout --- */
+        .game-wrapper {
+            flex: 1;
+            display: flex;
+            position: relative;
+            height: calc(100vh - 50px);
+            overflow: hidden;
+        }
+
+        /* --- Left: Scene --- */
+        .scene-container {
+            flex: 1;
+            position: relative;
+            display: grid;
+            place-items: center;
+            perspective: 1000px;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
+        }
+
+        .door-frame {
+            position: absolute;
+            width: calc(var(--card-width) + 80px);
+            height: calc(var(--card-height) + 80px);
+            border: 6px solid var(--primary);
+            border-radius: 16px;
+            box-shadow: 
+                0 0 40px var(--primary-glow),
+                inset 0 0 20px var(--primary-glow);
+            z-index: 10;
+            pointer-events: none;
+            display: flex;
+            justify-content: center;
+            transform: translateZ(20px);
+        }
+
+        .door-frame::after {
+            content: "WIN ZONE";
+            position: absolute;
+            bottom: -15px;
+            background: var(--primary);
+            color: black;
+            padding: 4px 12px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            border-radius: 4px;
+            letter-spacing: 1px;
+        }
+
+        .carousel {
+            position: relative;
+            width: var(--card-width);
+            height: var(--card-height);
+            transform-style: preserve-3d;
+            transition: transform 4s cubic-bezier(0.15, 0.05, 0.25, 1);
+        }
+
+        .card {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            transform-style: preserve-3d;
+            transform: rotateY(calc(var(--i) * 40deg)) translateZ(var(--carousel-depth));
+            -webkit-box-reflect: below 5px linear-gradient(to top, rgba(0,0,0,0.3) 20%, transparent);
+        }
+        
+        .card:nth-child(1) { --i: 1; }
+        .card:nth-child(2) { --i: 2; }
+        .card:nth-child(3) { --i: 3; }
+        .card:nth-child(4) { --i: 4; }
+        .card:nth-child(5) { --i: 5; }
+        .card:nth-child(6) { --i: 6; }
+        .card:nth-child(7) { --i: 7; }
+        .card:nth-child(8) { --i: 8; }
+        .card:nth-child(9) { --i: 9; }
+
+        .card img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid rgba(255,255,255,0.1);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+        }
+
+        .card-label {
+            position: absolute;
+            bottom: -35px; /* Shifted down for better visibility */
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            white-space: nowrap;
+            border: 1px solid rgba(255,255,255,0.2);
+            pointer-events: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        /* --- Right: Sidebar Panel --- */
+        .ui-panel {
+            width: 300px;
+            background: var(--panel-bg);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            gap: 1rem;
+            z-index: 50;
+            backdrop-filter: blur(12px);
+            overflow-y: auto;
+        }
+
+        .risk-section {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .section-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: #888;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .risk-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+        }
+
+        .risk-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            color: #aaa;
+            padding: 8px 2px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            transition: all 0.2s;
+        }
+
+        .risk-btn span.mult { font-size: 0.9rem; font-weight: 700; color: white; }
+        .risk-btn span.label { font-size: 0.5rem; text-transform: uppercase; }
+
+        .risk-btn:hover { background: rgba(255,255,255,0.1); }
+        
+        .risk-btn.active {
+            border-color: var(--primary);
+            background: rgba(255, 215, 0, 0.1);
+            color: var(--primary);
+            box-shadow: 0 0 10px rgba(255,215,0,0.2);
+        }
+        .risk-btn.active span.mult { color: var(--primary); }
+
+        .controls-row {
+            display: grid;
+            grid-template-columns: 1.8fr 1.2fr;
+            gap: 8px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .custom-select, .custom-input {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            width: 100%;
+            font-family: inherit;
+        }
+
+        #spin-btn {
+            background: linear-gradient(135deg, #dc2626, #991b1b);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #7f1d1d;
+            transition: transform 0.1s;
+        }
+        
+        #spin-btn:active { transform: translateY(4px); box-shadow: none; }
+        #spin-btn:disabled { background: #444; box-shadow: none; cursor: not-allowed; }
+
+        .history-container {
+            flex: 1;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 100px;
+        }
+
+        .history-header {
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.03);
+            border-bottom: 1px solid var(--border);
+            font-size: 0.75rem;
+            color: #888;
+            font-weight: 600;
+        }
+
+        .history-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+            margin: 0;
+            list-style: none;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.8rem;
+        }
+        
+        /* Updates History Colors: Green for win, Red for lose */
+        .history-item.win { color: var(--success); }
+        .history-item.lose { color: var(--danger); }
+        .history-item span.amount { font-weight: bold; }
+
+        /* --- Winner Animation Overlay --- */
+        .winner-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 3000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            pointer-events: auto;
+            backdrop-filter: blur(8px);
+        }
+
+        .winner-overlay.active { display: flex; animation: fadeIn 0.3s forwards; }
+
+        .winner-card-container {
+            position: relative;
+            width: 200px;
+            height: 300px;
+            transform-style: preserve-3d;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .winner-card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 15px;
+            border: 4px solid white;
+            box-shadow: 0 0 50px var(--hero-color);
+        }
+
+        .winner-text {
+            margin-top: 2rem;
+            font-family: "Jura", sans-serif;
+            font-size: 3rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: white;
+            text-shadow: 0 0 20px var(--hero-color);
+            text-align: center;
+            opacity: 0;
+            animation: slideUp 0.5s 0.3s forwards;
+        }
+        
+        .winner-subtext {
+            font-size: 1.2rem;
+            color: #ccc;
+            margin-top: 0.5rem;
+            opacity: 0;
+            animation: slideUp 0.5s 0.5s forwards;
+        }
+
+        .winner-particles {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .hero-theme-green { --hero-color: #39ff14; }
+        .hero-theme-red { --hero-color: #ff0000; }
+        .hero-theme-blue { --hero-color: #00f3ff; }
+        .hero-theme-cyan { --hero-color: #00e5ff; }
+        .hero-theme-orange { --hero-color: #ff8800; }
+        .hero-theme-yellow { --hero-color: #ffdd00; }
+        .hero-theme-purple { --hero-color: #aa00ff; }
+        .hero-theme-white { --hero-color: #ffffff; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes popIn { from { transform: scale(0) rotateY(180deg); } to { transform: scale(1) rotateY(0deg); } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1); opacity: 0.8; } }
+
+        /* --- Modals --- */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+            display: none;
+            place-items: center;
+            z-index: 2000;
+        }
+        .modal-overlay.active { display: grid; }
+        .modal {
+            background: #18181b;
+            border: 1px solid var(--border);
+            padding: 2rem;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            text-align: center;
+            position: relative;
+        }
+        .modal-close {
+            position: absolute;
+            top: 15px; right: 15px;
+            background: none; border: none;
+            color: #666; cursor: pointer; font-size: 1.2rem;
+        }
+        .ad-timer-circle {
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            border: 4px solid var(--accent);
+            display: grid;
+            place-items: center;
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 20px auto;
+            color: white;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
+        }
+        .claim-btn {
+            background: var(--success);
+            color: black;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: none;
+        }
+
+        /* --- MOBILE RESPONSIVENESS --- */
+        @media (max-width: 900px) {
+            .game-wrapper {
+                flex-direction: column;
+                height: auto;
+                overflow-y: auto;
+            }
+
+            .scene-container {
+                height: 55vh;
+                width: 100%;
+                overflow: hidden;
+            }
+
+            .ui-panel {
+                width: 100%;
+                height: auto;
+                min-height: 45vh;
+                border-left: none;
+                border-top: 1px solid var(--border);
+                padding: 1rem 1.5rem;
+                padding-bottom: 2rem;
+            }
+
+            .carousel {
+                transform: scale(0.55); /* Reduced scale for better mobile fit */
+            }
+            #spin-btn {
+                padding: 16px;
+                font-size: 1.3rem;
+            }
+            .risk-btn {
+                padding: 10px 4px;
+            }
+        }
+
+        @media (max-width: 400px) {
+             .carousel { transform: scale(0.45); } /* Even smaller for very small screens */
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Splash Screen -->
+    <div id="splash-screen">
+        <img src="loading.jpg" alt="Game Icon" class="splash-icon">
+        <div class="loader"></div>
+        <div class="loading-text">Loading Casino Assets...</div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">
+            <i class="fa-solid fa-dice"></i>
+            <span>Marvel Casino</span>
+        </div>
+        <div class="nav-actions">
+            <button class="btn-nav btn-ad" onclick="openAdModal()">
+                <i class="fa-solid fa-play"></i> <span>Watch Ad</span>
+            </button>
+            <div class="wallet-display">
+                <i class="fa-solid fa-wallet"></i>
+                <span id="nav-balance">$1000</span>
+            </div>
+            <button class="btn-nav" onclick="openHelpModal()">
+                <i class="fa-solid fa-circle-question"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Game Area -->
+    <div class="game-wrapper">
+        <div class="scene-container">
+            <div class="door-frame"></div>
+            <div class="carousel" id="carousel">
+                
+                <!-- 1 -->
+                <div class="card" data-title="Ant-man" data-theme="hero-theme-purple">
+                    <img src="https://raw.githubusercontent.com/cbolson/assets/refs/heads/main/codepen/lego/ant-man.webp">
+                    <div class="card-label">Ant-man</div>
+                </div>
+
+                <!-- 2 -->
+                <div class="card" data-title="Captain America" data-theme="hero-theme-blue">
+                    <img src="https://raw.githubusercontent.com/cbolson/assets/refs/heads/main/codepen/lego/capitan-america.webp">
+                    <div class="card-label">Captain America</div>
+                </div>
+
+                <!-- 3 -->
+                <div class="card" data-title="Dr Strange" data-theme="hero-theme-orange">
+                    <img src="https://raw.githubusercontent.com/cbolson/assets/refs/heads/main/codepen/lego/dr-strange.webp">
+                    <div class="card-label">Dr Strange</div>
+                </div>
+
+                <!-- 4 -->
+                <div class="card" data-title="Hulk" data-theme="hero-theme-green">
+                    <img src="https://raw.githubusercontent.com/cbolson/assets/refs/heads/main/codepen/lego/hulk.webp">
+                    <div class="card-label">Hulk</div>
+                </div>
+
+                <!-- 5 -->
+                <div class="card" data-title="Iron Man" data-theme="hero-theme-red">
+                    <img src="https://raw.githubusercontent.com/cbolson/assets/refs/heads/main/codepen/lego/iron-man.webp">
+                    <div class="card-label">Iron Man</div>
+                </div>
+
+                <!-- 6 -->
+                <div class="card" data-title="Spiderman" data-theme="hero-theme-red">
+                    <img src="https://raw.githubusercontent.com/cbolson/assets/refs/heads/main/codepen/lego/spiderman.webp">
+                    <div class="card-label">Spiderman</div>
+                </div>
+
+                <!-- 7 -->
+                <div class="card" data-title="Storm" data-theme="hero-theme-white">
+                    <img src="https://raw.githubusercontent.com/cbolson/assets/refs/heads/main/codepen/lego/storm.webp">
+                    <div class="card-label">Storm</div>
+                </div>
+
+                <!-- 8 -->
+                <div class="card" data-title="Thor" data-theme="hero-theme-cyan">
+                    <img src="https://raw.githubusercontent.com/cbolson/assets/refs/heads/main/codepen/lego/thor.webp">
+                    <div class="card-label">Thor</div>
+                </div>
+
+                <!-- 9 -->
+                <div class="card" data-title="Wolverine" data-theme="hero-theme-yellow">
+                    <img src="https://raw.githubusercontent.com/cbolson/assets/refs/heads/main/codepen/lego/wolverine.webp">
+                    <div class="card-label">Wolverine</div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <aside class="ui-panel">
+            <div class="risk-section">
+                <span class="section-label">Risk Multiplier</span>
+                <div class="risk-grid">
+                    <button class="risk-btn active" onclick="setRisk(2, this)">
+                        <span class="mult">2x</span><span class="label">Low</span>
+                    </button>
+                    <button class="risk-btn" onclick="setRisk(10, this)">
+                        <span class="mult">10x</span><span class="label">Med</span>
+                    </button>
+                    <button class="risk-btn" onclick="setRisk(50, this)">
+                        <span class="mult">50x</span><span class="label">High</span>
+                    </button>
+                    <button class="risk-btn" onclick="setRisk(100, this)">
+                        <span class="mult">100x</span><span class="label">Extr</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="controls-row">
+                <div class="input-group">
+                    <span class="section-label">Select Hero</span>
+                    <select id="hero-select" class="custom-select"></select>
+                </div>
+                <div class="input-group">
+                    <span class="section-label">Bet Amount</span>
+                    <input type="number" id="bet-amount" class="custom-input" value="100" min="10">
+                </div>
+            </div>
+
+            <button id="spin-btn">SPIN NOW</button>
+
+            <div class="history-container">
+                <div class="history-header">Recent History</div>
+                <ul class="history-list" id="history-list"></ul>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Winner Animation Overlay -->
+    <div id="winner-overlay" class="winner-overlay">
+        <div class="winner-particles"></div>
+        <div class="winner-card-container">
+            <img id="winner-img" class="winner-card-img" src="" alt="Winner">
+        </div>
+        <div class="winner-text" id="winner-name">HERO NAME</div>
+        <div class="winner-subtext" id="winner-amount">You Won $1000!</div>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-help" class="modal-overlay">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModals()"><i class="fa-solid fa-xmark"></i></button>
+            <h2><i class="fa-solid fa-book-open"></i> How To Play</h2>
+            <ul style="text-align: left; padding-left: 20px; line-height: 1.6; color: #ccc;">
+                <li><strong>Low Risk (2x):</strong> ~33% chance to win. Exact match required.</li>
+                <li><strong>Medium Risk (10x):</strong> ~11% chance to win. Exact match required.</li>
+                <li><strong>High Risk (50x):</strong> ~2% chance to win. Exact match required.</li>
+                <li><strong>Extreme (100x):</strong> ~1% chance to win. Exact match required.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="modal-ad" class="modal-overlay">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModals()"><i class="fa-solid fa-xmark"></i></button>
+            <h2>Watching Ad...</h2>
+            <div id="ad-timer" class="ad-timer-circle">10</div>
+            <div style="background: #333; height: 150px; margin: 20px 0; display:flex; align-items:center; justify-content:center; border-radius:8px; color:#555;">[ Ad Space ]</div>
+            <button id="claim-reward-btn" class="claim-btn" onclick="claimAdReward()">Claim $100</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Splash Screen Logic ---
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const splash = document.getElementById('splash-screen');
+                splash.style.opacity = '0';
+                setTimeout(() => {
+                    splash.style.display = 'none';
+                }, 500); // Wait for fade out
+            }, 2500); // 2.5s Loading time
+        });
+
+        // --- State ---
+        let balance = 1000;
+        let currentRotation = 0;
+        let isSpinning = false;
+        let currentRisk = 2; 
+        let cards = Array.from(document.querySelectorAll('.card'));
+        const totalCards = 9;
+
+        // --- Elements ---
+        const carousel = document.getElementById('carousel');
+        const heroSelect = document.getElementById('hero-select');
+        const spinBtn = document.getElementById('spin-btn');
+        const navBalance = document.getElementById('nav-balance');
+        const historyList = document.getElementById('history-list');
+        const winnerOverlay = document.getElementById('winner-overlay');
+        const winnerImg = document.getElementById('winner-img');
+        const winnerNameEl = document.getElementById('winner-name');
+        const winnerAmountEl = document.getElementById('winner-amount');
+
+        // --- Init: Populate Select strictly from DOM ---
+        cards.forEach((card, index) => {
+            const title = card.getAttribute('data-title');
+            const opt = document.createElement('option');
+            opt.value = index; 
+            opt.innerText = title;
+            heroSelect.appendChild(opt);
+        });
+
+        // --- Game Logic ---
+        function setRisk(multiplier, btn) {
+            if(isSpinning) return;
+            currentRisk = multiplier;
+            document.querySelectorAll('.risk-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        spinBtn.addEventListener('click', () => {
+            const betInput = document.getElementById('bet-amount');
+            const bet = parseInt(betInput.value);
+            const selectedIndex = parseInt(heroSelect.value);
+            const selectedName = cards[selectedIndex].getAttribute('data-title');
+
+            if (isNaN(bet) || bet <= 0 || bet > balance) {
+                alert("Invalid bet or insufficient funds!");
+                return;
+            }
+
+            balance -= bet;
+            updateBalanceUI();
+            
+            isSpinning = true;
+            spinBtn.disabled = true;
+            spinBtn.innerText = "Spinning...";
+
+            // 1. Determine Win or Loss Based on Probability First
+            let won = false;
+            const rand = Math.random();
+
+            if (currentRisk === 2) {
+                if (rand < 0.333) won = true; // Approx 33% chance to win for Low Risk
+            } else if (currentRisk === 10) {
+                if (rand < 0.111) won = true; // Approx 11% chance for Med Risk
+            } else if (currentRisk === 50) {
+                if (rand < 0.02) won = true;  // 2% chance for High Risk
+            } else if (currentRisk === 100) {
+                if (rand < 0.01) won = true;  // 1% chance for Extreme Risk
+            }
+
+            // 2. Set the Visual Winner Index strictly based on the calculated win/loss
+            let visualWinnerIndex = 0;
+
+            if (won) {
+                // Always land on the selected card on win
+                visualWinnerIndex = selectedIndex;
+            } else {
+                // On loss, strictly land on a different card (not the selected one)
+                let invalidSlots = [selectedIndex];
+                
+                let validSlots = [];
+                for(let i=0; i<totalCards; i++) {
+                    if(!invalidSlots.includes(i)) validSlots.push(i);
+                }
+                // Select random loss card
+                visualWinnerIndex = validSlots[Math.floor(Math.random() * validSlots.length)];
+            }
+
+            const visualWinnerCard = cards[visualWinnerIndex];
+            const visualWinnerName = visualWinnerCard.getAttribute('data-title');
+            const visualWinnerImgSrc = visualWinnerCard.querySelector('img').src;
+            const visualWinnerTheme = visualWinnerCard.getAttribute('data-theme');
+
+            const cardAngle = (visualWinnerIndex + 1) * 40; 
+            const targetRotation = -(cardAngle); 
+            const extraSpins = 360 * 5; 
+            
+            const currentMod = currentRotation % 360;
+            let neededAdjustment = targetRotation - currentMod;
+            if (neededAdjustment > 0) neededAdjustment -= 360;
+            
+            const finalRotation = currentRotation + neededAdjustment - extraSpins;
+
+            carousel.style.transform = `rotateY(${finalRotation}deg)`;
+            currentRotation = finalRotation;
+
+            setTimeout(() => {
+                isSpinning = false;
+                spinBtn.disabled = false;
+                spinBtn.innerText = "SPIN NOW";
+
+                if (won) {
+                    const winAmount = bet * currentRisk;
+                    balance += winAmount;
+                    
+                    // Show selected hero name on win
+                    addToHistory(true, winAmount, `${selectedName} (${currentRisk}x) Win`);
+                    
+                    showWinnerAnimation(visualWinnerName, visualWinnerImgSrc, visualWinnerTheme, winAmount);
+                } else {
+                    // Show the landed hero name on loss
+                    addToHistory(false, bet, `Loss - Landed on ${visualWinnerName}`);
+                }
+                updateBalanceUI();
+
+            }, 4000); 
+        });
+
+        function showWinnerAnimation(name, imgSrc, themeClass, amount) {
+            // Set content
+            winnerImg.src = imgSrc;
+            winnerNameEl.innerText = name + " WINS!";
+            winnerAmountEl.innerText = `You Won $${amount}`;
+            
+            // Set theme color
+            winnerOverlay.className = "winner-overlay active " + themeClass;
+            
+            // Auto hide after 3 seconds
+            setTimeout(() => {
+                winnerOverlay.classList.remove('active');
+            }, 3000);
+            
+            // Allow click to dismiss early
+            winnerOverlay.onclick = () => winnerOverlay.classList.remove('active');
+        }
+
+        function updateBalanceUI() {
+            navBalance.innerText = `$${balance}`;
+        }
+
+        function addToHistory(win, amount, desc) {
+            const li = document.createElement('li');
+            li.className = `history-item ${win ? 'win' : 'lose'}`;
+            li.innerHTML = `<span>${desc}</span><span class="amount">${win ? '+' : '-'}$${amount}</span>`;
+            historyList.prepend(li);
+            if(historyList.children.length > 20) historyList.lastChild.remove();
+        }
+
+        // --- Modal Logic ---
+        function openHelpModal() { document.getElementById('modal-help').classList.add('active'); }
+        function closeModals() { 
+            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+            clearInterval(adTimerInterval);
+        }
+        
+        let adTimerInterval;
+        function openAdModal() {
+            const modal = document.getElementById('modal-ad');
+            const timerEl = document.getElementById('ad-timer');
+            const btn = document.getElementById('claim-reward-btn');
+            
+            modal.classList.add('active');
+            btn.style.display = 'none';
+            timerEl.style.display = 'grid';
+            let timeLeft = 10;
+            timerEl.innerText = timeLeft;
+
+            clearInterval(adTimerInterval);
+            adTimerInterval = setInterval(() => {
+                timeLeft--;
+                timerEl.innerText = timeLeft;
+                if(timeLeft <= 0) {
+                    clearInterval(adTimerInterval);
+                    timerEl.style.display = 'none';
+                    btn.style.display = 'inline-block';
+                }
+            }, 1000);
+        }
+
+        function claimAdReward() {
+            balance += 100;
+            updateBalanceUI();
+            closeModals();
+        }
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal-overlay')) closeModals();
+        }
+    </script>
+</body>
+</html>

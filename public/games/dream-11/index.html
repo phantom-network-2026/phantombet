@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dream Eleven Casino</title>
+    <!-- Google Fonts for Modern Look -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0a0a;
+            --panel-bg: #121212;
+            --accent-gold: #FFD700;
+            --accent-green: #00ff88;
+            --accent-red: #ff3333;
+            --text-main: #ffffff;
+            --text-dim: #888888;
+            --glass: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden; /* Prevent scroll on body */
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+        }
+
+        /* --- SPLASH SCREEN --- */
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 1s ease-out;
+        }
+
+        .splash-logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 80px;
+            font-weight: 900;
+            color: transparent;
+            background: linear-gradient(to bottom, #FFD700, #B8860B);
+            -webkit-background-clip: text;
+            background-clip: text;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            margin-bottom: 40px;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+            animation: pulseLogo 2s infinite ease-in-out;
+            text-align: center;
+        }
+
+        .loader-container {
+            position: relative;
+            width: 60px;
+            height: 60px;
+        }
+
+        .loader {
+            width: 100%;
+            height: 100%;
+            border: 4px solid #333;
+            border-top: 4px solid var(--accent-gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+            margin-top: 20px;
+            color: #888;
+            font-size: 14px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes pulseLogo { 0% { transform: scale(1); filter: brightness(100%); } 50% { transform: scale(1.05); filter: brightness(120%); } 100% { transform: scale(1); filter: brightness(100%); } }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+
+        /* --- NAVBAR --- */
+        #navbar {
+            height: 60px;
+            width: 100%;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            border-bottom: 1px solid var(--accent-gold);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+            z-index: 100;
+            position: relative;
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            font-weight: 900;
+            color: var(--accent-gold);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .nav-btn {
+            background: linear-gradient(145deg, #222, #333);
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: #444;
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+        }
+
+        .ad-btn {
+            background: linear-gradient(90deg, #11998e, #38ef7d);
+            border: none;
+            color: #000;
+        }
+        
+        .ad-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px #38ef7d;
+        }
+
+        .wallet-display {
+            background: #1a1a1a;
+            padding: 8px 20px;
+            border-radius: 50px;
+            border: 1px solid var(--accent-gold);
+            font-family: 'Orbitron', sans-serif;
+            color: var(--accent-gold);
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* --- MAIN LAYOUT --- */
+        #main-layout {
+            display: flex;
+            height: calc(100vh - 60px); /* Subtract Navbar height */
+            width: 100vw;
+        }
+
+        #game-container {
+            flex-grow: 1;
+            position: relative;
+            background: #87CEEB; /* Day Sky */
+            overflow: hidden;
+        }
+
+        /* --- SIDEBAR --- */
+        #sidebar {
+            width: 300px;
+            background: var(--panel-bg);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            box-shadow: -5px 0 20px rgba(0,0,0,0.5);
+            z-index: 50;
+        }
+
+        .section-title {
+            font-size: 12px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 5px;
+            margin-top: 10px;
+        }
+        
+        .section-title:first-child { margin-top: 0; }
+
+        .status-box {
+            background: rgba(255,255,255,0.05);
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 13px;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border);
+        }
+        .win-text { color: var(--accent-green); text-shadow: 0 0 5px var(--accent-green); }
+        .lose-text { color: var(--accent-red); text-shadow: 0 0 5px var(--accent-red); }
+
+        /* Bet Amount Controls */
+        .bet-controls {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+            flex-direction: column;
+        }
+        
+        .bet-input-wrapper {
+            display: flex;
+            align-items: center;
+            background: #000;
+            border: 1px solid var(--accent-gold);
+            border-radius: 4px;
+            padding: 0 10px;
+            height: 40px;
+        }
+        
+        .currency-symbol { color: var(--accent-gold); font-weight: bold; }
+        
+        #betInput {
+            background: transparent;
+            border: none;
+            color: #fff;
+            padding: 8px;
+            width: 100%;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            outline: none;
+            font-size: 16px;
+        }
+
+        .quick-amounts {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .chip-btn {
+            flex: 1;
+            background: #333;
+            border: 1px solid #555;
+            color: #ccc;
+            padding: 8px 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        .chip-btn:hover { background: #444; color: #fff; border-color: #888; }
+
+
+        /* Compact Grid */
+        .bet-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .bet-btn {
+            background: #2a2a2a;
+            color: #fff;
+            border: 1px solid var(--border);
+            padding: 12px 5px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bet-btn span {
+            display: block;
+            font-size: 9px;
+            font-family: 'Montserrat', sans-serif;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        .bet-btn:hover { background: #333; border-color: #666; }
+        
+        .bet-btn.active {
+            background: var(--accent-gold);
+            color: #000;
+            border-color: #fff;
+            box-shadow: 0 0 15px var(--accent-gold);
+        }
+        .bet-btn.active span { color: #000; }
+        .bet-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        .btn-red { border-bottom: 2px solid var(--accent-red); }
+        .btn-green { border-bottom: 2px solid var(--accent-green); }
+        .btn-blue { border-bottom: 2px solid #00d2ff; }
+
+        /* History Section */
+        #history-section {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: rgba(0,0,0,0.3);
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            min-height: 50px;
+        }
+
+        #history-list {
+            overflow-y: auto;
+            flex-grow: 1;
+            padding: 5px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 10px;
+            font-size: 11px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .history-item:last-child { border-bottom: none; }
+        .h-win { color: var(--accent-green); }
+        .h-loss { color: var(--accent-red); }
+
+        /* --- GAME OVERLAY --- */
+        #ui-layer {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .score-board {
+            background: rgba(0,0,0,0.6);
+            padding: 10px 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-gold);
+            backdrop-filter: blur(5px);
+        }
+        .sb-title { font-size: 10px; color: #aaa; letter-spacing: 1px; }
+        .sb-score { font-size: 24px; font-weight: 900; font-family: 'Orbitron'; color: #fff; }
+
+        #message-overlay {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
+            text-align: center;
+            z-index: 20;
+            width: 100%;
+        }
+        #msg-text {
+            font-size: 100px;
+            font-weight: 900;
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            -webkit-text-stroke: 3px black;
+            text-shadow: 5px 5px 0px rgba(0,0,0,0.5);
+        }
+
+        /* --- MODALS (Popups) --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(5px);
+            z-index: 200;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-box {
+            background: #1a1a1a;
+            width: 400px;
+            max-width: 90%;
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid var(--accent-gold);
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            position: relative;
+            text-align: center;
+        }
+
+        .modal-title {
+            font-family: 'Orbitron';
+            font-size: 22px;
+            color: var(--accent-gold);
+            margin-bottom: 15px;
+        }
+
+        .modal-content {
+            font-size: 14px;
+            color: #ccc;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px; right: 15px;
+            color: #666;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        .close-btn:hover { color: #fff; }
+
+        .action-btn {
+            background: var(--accent-gold);
+            color: #000;
+            border: none;
+            padding: 10px 25px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .action-btn:disabled { background: #555; cursor: not-allowed; color: #888; }
+
+        /* Ad Specific */
+        .ad-placeholder {
+            background: #000;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            border: 1px dashed #444;
+            color: #555;
+            flex-direction: column;
+        }
+        #ad-timer { font-size: 32px; font-weight: bold; color: #fff; margin-top: 10px; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: #111; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+        /* --- MOBILE RESPONSIVE STYLES --- */
+        #mob-hist-btn { display: none; } /* Default hidden on desktop */
+
+        @media (max-width: 900px) {
+            #navbar {
+                padding: 0 10px;
+            }
+            .logo {
+                font-size: 16px;
+                letter-spacing: 1px;
+            }
+            .nav-btn {
+                padding: 6px 10px;
+                font-size: 10px;
+            }
+            .wallet-display {
+                padding: 5px 12px;
+                font-size: 12px;
+            }
+            .nav-actions {
+                gap: 5px;
+            }
+
+            #mob-hist-btn { display: inline-block; } /* Show on mobile */
+
+            #main-layout {
+                flex-direction: column;
+                height: calc(100vh - 60px);
+                overflow: hidden;
+            }
+
+            #game-container {
+                width: 100%;
+                height: 45%; /* Top 45% for Game */
+                flex-grow: 0;
+            }
+
+            #sidebar {
+                width: 100%;
+                height: 55%; /* Bottom 55% for Controls */
+                border-left: none;
+                border-top: 1px solid var(--border);
+                padding: 10px;
+                box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+            }
+
+            /* Hide History in Sidebar on Mobile to save space */
+            .hide-on-mobile { display: none !important; }
+
+            .splash-logo {
+                font-size: 40px;
+            }
+            
+            #msg-text {
+                font-size: 60px; /* Smaller text on mobile */
+            }
+
+            .bet-grid {
+                gap: 5px;
+            }
+            
+            .bet-btn {
+                padding: 10px 2px;
+                font-size: 12px;
+            }
+
+            .section-title {
+                margin-top: 5px;
+                margin-bottom: 5px;
+                font-size: 10px;
+            }
+            
+            .status-box {
+                min-height: 30px;
+                margin-bottom: 5px;
+                padding: 5px;
+                font-size: 12px;
+            }
+
+            .bet-input-wrapper {
+                height: 35px;
+            }
+        }
+    </style>
+    <!-- Load Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+    <!-- SPLASH SCREEN -->
+    <div id="splash-screen">
+        <div class="splash-logo">DREAM<br>ELEVEN</div>
+        <div class="loader-container">
+            <div class="loader"></div>
+        </div>
+        <div class="loading-text">Loading Casino...</div>
+    </div>
+
+    <!-- NAVBAR -->
+    <nav id="navbar">
+        <div class="logo">DREAM <span style="font-size:12px; color:#fff; vertical-align:middle; font-family:'Montserrat'">11</span></div>
+        <div class="nav-actions">
+            <button class="nav-btn" onclick="openModal('howToModal')">Help</button>
+            <button class="nav-btn" id="mob-hist-btn" onclick="openModal('historyModal')">History</button>
+            <button class="nav-btn ad-btn" onclick="openAdModal()">+₹100</button>
+            <div class="wallet-display">
+                <span>₹</span> <span id="wallet">1000</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN LAYOUT -->
+    <div id="main-layout">
+        
+        <!-- Game View -->
+        <div id="game-container">
+            <div id="ui-layer">
+                <div class="score-board">
+                    <div class="sb-title">LIVE MATCH</div>
+                    <div class="sb-score"><span id="score">0</span>-<span id="wickets">0</span></div>
+                    <div class="sb-title" style="margin-top:5px; font-size:9px">TARGET: Unlimited</div>
+                </div>
+            </div>
+            <div id="message-overlay">
+                <div id="msg-text"></div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div id="sidebar">
+            <div class="section-title">STATUS</div>
+            <div class="status-box" id="status-msg">
+                Place your bet...
+            </div>
+
+            <div class="section-title">BET AMOUNT</div>
+            <div class="bet-controls">
+                <div class="bet-input-wrapper">
+                    <span class="currency-symbol">₹</span>
+                    <input type="number" id="betInput" value="100" min="10">
+                </div>
+                <div class="quick-amounts">
+                    <button class="chip-btn" onclick="setBetAmount(100)">100</button>
+                    <button class="chip-btn" onclick="setBetAmount(500)">500</button>
+                    <button class="chip-btn" onclick="setBetAmount(1000)">1k</button>
+                    <button class="chip-btn" onclick="setBetAmount(5000)">5k</button>
+                </div>
+            </div>
+
+            <div class="section-title">SELECT PREDICTION</div>
+            <div class="bet-grid">
+                <button class="bet-btn btn-green" onclick="placeBet('6')">6 <span>2.0x</span></button>
+                <button class="bet-btn btn-green" onclick="placeBet('4')">4 <span>2.0x</span></button>
+                <button class="bet-btn btn-blue" onclick="placeBet('2')">2 <span>2.0x</span></button>
+                <button class="bet-btn btn-blue" onclick="placeBet('1')">1 <span>2.0x</span></button>
+                <button class="bet-btn" onclick="placeBet('DOT')">DOT <span>2.0x</span></button>
+                <button class="bet-btn btn-red" onclick="placeBet('OUT')">OUT <span>2.0x</span></button>
+            </div>
+
+            <!-- Hide on mobile to save space, use popup instead -->
+            <div class="section-title hide-on-mobile">BET HISTORY</div>
+            <div id="history-section" class="hide-on-mobile">
+                <div id="history-list">
+                    <!-- History items will appear here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+
+    <!-- History Modal (Mobile) -->
+    <div id="historyModal" class="modal-overlay">
+        <div class="modal-box" style="height: 60vh; display:flex; flex-direction:column;">
+            <span class="close-btn" onclick="closeModal('historyModal')">&times;</span>
+            <div class="modal-title">BET HISTORY</div>
+            <div id="mobile-history-list" style="overflow-y:auto; flex-grow:1; border:1px solid #333; padding:5px; border-radius:5px;">
+                <!-- Mirrored History items -->
+                <div style="text-align:center; color:#666; padding:20px;">No bets yet</div>
+            </div>
+            <button class="action-btn" style="margin-top:10px" onclick="closeModal('historyModal')">CLOSE</button>
+        </div>
+    </div>
+
+    <!-- How to Play Modal -->
+    <div id="howToModal" class="modal-overlay">
+        <div class="modal-box">
+            <span class="close-btn" onclick="closeModal('howToModal')">&times;</span>
+            <div class="modal-title">HOW TO PLAY</div>
+            <div class="modal-content">
+                <p>1. <strong>Enter Amount</strong> you want to bet.</p>
+                <p>2. <strong>Select an outcome</strong> (6, 4, 1, 2, Dot, Out).</p>
+                <p>3. Watch the AI play the shot.</p>
+                <p>4. If correct, you win <strong>2x</strong> your bet.</p>
+                <p>5. If incorrect, you lose your stake.</p>
+                <hr style="border:0; border-top:1px solid #333; margin:10px 0;">
+                <p style="font-size:12px; color:#888;">*Win probability is dynamically adjusted.</p>
+            </div>
+            <button class="action-btn" onclick="closeModal('howToModal')">GOT IT</button>
+        </div>
+    </div>
+
+    <!-- Ad Modal -->
+    <div id="adModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-title">WATCHING AD...</div>
+            <div class="ad-placeholder">
+                <div style="font-size:50px">📺</div>
+                <div style="margin-top:10px">Sponsor Ad</div>
+            </div>
+            <div id="ad-timer">10</div>
+            <button id="claimRewardBtn" class="action-btn" style="width:100%; margin-top:10px;" disabled onclick="claimAdReward()">CLAIM REWARD</button>
+        </div>
+    </div>
+
+    <script>
+        // --- GAME LOGIC VARIABLES ---
+        let wallet = 1000;
+        let currentBetAmount = 100;
+        let currentPrediction = null;
+        let isBettingOpen = true;
+        
+        const ALL_OUTCOMES = ['6', '4', '1', '2', 'DOT', 'OUT'];
+
+        // Three.js Vars
+        let scene, camera, renderer;
+        let ball, batGroup, stumps, ground;
+        let ballVelocity = new THREE.Vector3();
+        let gravity = -0.015;
+        let totalScore = 0;
+        let wickets = 0;
+        let predefinedOutcome = null;
+
+        // Game States
+        let currentState = 0; // 0: Idle, 1: Bowling, 2: Hit, 3: Out
+
+        // DOM Elements
+        const statusMsg = document.getElementById('status-msg');
+        const walletEl = document.getElementById('wallet');
+        const scoreEl = document.getElementById('score');
+        const wicketsEl = document.getElementById('wickets');
+        const historyList = document.getElementById('history-list');
+        const mobileHistoryList = document.getElementById('mobile-history-list');
+        const msgOverlay = document.getElementById('message-overlay');
+        const msgText = document.getElementById('msg-text');
+        const betBtns = document.querySelectorAll('.bet-btn');
+        const betInput = document.getElementById('betInput');
+
+        init();
+        animate();
+        handleSplash();
+
+        // --- SPLASH SCREEN LOGIC ---
+        function handleSplash() {
+            setTimeout(() => {
+                const splash = document.getElementById('splash-screen');
+                splash.style.opacity = '0';
+                setTimeout(() => {
+                    splash.style.display = 'none';
+                }, 1000);
+            }, 3000); // 3 Seconds Load Time
+        }
+
+        // --- UI FUNCTIONS ---
+        function openModal(id) {
+            document.getElementById(id).style.display = 'flex';
+        }
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+        
+        function setBetAmount(amount) {
+            if(!isBettingOpen) return;
+            betInput.value = amount;
+        }
+
+        // --- AD LOGIC ---
+        let adInterval;
+        function openAdModal() {
+            const modal = document.getElementById('adModal');
+            const timerEl = document.getElementById('ad-timer');
+            const btn = document.getElementById('claimRewardBtn');
+            
+            modal.style.display = 'flex';
+            btn.disabled = true;
+            btn.innerText = "WAIT...";
+            btn.style.background = "#555";
+            
+            let timeLeft = 10;
+            timerEl.innerText = timeLeft;
+
+            clearInterval(adInterval);
+            adInterval = setInterval(() => {
+                timeLeft--;
+                timerEl.innerText = timeLeft;
+                if(timeLeft <= 0) {
+                    clearInterval(adInterval);
+                    timerEl.innerText = "DONE!";
+                    btn.disabled = false;
+                    btn.innerText = "CLAIM ₹100";
+                    btn.style.background = "var(--accent-green)";
+                }
+            }, 1000);
+        }
+
+        function claimAdReward() {
+            wallet += 100;
+            updateWalletUI();
+            closeModal('adModal');
+        }
+
+        // --- BETTING LOGIC ---
+        function placeBet(prediction) {
+            if (!isBettingOpen) return;
+            
+            // Get amount from input
+            const amount = parseInt(betInput.value);
+            
+            if (isNaN(amount) || amount <= 0) {
+                statusMsg.innerText = "INVALID AMOUNT";
+                statusMsg.style.color = "var(--accent-red)";
+                return;
+            }
+
+            if (wallet < amount) {
+                statusMsg.innerText = "INSUFFICIENT FUNDS";
+                statusMsg.style.color = "var(--accent-red)";
+                return;
+            }
+
+            currentBetAmount = amount;
+            
+            betBtns.forEach(btn => btn.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            
+            currentPrediction = prediction;
+            wallet -= currentBetAmount;
+            updateWalletUI();
+            
+            statusMsg.innerHTML = `Bet ₹${currentBetAmount} on <span style="color:var(--accent-gold)">${prediction}</span>.`;
+            
+            isBettingOpen = false;
+            disableButtons(true);
+            betInput.disabled = true;
+            
+            startMatchSequence();
+        }
+
+        function disableButtons(disable) {
+            betBtns.forEach(btn => btn.disabled = disable);
+            const chips = document.querySelectorAll('.chip-btn');
+            chips.forEach(btn => btn.disabled = disable);
+            if(!disable) betBtns.forEach(btn => btn.classList.remove('active'));
+        }
+
+        function updateWalletUI() {
+            walletEl.innerText = wallet;
+        }
+
+        function startMatchSequence() {
+            // Updated Logic: 60% Win Rate
+            const winChance = 0.60;
+            const random = Math.random();
+
+            if (random < winChance) {
+                predefinedOutcome = currentPrediction;
+            } else {
+                const losers = ALL_OUTCOMES.filter(o => o !== currentPrediction);
+                predefinedOutcome = losers[Math.floor(Math.random() * losers.length)];
+            }
+            
+            startBowl();
+        }
+
+        // --- THREE.JS GAME ---
+        function init() {
+            const container = document.getElementById('game-container');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87CEEB); 
+            scene.fog = new THREE.Fog(0x87CEEB, 100, 400);
+
+            camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
+            camera.position.set(0, 25, 60);
+            camera.lookAt(0, 5, -100);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(width, height);
+            renderer.shadowMap.enabled = true;
+            container.appendChild(renderer.domElement);
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+            dirLight.position.set(50, 100, 50);
+            dirLight.castShadow = true;
+            scene.add(dirLight);
+
+            createStadium();
+            createGameplayObjects();
+
+            window.addEventListener('resize', onWindowResize, false);
+        }
+
+        function createStadium() {
+            const groundGeo = new THREE.CircleGeometry(300, 64);
+            const groundMat = new THREE.MeshStandardMaterial({ color: 0x4caf50, roughness: 0.8 });
+            ground = new THREE.Mesh(groundGeo, groundMat);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            const pitchGeo = new THREE.PlaneGeometry(26, 220);
+            const pitchMat = new THREE.MeshStandardMaterial({ color: 0xd2b48c });
+            const pitch = new THREE.Mesh(pitchGeo, pitchMat);
+            pitch.rotation.x = -Math.PI / 2;
+            pitch.position.y = 0.1;
+            pitch.position.z = -90;
+            pitch.receiveShadow = true;
+            scene.add(pitch);
+
+            const standsGeo = new THREE.CylinderGeometry(320, 320, 40, 64, 1, true);
+            const standsMat = new THREE.MeshBasicMaterial({ color: 0x666666, side: THREE.DoubleSide });
+            const stands = new THREE.Mesh(standsGeo, standsMat);
+            stands.position.y = 20;
+            scene.add(stands);
+            
+            const ringGeo = new THREE.TorusGeometry(290, 1, 16, 100);
+            const ringMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            const ring = new THREE.Mesh(ringGeo, ringMat);
+            ring.rotation.x = -Math.PI / 2;
+            ring.position.y = 1;
+            scene.add(ring);
+        }
+
+        function createGameplayObjects() {
+            const stumpGeo = new THREE.CylinderGeometry(0.4, 0.4, 9, 16);
+            const stumpMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+            stumps = new THREE.Group();
+            for(let i=-1; i<=1; i++) {
+                const s = new THREE.Mesh(stumpGeo, stumpMat);
+                s.position.x = i * 1.5; s.position.y = 4.5;
+                stumps.add(s);
+            }
+            stumps.position.z = 10;
+            scene.add(stumps);
+            
+            batGroup = new THREE.Group();
+            const blade = new THREE.Mesh(new THREE.BoxGeometry(4.5, 14, 1), new THREE.MeshStandardMaterial({ color: 0x8d6e63 }));
+            blade.position.y = 6;
+            batGroup.add(blade);
+            const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 6), new THREE.MeshStandardMaterial({ color: 0x000 }));
+            handle.position.y = 14;
+            batGroup.add(handle);
+            batGroup.position.set(2, 6, 6); 
+            batGroup.rotation.set(-Math.PI/8, 0, Math.PI/8);
+            scene.add(batGroup);
+
+            ball = new THREE.Mesh(new THREE.SphereGeometry(1.0), new THREE.MeshStandardMaterial({ color: 0xff0000 }));
+            ball.visible = false;
+            scene.add(ball);
+        }
+
+        function startBowl() {
+            ball.position.set(0, 15, -190);
+            ballVelocity.set(0, 0, 0);
+            batGroup.rotation.set(-Math.PI/8, 0, Math.PI/8);
+            stumps.children[1].rotation.x = 0;
+            msgOverlay.style.display = 'none';
+
+            ball.visible = true;
+            currentState = 1; 
+            ballVelocity.set(0, 0, 3.2);
+
+            setTimeout(autoBat, 900);
+        }
+
+        function autoBat() {
+            let frame = 0;
+            const interval = setInterval(() => {
+                frame++;
+                batGroup.rotation.y -= 0.5;
+                batGroup.rotation.x += 0.1;
+                
+                if (frame === 4) processPhysics();
+                
+                if (frame > 10) {
+                    clearInterval(interval);
+                    setTimeout(() => batGroup.rotation.set(-Math.PI/8, 0, Math.PI/8), 400);
+                }
+            }, 20);
+        }
+
+        function processPhysics() {
+            currentState = 2; 
+            
+            if (predefinedOutcome === 'OUT') {
+                ball.position.x = 0; 
+                currentState = 1; 
+                return;
+            }
+
+            let vx = (Math.random()-0.5)*3; 
+            let vy = 0; 
+            let vz = -4;
+
+            switch(predefinedOutcome) {
+                case '6': vy = 2.5; vz = -6.5; break; // Modified for High Loft
+                case '4': vy = 0.3; vz = -6.0; break;
+                case '1': vy = 0.5; vz = -1.5; break;
+                case '2': vy = 0.8; vz = -2.5; break;
+                case 'DOT': vy = -0.5; vz = -0.5; break;
+            }
+            ballVelocity.set(vx, vy, vz);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (currentState === 1) { 
+                ball.position.add(ballVelocity);
+                if(ball.position.y > 0.5) ballVelocity.y += gravity;
+                
+                if (ball.position.z > 10 && Math.abs(ball.position.x) < 2) {
+                    if (predefinedOutcome === 'OUT') handleWicket();
+                }
+            }
+            else if (currentState === 2) { 
+                ball.position.add(ballVelocity);
+                ballVelocity.y += gravity;
+                
+                if (ball.position.y <= 0.5) {
+                    ball.position.y = 0.5;
+                    ballVelocity.y *= -0.6;
+                    ballVelocity.z *= 0.95;
+                    ballVelocity.x *= 0.95;
+                }
+
+                if (ballVelocity.length() < 0.1 || ball.position.z < -250) finishRound();
+            }
+            renderer.render(scene, camera);
+        }
+
+        function handleWicket() {
+            currentState = 3;
+            stumps.children[1].rotation.x = 0.5;
+            finishRound();
+        }
+
+        function finishRound() {
+            currentState = 0;
+            ballVelocity.set(0,0,0);
+            
+            let runs = 0;
+            if(predefinedOutcome === '6') runs = 6;
+            if(predefinedOutcome === '4') runs = 4;
+            if(predefinedOutcome === '2') runs = 2;
+            if(predefinedOutcome === '1') runs = 1;
+            if(predefinedOutcome === 'OUT') wickets++;
+            
+            totalScore += runs;
+            scoreEl.innerText = totalScore;
+            wicketsEl.innerText = wickets;
+
+            // Show Message with Color Logic
+            let text = predefinedOutcome === 'DOT' ? 'DOT BALL' : predefinedOutcome;
+            if (text === '6') text = 'SIX!';
+            if (text === '4') text = 'FOUR!';
+            if (text === 'OUT') text = 'OUT!';
+            
+            // Set Color based on outcome
+            let textColor = 'white';
+            if(predefinedOutcome === 'OUT') {
+                textColor = '#ff3333'; // Red
+            } else if (['6', '4', '1', '2'].includes(predefinedOutcome)) {
+                textColor = '#00ff88'; // Green
+            } else {
+                textColor = '#ffffff'; // White for DOT
+            }
+
+            msgText.innerText = text;
+            msgText.style.color = textColor;
+            // Ensure black stroke is present via CSS, but we can reinforce here if needed
+            // CSS -webkit-text-stroke takes care of the outline
+            
+            msgOverlay.style.display = 'block';
+
+            // Wallet Logic
+            let won = (predefinedOutcome === currentPrediction);
+            let profit = won ? currentBetAmount * 2 : 0;
+            wallet += profit;
+            updateWalletUI();
+
+            // Status Update
+            if (won) {
+                statusMsg.innerHTML = `<span class="win-text">YOU WON ₹${profit}!</span>`;
+            } else {
+                statusMsg.innerHTML = `<span class="lose-text">LOST ₹${currentBetAmount}!</span>`;
+            }
+
+            // History Update
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            div.innerHTML = `
+                <span style="color:#aaa">Bet: ${currentPrediction} (₹${currentBetAmount})</span>
+                <span class="${won ? 'h-win' : 'h-loss'}">${won ? 'WIN' : 'LOSS'}</span>
+            `;
+            
+            // Remove "No bets yet" placeholder if exists
+            if (mobileHistoryList.children.length === 1 && mobileHistoryList.children[0].textContent === 'No bets yet') {
+                 mobileHistoryList.innerHTML = '';
+            }
+
+            historyList.prepend(div.cloneNode(true));
+            mobileHistoryList.prepend(div);
+
+            setTimeout(() => {
+                isBettingOpen = true;
+                disableButtons(false);
+                betInput.disabled = false;
+                statusMsg.innerText = "Place your bet...";
+                msgOverlay.style.display = 'none';
+            }, 1500); // Faster restart time
+        }
+
+        function onWindowResize() {
+            const container = document.getElementById('game-container');
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+    </script>
+</body>
+</html>

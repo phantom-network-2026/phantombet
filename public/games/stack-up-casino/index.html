@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SkyStack Casino</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <!-- Using a more premium font -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-panel: #1e293b;
+            --bg-panel-lighter: #334155;
+            --accent-gold: #f59e0b;
+            --accent-gold-hover: #d97706;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --font-main: 'Montserrat', sans-serif;
+            --shadow-card: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            font-family: var(--font-main);
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+        }
+
+        /* --- SPLASH SCREEN --- */
+        #splash-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.6s ease-out;
+        }
+        
+        .splash-content {
+            text-align: center;
+            position: relative;
+        }
+
+        .splash-logo {
+            font-size: 3.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            background: linear-gradient(135deg, #fceabb 0%, #f8b500 50%, #fceabb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 20px rgba(248, 181, 0, 0.4));
+            animation: shimmer 3s infinite linear;
+            background-size: 200% auto;
+        }
+        
+        .splash-logo i {
+            font-size: 3rem;
+            background: linear-gradient(135deg, #fceabb, #f8b500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        @keyframes shimmer {
+            to { background-position: 200% center; }
+        }
+
+        .loader-track {
+            width: 240px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            margin: 0 auto 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .loader-bar {
+            position: absolute;
+            top: 0; left: 0; height: 100%; width: 0%;
+            background: var(--accent-gold);
+            box-shadow: 0 0 15px var(--accent-gold);
+            border-radius: 4px;
+            animation: load 2.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        @keyframes load {
+            0% { width: 0%; }
+            40% { width: 60%; }
+            100% { width: 100%; }
+        }
+
+        .loading-text {
+            color: var(--text-dim);
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-weight: 600;
+            opacity: 0.7;
+        }
+
+        #splash-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* --- LAYOUT --- */
+        #app {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        /* --- NAVBAR --- */
+        #navbar {
+            height: 50px;
+            background: rgba(15, 23, 42, 0.95);
+            border-bottom: var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 15px;
+            z-index: 200;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            flex-shrink: 0; /* Prevent navbar from shrinking */
+        }
+
+        .logo {
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .logo i { color: var(--accent-gold); }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .wallet-pill {
+            background: var(--bg-panel-lighter);
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-weight: 700;
+            color: var(--accent-green);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border: var(--glass-border);
+            font-size: 0.9rem;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 1rem;
+            transition: color 0.2s;
+            position: relative;
+        }
+        .nav-btn:hover { color: var(--text-light); }
+        
+        .btn-ad {
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-hover));
+            color: #000;
+            font-weight: 700;
+            font-size: 0.75rem;
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
+        }
+        .btn-ad:active { transform: scale(0.95); }
+
+        /* --- MAIN CONTENT --- */
+        #main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* --- GAME CANVAS --- */
+        #game-area {
+            flex: 1;
+            position: relative;
+            background: linear-gradient(to bottom, #1a1a2e, #16213e); 
+        }
+        
+        #game-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* --- SIDEBAR --- */
+        #sidebar {
+            width: 280px; /* More compact */
+            background: var(--bg-panel);
+            border-left: var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+            padding: 12px;
+            gap: 12px;
+        }
+
+        /* Sidebar Header Stats - Compact */
+        .game-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .stat-card {
+            background: var(--bg-panel-lighter);
+            padding: 8px;
+            border-radius: 6px;
+            text-align: center;
+            border: var(--glass-border);
+        }
+        .stat-label { 
+            font-size: 0.65rem; 
+            color: var(--text-dim); 
+            text-transform: uppercase; 
+            margin-bottom: 2px;
+        }
+        .stat-val { 
+            font-size: 1rem; 
+            font-weight: 700; 
+            color: var(--accent-gold); 
+            line-height: 1.2;
+        }
+        .stat-val.win { color: var(--accent-green); }
+
+        /* Controls */
+        .control-section {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .section-label {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .input-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .input-icon {
+            position: absolute;
+            left: 10px;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+        }
+        input[type="number"] {
+            width: 100%;
+            background: var(--bg-dark);
+            border: 1px solid var(--bg-panel-lighter);
+            padding: 8px 8px 8px 30px;
+            border-radius: 5px;
+            color: white;
+            font-family: var(--font-main);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        input:focus { outline: 1px solid var(--accent-blue); }
+
+        /* Risk Buttons - Compact Grid */
+        .risk-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+        .risk-btn {
+            background: var(--bg-panel-lighter);
+            border: 1px solid transparent;
+            padding: 8px 4px;
+            border-radius: 5px;
+            color: var(--text-dim);
+            font-family: var(--font-main);
+            font-size: 0.7rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1px;
+        }
+        .risk-btn span { font-size: 0.55rem; opacity: 0.7; font-weight: 400; }
+        
+        .risk-btn.active {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: var(--accent-blue);
+            color: white;
+        }
+        .risk-btn.low.active { border-color: var(--accent-green); background: rgba(16, 185, 129, 0.15); }
+        .risk-btn.med.active { border-color: var(--accent-gold); background: rgba(245, 158, 11, 0.15); }
+        .risk-btn.high.active { border-color: #f97316; background: rgba(249, 115, 22, 0.15); }
+        .risk-btn.ext.active { border-color: var(--accent-red); background: rgba(239, 68, 68, 0.15); }
+
+        /* Main Action Buttons */
+        .btn-main {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-family: var(--font-main);
+            font-weight: 800;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: transform 0.1s, filter 0.2s;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.2);
+        }
+        .btn-main:active { transform: translateY(1px); }
+        .btn-main:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
+
+        .btn-bet { background: var(--accent-green); color: #000; }
+        .btn-bet:hover { background: #34d399; }
+
+        .game-controls { display: flex; gap: 8px; }
+        .btn-stack { flex: 1; background: var(--accent-blue); color: white; }
+        .btn-cashout { flex: 1; background: var(--accent-gold); color: #000; }
+
+        /* History */
+        .history-section {
+            margin-top: auto;
+            border-top: var(--glass-border);
+            padding-top: 10px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 80px;
+        }
+        .history-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding-right: 2px;
+        }
+        /* Custom Scrollbar */
+        .history-list::-webkit-scrollbar { width: 3px; }
+        .history-list::-webkit-scrollbar-thumb { background: var(--bg-panel-lighter); border-radius: 2px; }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(255,255,255,0.03);
+            padding: 6px 8px;
+            border-radius: 3px;
+            font-size: 0.75rem;
+        }
+        .h-mult { font-weight: 700; }
+        .h-profit { font-family: monospace; }
+        .history-item.win { border-left: 2px solid var(--accent-green); }
+        .history-item.win .h-mult, .history-item.win .h-profit { color: var(--accent-green); }
+        .history-item.loss { border-left: 2px solid var(--accent-red); opacity: 0.7; }
+        .history-item.loss .h-mult, .history-item.loss .h-profit { color: var(--text-dim); }
+
+        /* Overlays */
+        #floating-msg {
+            position: absolute;
+            top: 25%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            pointer-events: none;
+            z-index: 50;
+        }
+        .float-txt {
+            font-size: 3.5rem;
+            font-weight: 900;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .float-txt.show { opacity: 1; transform: scale(1); }
+        .float-txt.crash { color: var(--accent-red); font-family: 'Courier New', monospace; }
+        .float-txt.win { color: var(--accent-green); }
+
+        /* --- MODALS --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .modal-overlay.open { display: flex; opacity: 1; }
+        
+        .modal-card {
+            background: var(--bg-panel);
+            width: 90%;
+            max-width: 400px;
+            border-radius: 12px;
+            border: var(--glass-border);
+            padding: 25px;
+            position: relative;
+            transform: translateY(20px);
+            transition: transform 0.3s;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+        .modal-overlay.open .modal-card { transform: translateY(0); }
+
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-header h3 { margin: 0; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; }
+        .close-btn { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 1.5rem; }
+        
+        .modal-body { color: var(--text-dim); font-size: 0.9rem; line-height: 1.6; }
+        .modal-body ul { padding-left: 20px; margin-bottom: 0; }
+        .modal-body li { margin-bottom: 8px; }
+
+        .ad-timer-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .ad-circle {
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            border: 4px solid var(--bg-panel-lighter);
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--accent-gold);
+            position: relative;
+        }
+        .ad-circle svg {
+            position: absolute;
+            top: -4px; left: -4px;
+            width: 80px; height: 80px;
+            transform: rotate(-90deg);
+        }
+        .ad-circle circle {
+            fill: none;
+            stroke: var(--accent-gold);
+            stroke-width: 4;
+            stroke-dasharray: 240;
+            stroke-dashoffset: 240;
+            transition: stroke-dashoffset 1s linear;
+        }
+        .ad-msg { font-size: 0.9rem; margin-bottom: 20px; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            #main-content { flex-direction: column; } 
+            #sidebar { 
+                width: 100%; 
+                height: 50%; 
+                padding: 10px; 
+                border-left: none; 
+                border-top: var(--glass-border);
+                overflow-y: auto; /* Enable Scroll */
+                -webkit-overflow-scrolling: touch;
+            }
+            #game-area { height: 50%; }
+            .history-section { display: flex; min-height: 120px; } /* Visible and sized */
+            .game-stats { margin-bottom: 8px; }
+            .control-section { gap: 4px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- SPLASH SCREEN -->
+<div id="splash-screen">
+    <div class="splash-content">
+        <div class="splash-logo">
+            <i class="fas fa-layer-group"></i> SkyStack
+        </div>
+        <div class="loader-track">
+            <div class="loader-bar"></div>
+        </div>
+        <div class="loading-text">Initializing Secure Connection...</div>
+    </div>
+</div>
+
+<div id="app">
+    <!-- Navbar -->
+    <nav id="navbar">
+        <div class="logo">
+            <i class="fas fa-layer-group"></i> SkyStack
+        </div>
+        <div class="nav-right">
+            <div class="wallet-pill">
+                <i class="fas fa-wallet"></i>
+                <span id="nav-balance">$1000.00</span>
+            </div>
+            <button class="nav-btn btn-ad" id="btn-watch-ad">
+                <i class="fas fa-play"></i> Get $100
+            </button>
+            <button class="nav-btn" id="btn-info">
+                <i class="fas fa-circle-question"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Content -->
+    <div id="main-content">
+        <!-- Game Area (Moved to top/left in DOM) -->
+        <main id="game-area">
+            <div id="game-canvas"></div>
+            <div id="floating-msg">
+                <div id="msg-text" class="float-txt"></div>
+            </div>
+        </main>
+
+        <!-- Sidebar Controls (Moved to bottom/right in DOM) -->
+        <aside id="sidebar">
+            <!-- Header Stats -->
+            <div class="game-stats">
+                <div class="stat-card">
+                    <div class="stat-label">Multiplier</div>
+                    <div class="stat-val" id="disp-mult">1.00x</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Potential Win</div>
+                    <div class="stat-val win" id="disp-win">$0.00</div>
+                </div>
+            </div>
+
+            <!-- Bet Controls -->
+            <div class="control-section">
+                <div class="section-label">Bet Amount</div>
+                <div class="input-group">
+                    <i class="fas fa-dollar-sign input-icon"></i>
+                    <input type="number" id="inp-bet" value="10" min="1">
+                </div>
+            </div>
+
+            <!-- Risk Controls -->
+            <div class="control-section">
+                <div class="section-label">Risk Level</div>
+                <div class="risk-grid">
+                    <button class="risk-btn low active" onclick="game.setRisk('low')">
+                        LOW <span>Safe Mode</span>
+                    </button>
+                    <button class="risk-btn med" onclick="game.setRisk('medium')">
+                        MED <span>Balanced</span>
+                    </button>
+                    <button class="risk-btn high" onclick="game.setRisk('high')">
+                        HIGH <span>High Risk</span>
+                    </button>
+                    <button class="risk-btn ext" onclick="game.setRisk('extreme')">
+                        EXT <span>Jackpot</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="control-section" style="margin-top: 5px;">
+                <button id="btn-start" class="btn-main btn-bet">Place Bet</button>
+                <div id="in-game-controls" class="game-controls" style="display: none;">
+                    <button id="btn-stack" class="btn-main btn-stack">
+                        Stack <i class="fas fa-arrow-up"></i>
+                    </button>
+                    <button id="btn-cashout" class="btn-main btn-cashout">
+                        Cashout <i class="fas fa-money-bill-wave"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- History -->
+            <div class="history-section">
+                <div class="section-label" style="margin-bottom: 5px;">Recent History</div>
+                <div id="history-list" class="history-list">
+                    <!-- JS will populate -->
+                    <div class="history-item" style="justify-content: center; opacity: 0.5; font-style: italic;">No bets yet</div>
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>
+
+<!-- How to Play Modal -->
+<div class="modal-overlay" id="modal-info">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3>How to Play</h3>
+            <button class="close-btn" onclick="closeModal('modal-info')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <ul>
+                <li><strong>Place a Bet:</strong> Select your amount and risk level.</li>
+                <li><strong>Stack Up:</strong> Click 'Stack' to add a block.</li>
+                <li><strong>Win Ratios (Per Block):</strong>
+                    <ul>
+                        <li>Low: 80% Win Rate (Safe)</li>
+                        <li>Medium: 30% Win Rate</li>
+                        <li>High: 10% Win Rate</li>
+                        <li>Extreme: 0.5% Win Rate (Jackpot)</li>
+                    </ul>
+                </li>
+                <li><strong>Cash Out:</strong> Secure your winnings before the tower crashes!</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Ad Modal -->
+<div class="modal-overlay" id="modal-ad">
+    <div class="modal-card" style="text-align: center;">
+        <div class="modal-header" style="justify-content: center;">
+            <h3>Watching Ad...</h3>
+        </div>
+        <div class="modal-body">
+            <div class="ad-timer-container">
+                <div class="ad-circle">
+                    <svg><circle r="38" cx="40" cy="40"></circle></svg>
+                    <span id="ad-countdown">10</span>
+                </div>
+                <div class="ad-msg">Please wait to claim your reward.</div>
+                <!-- Placeholder for actual Ad Unit -->
+                <div style="background: #000; height: 100px; color: #555; display: flex; align-items:center; justify-content:center; border-radius: 8px;">
+                    [Google AdSense / Custom Ad]
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+<script>
+    // --- UTILS ---
+    const $ = (id) => document.getElementById(id);
+    const formatMoney = (val) => `$${val.toFixed(2)}`;
+    
+    // --- SPLASH SCREEN LOGIC ---
+    window.addEventListener('load', () => {
+        const splash = $('splash-screen');
+        // Wait for animation (2.5s) + small buffer
+        setTimeout(() => {
+            splash.classList.add('hidden');
+            setTimeout(() => splash.remove(), 600); // Remove from DOM after fade
+        }, 2500);
+    });
+
+    // --- MODAL LOGIC ---
+    function openModal(id) { 
+        $(id).classList.add('open'); 
+    }
+    function closeModal(id) { 
+        $(id).classList.remove('open'); 
+    }
+
+    $('btn-info').onclick = () => openModal('modal-info');
+    
+    // --- AD LOGIC ---
+    let adTimer = null;
+    $('btn-watch-ad').onclick = () => {
+        if(game.isPlaying) return; // Prevent during game
+        openModal('modal-ad');
+        let timeLeft = 10;
+        const countEl = $('ad-countdown');
+        const circle = document.querySelector('.ad-circle circle');
+        countEl.innerText = timeLeft;
+        circle.style.strokeDashoffset = 0; // Reset
+        
+        // Timer Animation
+        clearInterval(adTimer);
+        adTimer = setInterval(() => {
+            timeLeft--;
+            countEl.innerText = timeLeft;
+            // 240 is circumference approx
+            const offset = 240 - (timeLeft / 10) * 240; 
+            circle.style.strokeDashoffset = -offset; // Animate stroke
+
+            if (timeLeft <= 0) {
+                clearInterval(adTimer);
+                closeModal('modal-ad');
+                game.addBalance(100);
+                alert("Thanks for watching! $100 added to your wallet.");
+            }
+        }, 1000);
+    };
+
+    // --- GAME CLASS ---
+    class GameLogic {
+        constructor() {
+            this.balance = 1000;
+            this.currentBet = 10;
+            this.multiplier = 1.0;
+            this.isPlaying = false;
+            
+            // Risk Config (Inverted Logic: Win Ratio is Success Chance)
+            // crashChance = 1.0 - WinRatio
+            // multInc = Reward scaling
+            this.riskLevels = {
+                'low':      { winRatio: 0.80, multInc: 1.0 },   // 80% Win
+                'medium':   { winRatio: 0.30, multInc: 2.5 },   // 30% Win, High Reward
+                'high':     { winRatio: 0.10, multInc: 8.0 },   // 10% Win, Massive Reward
+                'extreme':  { winRatio: 0.005, multInc: 100.0 } // 0.5% Win, Jackpot
+            };
+            this.currentRisk = 'low';
+
+            // Visuals
+            this.stage = new VisualStage();
+
+            // Bind UI
+            this.btnStart = $('btn-start');
+            this.btnStack = $('btn-stack');
+            this.btnCashout = $('btn-cashout');
+            this.inpBet = $('inp-bet');
+            
+            this.btnStart.onclick = () => this.startGame();
+            this.btnStack.onclick = () => this.stackUp();
+            this.btnCashout.onclick = () => this.cashOut();
+            
+            this.updateUI();
+        }
+
+        setRisk(level) {
+            if(this.isPlaying) return;
+            this.currentRisk = level;
+            
+            // UI Toggle
+            document.querySelectorAll('.risk-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`.risk-btn.${level.substr(0,3)}`).classList.add('active'); // Matches class .low, .med, etc.
+        }
+
+        addBalance(amount) {
+            this.balance += amount;
+            this.updateUI();
+        }
+
+        updateUI() {
+            $('nav-balance').innerText = formatMoney(this.balance);
+            $('disp-mult').innerText = `${this.multiplier.toFixed(2)}x`;
+            
+            const potentialWin = this.isPlaying ? this.currentBet * this.multiplier : 0;
+            $('disp-win').innerText = formatMoney(potentialWin);
+            
+            this.inpBet.disabled = this.isPlaying;
+            document.querySelectorAll('.risk-btn').forEach(b => b.style.pointerEvents = this.isPlaying ? 'none' : 'auto');
+        }
+
+        startGame() {
+            const betVal = parseFloat(this.inpBet.value);
+            if(isNaN(betVal) || betVal <= 0) return alert("Invalid Bet");
+            if(betVal > this.balance) return alert("Insufficient Funds");
+
+            this.balance -= betVal;
+            this.currentBet = betVal;
+            this.multiplier = 1.0;
+            this.isPlaying = true;
+
+            // UI Switch
+            this.btnStart.style.display = 'none'; 
+            $('in-game-controls').style.display = 'flex';
+            
+            this.stage.reset();
+            this.updateUI();
+        }
+
+        stackUp() {
+            if(!this.isPlaying) return;
+            
+            // Prevent spam
+            this.btnStack.disabled = true;
+            setTimeout(() => this.btnStack.disabled = false, 400);
+
+            const cfg = this.riskLevels[this.currentRisk];
+            
+            // Win Ratio Check
+            // Random > (1 - WinRatio) ? No, that's redundant.
+            // Success if Math.random() < WinRatio
+            const isSuccess = Math.random() < cfg.winRatio;
+
+            if(!isSuccess) {
+                this.crash();
+            } else {
+                // Success
+                this.multiplier += cfg.multInc;
+                this.stage.addBlock();
+                this.updateUI();
+            }
+        }
+
+        crash() {
+            this.isPlaying = false;
+            this.stage.crashBlock();
+            this.showFloat("CRASHED!", "crash");
+            this.addHistory(0, 'loss'); // 0 profit
+            this.resetControls();
+        }
+
+        cashOut() {
+            if(!this.isPlaying) return; // FIX: Prevent cashout if crashed
+            
+            const win = this.currentBet * this.multiplier;
+            this.balance += win;
+            this.isPlaying = false;
+            this.stage.celebrate();
+            this.showFloat(`+${formatMoney(win)}`, "win");
+            this.addHistory(win - this.currentBet, 'win');
+            this.resetControls();
+            this.updateUI();
+        }
+
+        resetControls() {
+            setTimeout(() => {
+                $('in-game-controls').style.display = 'none';
+                this.btnStart.style.display = 'block'; 
+                this.updateUI();
+            }, 1500);
+        }
+
+        showFloat(text, type) {
+            const el = $('msg-text');
+            el.innerText = text;
+            el.className = `float-txt show ${type}`;
+            setTimeout(() => el.classList.remove('show'), 2000);
+        }
+
+        addHistory(profit, type) {
+            const list = $('history-list');
+            if(list.children.length === 1 && list.children[0].innerText === "No bets yet") {
+                list.innerHTML = "";
+            }
+            
+            const div = document.createElement('div');
+            div.className = `history-item ${type}`;
+            
+            const sign = profit >= 0 ? "+" : "";
+            div.innerHTML = `
+                <span class="h-mult">${this.multiplier.toFixed(2)}x</span>
+                <span class="h-profit">${sign}${formatMoney(profit)}</span>
+            `;
+            
+            list.prepend(div);
+            if(list.children.length > 20) list.lastChild.remove();
+        }
+    }
+
+    // --- 3D VISUALS (Three.js) ---
+    class VisualStage {
+        constructor() {
+            this.container = $('game-canvas');
+            this.scene = new THREE.Scene();
+            
+            // Camera (Isometric)
+            const aspect = this.container.clientWidth / this.container.clientHeight;
+            const d = 25;
+            this.camera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, -100, 1000);
+            this.camera.position.set(20, 20, 20);
+            this.cameraTarget = new THREE.Vector3(0, 5, 0); // Focus slightly up
+            this.camera.lookAt(this.cameraTarget);
+
+            // Renderer
+            this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+            this.renderer.shadowMap.enabled = true;
+            this.container.appendChild(this.renderer.domElement);
+
+            // Lighting
+            const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+            this.scene.add(ambient);
+
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
+            dirLight.position.set(10, 20, 10);
+            dirLight.castShadow = true;
+            this.scene.add(dirLight);
+
+            // Blocks
+            this.blocks = [];
+            this.baseY = -8;
+            this.blockHeight = 2.5;
+
+            // Base Platform
+            this.addBase();
+
+            // Loop
+            this.animate = this.animate.bind(this);
+            requestAnimationFrame(this.animate);
+
+            window.addEventListener('resize', () => this.onResize());
+        }
+
+        addBase() {
+            const geo = new THREE.BoxGeometry(12, 1, 12);
+            const mat = new THREE.MeshStandardMaterial({ color: 0x1e293b });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.y = this.baseY;
+            mesh.receiveShadow = true;
+            this.scene.add(mesh);
+
+            // Grid Helper for "Casino Floor" feel
+            const grid = new THREE.GridHelper(100, 50, 0x334155, 0x0f172a);
+            grid.position.y = this.baseY - 0.5;
+            this.scene.add(grid);
+        }
+
+        reset() {
+            this.blocks.forEach(b => this.scene.remove(b.mesh));
+            this.blocks = [];
+            
+            // Reset Camera
+            gsap.to(this.camera.position, { y: 20, duration: 1 });
+            gsap.to(this.cameraTarget, { y: 5, duration: 1 });
+        }
+
+        addBlock() {
+            const idx = this.blocks.length;
+            const y = this.baseY + 1 + (idx * this.blockHeight); // Stack up
+            
+            // Random Color (Gold/Blue theme variation)
+            const isGold = Math.random() > 0.7;
+            const color = isGold ? 0xf59e0b : 0x3b82f6;
+            
+            const geo = new THREE.BoxGeometry(8, 2, 8);
+            const mat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.3, metalness: 0.1 });
+            const mesh = new THREE.Mesh(geo, mat);
+            
+            mesh.position.set(0, y + 20, 0); // Start high
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            this.scene.add(mesh);
+            
+            // Drop Animation
+            gsap.to(mesh.position, { y: y, duration: 0.4, ease: "bounce.out" });
+            
+            this.blocks.push({ mesh });
+
+            // Move Camera Up
+            const targetCamY = 20 + (idx * 2);
+            const targetLookY = 5 + (idx * 2);
+            gsap.to(this.camera.position, { y: targetCamY, duration: 0.5 });
+            gsap.to(this.cameraTarget, { y: targetLookY, duration: 0.5 });
+        }
+
+        crashBlock() {
+            const idx = this.blocks.length;
+            const y = this.baseY + 1 + (idx * this.blockHeight);
+            
+            const geo = new THREE.BoxGeometry(8, 2, 8);
+            const mat = new THREE.MeshStandardMaterial({ color: 0xef4444 }); // Red
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(0, y + 20, 0);
+            this.scene.add(mesh);
+            
+            // Crash Animation sequence
+            const tl = gsap.timeline({ onComplete: () => this.scene.remove(mesh) });
+            tl.to(mesh.position, { y: y, duration: 0.3, ease: "power1.in" })
+              .to(mesh.rotation, { x: 0.5, z: -0.5, duration: 0.2 })
+              .to(mesh.position, { y: -50, duration: 0.8, ease: "power1.in" }, "-=0.1");
+              
+            // Camera Shake
+            gsap.fromTo(this.camera.position, 
+                { x: 19.5 }, 
+                { x: 20.5, duration: 0.05, repeat: 5, yoyo: true }
+            );
+        }
+
+        celebrate() {
+            if(this.blocks.length === 0) return;
+            const last = this.blocks[this.blocks.length-1].mesh;
+            gsap.to(last.rotation, { y: Math.PI*2, duration: 0.6 });
+            gsap.to(last.scale, { x: 1.2, z: 1.2, y: 1.2, duration: 0.3, yoyo: true, repeat: 1 });
+        }
+
+        onResize() {
+            const aspect = this.container.clientWidth / this.container.clientHeight;
+            const d = 25;
+            this.camera.left = -d * aspect;
+            this.camera.right = d * aspect;
+            this.camera.top = d;
+            this.camera.bottom = -d;
+            this.camera.updateProjectionMatrix();
+            this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+        }
+
+        animate() {
+            requestAnimationFrame(this.animate);
+            this.camera.lookAt(this.cameraTarget);
+            this.renderer.render(this.scene, this.camera);
+        }
+    }
+
+    // Init
+    const game = new GameLogic();
+</script>
+
+</body>
+</html>

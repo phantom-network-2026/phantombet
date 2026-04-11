@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CRYPTO CALL PRO | Live Multiplayer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<!-- SPLASH SCREEN -->
+<div id="splash-screen" class="full-screen-overlay">
+    <div class="splash-logo"><i class="fas fa-chart-line"></i> CRYPTO CALL</div>
+    <div class="loading-bar">
+        <div id="loading-progress" class="loading-progress"></div>
+    </div>
+</div>
+
+<!-- MENU SCREEN -->
+<div id="menu-screen" class="full-screen-overlay hidden">
+    <div class="menu-title">Crypto Call Pro</div>
+    <div class="menu-subtitle">Multiplayer Prediction Arena</div>
+    
+    <button class="menu-btn" onclick="Game.launchGame()">Start Game</button>
+    <button class="menu-btn secondary" onclick="document.getElementById('how-to-popup').classList.remove('hidden')">How to Play</button>
+
+    <div style="margin-top:40px; color:#555; font-size:0.8rem;">Simulator Gameplay</div>
+    
+    <!-- How To Play Popup -->
+    <div id="how-to-popup" class="popup-overlay hidden">
+        <div class="popup-card">
+            <i class="fas fa-times popup-close" onclick="document.getElementById('how-to-popup').classList.add('hidden')"></i>
+            <div class="popup-title">How to Play</div>
+            <div class="popup-text">
+                <p>1. <b>Wait for Betting Phase:</b> You have 10 seconds to analyze the chart.</p>
+                <p>2. <b>Place Your Bet:</b> Select an amount and choose <b>HIGH</b> (Green) or <b>LOW</b> (Red).</p>
+                <p>3. <b>Watch the Round:</b> The chart will run for 10 seconds. This is the live trading phase.</p>
+                <p>4. <b>Result:</b> If your prediction is correct relative to the start price, you win <b>1.87x</b> your bet!</p>
+            </div>
+            <button class="menu-btn" style="padding:10px 30px; min-width:auto; font-size:1rem;" onclick="document.getElementById('how-to-popup').classList.add('hidden')">Got it</button>
+        </div>
+    </div>
+</div>
+
+<!-- AD MODAL -->
+<div id="ad-modal" class="popup-overlay hidden">
+    <div class="popup-card" style="width:500px; max-width:95%;">
+        <i class="fas fa-times popup-close" onclick="Game.closeAdModal()"></i>
+        <div class="popup-title">Watch Ad & Earn</div>
+        
+        <!-- PLACEHOLDER FOR ADSENSE / IMAGE -->
+        <div class="ad-placeholder">
+            <!-- Replace this content with your AdSense script or <a href...><img ...></a> -->
+            <div style="text-align:center;">
+                <i class="fas fa-ad" style="font-size:3rem; margin-bottom:10px;"></i><br>
+                <span>[ Insert AdSense / Banner Code Here ]</span>
+            </div>
+        </div>
+
+        <div class="ad-timer" id="ad-timer-display">Reward in: 10s</div>
+        
+        <button id="btn-claim-reward" class="menu-btn" style="padding:10px 30px; min-width:auto; font-size:1rem; width:100%;" disabled onclick="Game.claimAdReward()">
+            Claim $100
+        </button>
+    </div>
+</div>
+
+<!-- RESULT MODAL (WIN/LOSE) -->
+<div id="result-modal" class="popup-overlay hidden">
+    <div id="result-card" class="popup-card">
+        <div id="result-icon" class="result-icon"></div>
+        <div id="result-title" class="popup-title" style="font-size:2rem; margin-bottom:10px;"></div>
+        <div id="result-msg" style="color:var(--text-dim); margin-bottom:10px;"></div>
+        <div id="result-amount" class="result-amount"></div>
+        <button class="menu-btn" style="padding:10px 40px; min-width:auto;" onclick="Game.closeResultModal()">CONTINUE</button>
+    </div>
+</div>
+
+<!-- GAME UI -->
+<header>
+    <div class="brand">
+        <i class="fas fa-chart-line"></i> CRYPTO CALL <span style="font-size:0.7em; opacity:0.7; font-weight:normal;">PRO</span>
+    </div>
+    <div class="live-status">
+        <div class="dot"></div> <span id="online-count">1,240 Online</span>
+    </div>
+    <div class="wallet">
+        <span style="color:var(--gold)">$</span> <span id="balance">1000.00</span>
+    </div>
+</header>
+
+<div class="main-container">
+    <!-- CHART SECTION -->
+    <div class="chart-section">
+        <div class="chart-header">
+            <div class="pair-title">BTC/USD <span style="font-size:0.8em; color:var(--text-dim); font-weight:normal;">Perpetual</span></div>
+            <div class="current-price" id="price-display">48,230.50</div>
+        </div>
+
+        <div class="timer-display">
+            <div class="phase-badge phase-wait" id="phase-badge">WAITING</div>
+            <div class="countdown" id="timer">00:00</div>
+        </div>
+
+        <canvas id="chart-canvas"></canvas>
+    </div>
+
+    <!-- SIDEBAR CONTROLS -->
+    <div class="sidebar">
+        <div class="sidebar-tabs">
+            <div class="tab active" onclick="Game.switchTab('live')">Live Bets</div>
+            <div class="tab" onclick="Game.switchTab('history')">My History</div>
+            <div class="tab" onclick="Game.switchTab('leaders')">Leaders</div>
+        </div>
+
+        <div class="table-header">
+            <div style="flex:1">User</div>
+            <div style="width:60px; text-align:right">Amount</div>
+            <div style="width:50px; text-align:right">Side</div>
+        </div>
+        
+        <!-- Tab Contents -->
+        <div id="tab-live" class="tab-content active live-bets-container">
+            <!-- Simulated rows will appear here -->
+            <div id="live-bets-list"></div>
+        </div>
+        
+        <div id="tab-history" class="tab-content">
+            <div id="my-history-list" style="padding-bottom:20px;">
+                <div style="padding:20px; text-align:center; color:#555;">No bets yet.</div>
+            </div>
+        </div>
+
+        <div id="tab-leaders" class="tab-content">
+            <div id="leaders-list" style="padding-bottom:20px;">
+                <!-- Filled by JS -->
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="chip-row" id="chips">
+                <div class="chip active" data-val="10">$10</div>
+                <div class="chip" data-val="50">$50</div>
+                <div class="chip" data-val="100">$100</div>
+                <div class="chip" data-val="MAX">MAX</div>
+            </div>
+
+            <div class="amount-input-group">
+                <span class="input-label">Investment</span>
+                <span class="amount-display" id="bet-input">10</span>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn-trade btn-up" id="btn-up">
+                    <i class="fas fa-arrow-up"></i> HIGH
+                    <div style="font-size:0.6em; opacity:0.8">1.87x</div>
+                </button>
+                <button class="btn-trade btn-down" id="btn-down">
+                    <i class="fas fa-arrow-down"></i> LOW
+                    <div style="font-size:0.6em; opacity:0.8">1.87x</div>
+                </button>
+            </div>
+            
+            <!-- WATCH AD BUTTON -->
+            <button class="btn-trade" style="background:var(--bg-hover); margin-top:10px; font-size:0.9rem; color:var(--gold); border:1px solid var(--border-color);" onclick="Game.openAdModal()">
+                <i class="fas fa-video"></i> Watch Ad & Earn $100
+            </button>
+
+            <div style="text-align:center; margin-top:10px; font-size:0.75rem; color:var(--text-dim);">
+                Locked until round ends. No cancellation.
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast">Order Placed Successfully</div>
+
+<script src="script.js"></script>
+</body>
+</html>

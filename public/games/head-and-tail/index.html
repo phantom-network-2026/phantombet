@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Head & Tail - Premium Casino</title>
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Rajdhani:wght@600;700;800&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons (for lightweight modern icons) -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <style>
+        :root {
+            --bg-dark: #0f111a;
+            --sidebar-bg: rgba(21, 26, 38, 0.95);
+            --nav-bg: rgba(21, 26, 38, 0.9);
+            --primary: #ffd700;       /* Gold */
+            --accent: #00ff88;        /* Green */
+            --accent-hover: #00cc6a;
+            --danger: #ff4757;        /* Red */
+            --text-main: #ffffff;
+            --text-dim: #8b9bb4;
+            --border: rgba(255,255,255,0.08);
+            --glass: blur(12px);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+        }
+
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            margin: 0; padding: 0;
+            overflow: hidden;
+            background: #0f111a;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+        }
+
+        /* --- SPLASH SCREEN --- */
+        #splash-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #1a1e2e 0%, #090a0f 100%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.8s ease-out;
+        }
+        
+        #splash-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .splash-logo {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 4rem;
+            font-weight: 800;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 40px;
+            animation: pulseLogo 2s infinite ease-in-out;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .splash-logo i {
+            font-size: 5rem;
+            color: var(--primary);
+            filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.4));
+        }
+
+        .loader-container {
+            width: 200px;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .loader-bar {
+            width: 0%;
+            height: 100%;
+            background: var(--primary);
+            box-shadow: 0 0 10px var(--primary);
+            animation: loadProgress 2.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        .loading-text {
+            margin-top: 15px;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            font-family: 'Rajdhani', sans-serif;
+            letter-spacing: 1px;
+        }
+
+        @keyframes pulseLogo {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes loadProgress {
+            0% { width: 0%; }
+            50% { width: 60%; }
+            100% { width: 100%; }
+        }
+
+        /* 3D Canvas Background */
+        #game-container {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+        }
+
+        /* --- NAVBAR --- */
+        .navbar {
+            position: absolute;
+            top: 0; left: 0; width: 100%;
+            height: 60px; /* Reduced height */
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            background: var(--nav-bg);
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: var(--glass);
+            z-index: 10;
+        }
+
+        .logo {
+            display: flex; align-items: center; gap: 8px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            color: #fff;
+        }
+        .logo i { color: var(--primary); font-size: 1.6rem; }
+
+        .nav-actions { display: flex; align-items: center; gap: 10px; }
+
+        .nav-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex; align-items: center; gap: 6px;
+            transition: all 0.2s;
+        }
+        .nav-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .nav-btn.ad-btn { background: rgba(255, 215, 0, 0.1); color: var(--primary); border-color: rgba(255, 215, 0, 0.2); }
+        .nav-btn.ad-btn:hover { background: rgba(255, 215, 0, 0.2); }
+
+        .wallet-display {
+            background: rgba(0,0,0,0.3);
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            display: flex; align-items: center; gap: 6px;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.1);
+        }
+
+        /* --- RIGHT SIDEBAR --- */
+        .sidebar {
+            position: absolute;
+            right: 0; top: 60px; bottom: 0;
+            width: 320px;
+            background: var(--sidebar-bg);
+            border-left: 1px solid var(--border);
+            backdrop-filter: var(--glass);
+            padding: 15px; /* Compact padding */
+            display: flex;
+            flex-direction: column;
+            gap: 12px; /* Compact gap */
+            z-index: 10;
+            transform: translateX(0);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .panel-section { display: flex; flex-direction: column; gap: 6px; }
+        .label { font-size: 0.7rem; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* Bet Input */
+        .input-wrapper {
+            position: relative;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            display: flex; align-items: center;
+            padding: 2px;
+            transition: border-color 0.2s;
+        }
+        .input-wrapper:focus-within { border-color: var(--primary); }
+        
+        .coin-icon { color: var(--primary); padding-left: 8px; font-size: 1.1rem; }
+        
+        input[type="number"] {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.1rem; /* Slightly smaller */
+            font-weight: 700;
+            padding: 8px; /* Compact */
+            outline: none;
+        }
+
+        .multipliers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+        .mult-btn {
+            background: rgba(255,255,255,0.05);
+            border: none;
+            color: var(--text-dim);
+            padding: 6px; /* Compact */
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .mult-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+        /* Side Selection */
+        .side-toggle {
+            display: flex;
+            background: rgba(0,0,0,0.4);
+            padding: 3px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+        }
+        .side-option {
+            flex: 1;
+            padding: 8px; /* Compact */
+            text-align: center;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 700;
+            color: var(--text-dim);
+            display: flex; flex-direction: column; align-items: center; gap: 3px;
+        }
+        .side-option i { font-size: 1.3rem; }
+        .side-option span { font-size: 0.75rem; text-transform: uppercase; }
+
+        /* Active States */
+        .side-option.active-heads { background: var(--primary); color: #000; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3); }
+        .side-option.active-tails { background: #e0e0e0; color: #000; box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2); }
+
+        /* Main Button */
+        .action-btn {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 12px; /* Compact */
+            border-radius: var(--radius-md);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+            transition: all 0.2s;
+            margin-top: 5px;
+        }
+        .action-btn:hover { background: var(--accent-hover); transform: translateY(-2px); }
+        .action-btn:active { transform: scale(0.98); }
+        .action-btn:disabled { opacity: 0.5; filter: grayscale(1); cursor: not-allowed; transform: none; }
+
+        /* History List (Vertical) */
+        .history-section {
+            margin-top: auto;
+            border-top: 1px solid var(--border);
+            padding-top: 10px;
+            flex: 1; /* Takes remaining height */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; 
+            min-height: 0; /* Crucial for nested scroll */
+        }
+        
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 8px;
+            overflow-y: auto; /* Enable vertical scroll */
+            padding-right: 5px;
+            flex: 1;
+            /* Smooth scrolling for touch */
+            -webkit-overflow-scrolling: touch; 
+        }
+        
+        /* Custom Scrollbar */
+        .history-list::-webkit-scrollbar { width: 4px; }
+        .history-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+
+        .hist-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0,0,0,0.3);
+            padding: 8px 10px; /* Compact */
+            border-radius: 6px;
+            border-left: 3px solid transparent;
+            animation: slideIn 0.3s ease-out;
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .hist-item.win { border-left-color: var(--accent); background: linear-gradient(90deg, rgba(0,255,136,0.05), transparent); }
+        .hist-item.lose { border-left-color: var(--danger); }
+
+        .hist-side {
+            font-weight: 700;
+            font-size: 0.75rem;
+            display: flex; align-items: center; gap: 6px;
+            text-transform: uppercase;
+        }
+        .hist-amt {
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+        .hist-amt.plus { color: var(--accent); }
+        .hist-amt.minus { color: var(--text-dim); }
+
+        /* --- POPUPS / MODALS --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+            z-index: 100;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: auto; }
+
+        .modal-card {
+            background: #1a1f2e;
+            width: 90%; max-width: 450px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            padding: 30px;
+            text-align: center;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        .modal-overlay.open .modal-card { transform: scale(1); }
+
+        .modal-icon {
+            font-size: 3rem; color: var(--primary);
+            margin-bottom: 15px;
+        }
+        .modal-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 2rem; margin: 0 0 10px 0;
+            color: #fff;
+        }
+        .modal-text {
+            color: var(--text-dim);
+            line-height: 1.6;
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+        }
+        .btn-close, .btn-claim {
+            background: rgba(255,255,255,0.1);
+            border: none; color: #fff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+            width: 100%;
+        }
+        .btn-close:hover { background: rgba(255,255,255,0.2); }
+        .btn-claim { background: var(--accent); color: #000; display: none; } /* Hidden initially */
+        
+        /* Result Center Display */
+        #result-display {
+            position: absolute;
+            top: 50%; 
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            pointer-events: none;
+            z-index: 5;
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        #result-display.active { opacity: 1; transform: translate(-50%, -60%); }
+        .res-main { font-family: 'Rajdhani'; font-size: 5rem; font-weight: 800; line-height: 1; text-transform: uppercase; -webkit-text-stroke: 2px rgba(0,0,0,0.5); }
+        .res-sub { background: rgba(0,0,0,0.6); padding: 5px 20px; border-radius: 20px; font-weight: 600; display: inline-block; margin-top: 10px; font-size: 1.5rem; }
+        .win-text { color: var(--accent); text-shadow: 0 0 30px var(--accent); }
+        .lose-text { color: var(--danger); text-shadow: 0 0 30px var(--danger); }
+
+        /* Confetti */
+        .confetti { position: absolute; width: 8px; height: 8px; background: var(--primary); animation: fall linear forwards; z-index: 50; }
+        @keyframes fall { to { transform: translateY(100vh) rotate(720deg); } }
+
+        /* Desktop specific layout adjustment */
+        @media (min-width: 769px) {
+            #result-display {
+                /* Increased offset even more to move play area left */
+                left: calc(50% - 350px); 
+            }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .navbar { padding: 0 15px; }
+            .logo span { display: none; } /* Hide text logo on small mobile */
+            .sidebar {
+                width: 100%;
+                height: 55vh; /* Slightly increased to fit history */
+                top: auto; bottom: 0;
+                border-left: none;
+                border-top: 1px solid var(--border);
+                border-radius: 20px 20px 0 0;
+                overflow: hidden; /* Prevent body scroll, let history list scroll */
+                padding-bottom: 20px;
+            }
+            #result-display { left: 50%; top: 25%; } /* Move result up */
+            
+            /* Enable history on mobile */
+            .history-section { 
+                display: flex; 
+            } 
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SPLASH SCREEN -->
+    <div id="splash-screen">
+        <div class="splash-logo">
+            <i class="ph-fill ph-crown"></i>
+            <span>Head & Tail</span>
+        </div>
+        <div class="loader-container">
+            <div class="loader-bar"></div>
+        </div>
+        <div class="loading-text">LOADING CASINO ASSETS...</div>
+    </div>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="logo">
+            <i class="ph-fill ph-crown"></i>
+            <span>Head & Tail</span>
+        </div>
+        <div class="nav-actions">
+            <div class="wallet-display">
+                <i class="ph-fill ph-wallet"></i>
+                <span id="wallet-balance">1000.00</span>
+            </div>
+            <button class="nav-btn ad-btn" onclick="UI.openAd()">
+                <i class="ph-fill ph-video"></i>
+                <span>Get $100</span>
+            </button>
+            <button class="nav-btn" onclick="UI.openHelp()">
+                <i class="ph-bold ph-question"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- 3D VIEWPORT -->
+    <div id="game-container"></div>
+
+    <!-- RESULT CENTER -->
+    <div id="result-display">
+        <div class="res-main" id="res-title">HEADS</div>
+        <div class="res-sub" id="res-val">+20.00</div>
+    </div>
+
+    <!-- RIGHT SIDEBAR CONTROLS -->
+    <aside class="sidebar">
+        
+        <!-- Bet Amount -->
+        <div class="panel-section">
+            <span class="label">Bet Amount</span>
+            <div class="input-wrapper">
+                <i class="ph-fill ph-coins coin-icon"></i>
+                <input type="number" id="bet-input" value="10" min="1">
+            </div>
+            <div class="multipliers">
+                <button class="mult-btn" onclick="game.adjustBet('min')">MIN</button>
+                <button class="mult-btn" onclick="game.adjustBet('half')">1/2</button>
+                <button class="mult-btn" onclick="game.adjustBet('double')">2x</button>
+                <button class="mult-btn" onclick="game.adjustBet('max')">MAX</button>
+            </div>
+        </div>
+
+        <!-- Side Selection -->
+        <div class="panel-section">
+            <span class="label">Choose Side</span>
+            <div class="side-toggle">
+                <div class="side-option active-heads" id="btn-heads" onclick="game.setSide('heads')">
+                    <i class="ph-fill ph-coin"></i>
+                    <span>Heads</span>
+                </div>
+                <div class="side-option" id="btn-tails" onclick="game.setSide('tails')">
+                    <i class="ph-fill ph-circle"></i>
+                    <span>Tails</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action -->
+        <button class="action-btn" id="flip-btn">Place Bet & Flip</button>
+
+        <!-- History List -->
+        <div class="history-section">
+            <span class="label">Bet History</span>
+            <div class="history-list" id="history-container">
+                <!-- Items injected via JS -->
+            </div>
+        </div>
+    </aside>
+
+    <!-- MODAL: HELP -->
+    <div class="modal-overlay" id="modal-help">
+        <div class="modal-card">
+            <i class="ph-duotone ph-game-controller modal-icon"></i>
+            <h2 class="modal-title">How to Play</h2>
+            <p class="modal-text">
+                1. Select your side (Heads or Tails).<br>
+                2. Enter your bet amount.<br>
+                3. Click "FLIP" to toss the coin.<br>
+                4. Win 2x your bet if you guess correctly!<br>
+                <br>
+                Fairness: The outcome is randomly generated using crypto-secure standards.
+            </p>
+            <button class="btn-close" onclick="UI.closeModal('modal-help')">Got it!</button>
+        </div>
+    </div>
+
+    <!-- MODAL: AD -->
+    <div class="modal-overlay" id="modal-ad">
+        <div class="modal-card">
+            <i class="ph-duotone ph-television-simple modal-icon" style="color: #00f3ff;"></i>
+            <h2 class="modal-title">Watching Ad...</h2>
+            <div id="ad-content" style="background:#000; height:150px; margin-bottom:20px; display:flex; align-items:center; justify-content:center; border-radius:8px; border:1px dashed #333;">
+                <span id="ad-timer" style="font-size:2rem; font-family:'Rajdhani'; color:#fff;">10</span>
+            </div>
+            <p class="modal-text">Please wait to claim your free credits.</p>
+            <button class="btn-close" id="btn-cancel-ad" onclick="UI.closeModal('modal-ad')">Close</button>
+            <button class="btn-claim" id="btn-claim-ad" onclick="UI.claimAdReward()">Claim +100 Coins</button>
+        </div>
+    </div>
+
+    <script>
+        // --- AUDIO SYSTEM ---
+        const AudioSys = {
+            ctx: null, muted: false,
+            init() { 
+                window.AudioContext = window.AudioContext || window.webkitAudioContext;
+                this.ctx = new AudioContext(); 
+            },
+            playTone(freq, type, dur, vol=0.1) {
+                if(this.muted || !this.ctx) return;
+                const o = this.ctx.createOscillator(); const g = this.ctx.createGain();
+                o.type = type; o.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                g.gain.setValueAtTime(vol, this.ctx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime+dur);
+                o.connect(g); g.connect(this.ctx.destination);
+                o.start(); o.stop(this.ctx.currentTime+dur);
+            },
+            playClick() {
+                if (!this.ctx) this.init(); 
+                this.playTone(800, 'sine', 0.1, 0.05);
+            },
+            playFlip() {
+                if(!this.ctx) return;
+                const t = this.ctx.currentTime;
+                const o = this.ctx.createOscillator(); const g = this.ctx.createGain();
+                o.frequency.setValueAtTime(200, t); o.frequency.linearRampToValueAtTime(1200, t+0.1);
+                g.gain.setValueAtTime(0.1, t); g.gain.exponentialRampToValueAtTime(0.01, t+1.0);
+                o.connect(g); g.connect(this.ctx.destination); o.start(); o.stop(t+1.0);
+            },
+            playWin() { 
+                [600, 800, 1200].forEach((f,i) => setTimeout(()=>this.playTone(f,'sine',0.3,0.1), i*100));
+            },
+            playLose() { 
+                this.playTone(300, 'sawtooth', 0.4, 0.1); setTimeout(()=>this.playTone(200,'sawtooth',0.4,0.1), 300);
+            }
+        };
+
+        // --- UI MANAGER ---
+        const UI = {
+            openHelp() { document.getElementById('modal-help').classList.add('open'); },
+            openAd() { 
+                document.getElementById('modal-ad').classList.add('open'); 
+                this.startAdTimer();
+            },
+            closeModal(id) { document.getElementById(id).classList.remove('open'); },
+            
+            startAdTimer() {
+                const timerEl = document.getElementById('ad-timer');
+                const btnClaim = document.getElementById('btn-claim-ad');
+                const btnCancel = document.getElementById('btn-cancel-ad');
+                
+                btnClaim.style.display = 'none';
+                btnCancel.style.display = 'inline-block';
+                let timeLeft = 10;
+                timerEl.textContent = timeLeft;
+                
+                const interval = setInterval(() => {
+                    timeLeft--;
+                    timerEl.textContent = timeLeft;
+                    if(timeLeft <= 0) {
+                        clearInterval(interval);
+                        timerEl.textContent = "DONE";
+                        btnCancel.style.display = 'none';
+                        btnClaim.style.display = 'inline-block';
+                        AudioSys.playWin();
+                    }
+                }, 1000);
+            },
+
+            claimAdReward() {
+                game.updateBalance(100);
+                this.closeModal('modal-ad');
+            }
+        };
+
+        // --- GAME LOGIC ---
+        const game = {
+            scene: null, camera: null, renderer: null, coin: null,
+            state: 'IDLE', balance: 1000, bet: 10, side: 'heads',
+            lastResult: 'heads',
+            
+            init() {
+                this.initThree();
+                this.setupEvents();
+                this.animate();
+                
+                // Hide splash screen after delay
+                setTimeout(() => {
+                    document.getElementById('splash-screen').classList.add('hidden');
+                }, 2500);
+            },
+
+            initThree() {
+                this.scene = new THREE.Scene();
+                this.scene.fog = new THREE.FogExp2(0x0f111a, 0.04);
+
+                this.camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 100);
+                this.updateCameraLayout(); 
+
+                this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                this.renderer.shadowMap.enabled = true;
+                this.renderer.shadowMap.type = THREE.PCFSoftShadowMap; 
+                
+                document.getElementById('game-container').appendChild(this.renderer.domElement);
+
+                // Lights
+                const amb = new THREE.AmbientLight(0xffffff, 0.3);
+                this.scene.add(amb);
+                const dir = new THREE.DirectionalLight(0xffffff, 1.5);
+                dir.position.set(5, 10, 5);
+                dir.castShadow = true;
+                dir.shadow.mapSize.width = 2048; 
+                dir.shadow.mapSize.height = 2048;
+                this.scene.add(dir);
+                
+                const spot1 = new THREE.SpotLight(0x00ff88, 2); spot1.position.set(-5, 2, 0); this.scene.add(spot1);
+                const spot2 = new THREE.SpotLight(0x00f3ff, 2); spot2.position.set(5, 2, 0); this.scene.add(spot2);
+
+                const plane = new THREE.Mesh(
+                    new THREE.PlaneGeometry(50, 50),
+                    new THREE.MeshStandardMaterial({ color: 0x151a26, roughness: 0.7, metalness: 0.4 })
+                );
+                plane.rotation.x = -Math.PI/2;
+                plane.receiveShadow = true;
+                this.scene.add(plane);
+
+                this.createCoin();
+            },
+
+            updateCameraLayout() {
+                const w = window.innerWidth;
+                
+                // Base position
+                let camX = 0;
+                let camY = 6;
+                let camZ = 9;
+
+                if (w > 768) {
+                    // Desktop: Massive right shift for camera = Massive left shift for Coin on screen
+                    camX = 4.0; 
+                } else {
+                    // Mobile: Center
+                    camX = 0;
+                }
+
+                this.camera.position.set(camX, camY, camZ);
+                this.camera.lookAt(0, 0, 0);
+            },
+
+            createCoin() {
+                const geo = new THREE.CylinderGeometry(1.6, 1.6, 0.15, 64);
+                const mat = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.9, roughness: 0.2 });
+                this.coin = new THREE.Group();
+                
+                const edge = new THREE.Mesh(geo, mat);
+                edge.rotation.x = Math.PI/2;
+                edge.castShadow = true;
+                this.coin.add(edge);
+
+                const tHead = this.genTexture('HEADS');
+                const tTail = this.genTexture('TAILS');
+                const faceGeo = new THREE.CircleGeometry(1.6, 64);
+                
+                const mHead = new THREE.MeshStandardMaterial({ map: tHead, metalness:0.6, roughness:0.4 });
+                const fHead = new THREE.Mesh(faceGeo, mHead);
+                fHead.position.z = 0.08;
+                this.coin.add(fHead);
+
+                const mTail = new THREE.MeshStandardMaterial({ map: tTail, metalness:0.6, roughness:0.4 });
+                const fTail = new THREE.Mesh(faceGeo, mTail);
+                fTail.rotation.y = Math.PI;
+                fTail.position.z = -0.08;
+                this.coin.add(fTail);
+
+                this.coin.rotation.x = -Math.PI/2;
+                this.coin.position.y = 1;
+                this.scene.add(this.coin);
+                this.lastResult = 'heads';
+            },
+
+            genTexture(text) {
+                const size = 1024;
+                const c = document.createElement('canvas'); c.width=size; c.height=size;
+                const ctx = c.getContext('2d');
+                const center = size/2;
+                
+                const g = ctx.createRadialGradient(center,center,100,center,center,center);
+                g.addColorStop(0,'#fff5c3'); g.addColorStop(1,'#DAA520');
+                ctx.fillStyle = g; ctx.fillRect(0,0,size,size);
+                
+                ctx.beginPath(); ctx.arc(center,center,size/2 - 50,0,Math.PI*2); ctx.lineWidth=40; ctx.strokeStyle='#B8860B'; ctx.stroke();
+                
+                ctx.font='bold 200px Rajdhani'; 
+                ctx.fillStyle='#8B4513'; ctx.textAlign='center'; ctx.textBaseline='middle';
+                ctx.fillText(text, center, center);
+                
+                const tex = new THREE.CanvasTexture(c);
+                tex.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
+                return tex;
+            },
+
+            setupEvents() {
+                window.addEventListener('resize', () => {
+                    this.camera.aspect = window.innerWidth/window.innerHeight;
+                    this.camera.updateProjectionMatrix();
+                    this.renderer.setSize(window.innerWidth, window.innerHeight);
+                    this.updateCameraLayout();
+                });
+                document.getElementById('flip-btn').addEventListener('click', () => this.flip());
+                document.getElementById('bet-input').addEventListener('change', (e) => this.bet = parseFloat(e.target.value));
+            },
+
+            adjustBet(type) {
+                const inp = document.getElementById('bet-input');
+                let v = parseFloat(inp.value) || 0;
+                if(type==='min') v=10;
+                if(type==='max') v=this.balance;
+                if(type==='half') v = Math.floor(v/2);
+                if(type==='double') v*=2;
+                if(v>this.balance) v=this.balance; if(v<1) v=1;
+                inp.value = v; this.bet = v;
+                AudioSys.playClick();
+            },
+
+            setSide(s) {
+                if(this.state !== 'IDLE') return;
+                this.side = s;
+                document.getElementById('btn-heads').className = `side-option ${s==='heads'?'active-heads':''}`;
+                document.getElementById('btn-tails').className = `side-option ${s==='tails'?'active-tails':''}`;
+                AudioSys.playClick();
+            },
+
+            updateBalance(amt) {
+                this.balance += amt;
+                document.getElementById('wallet-balance').textContent = this.balance.toFixed(2);
+            },
+
+            addHistory(res, win, amount) {
+                const c = document.getElementById('history-container');
+                const div = document.createElement('div');
+                div.className = `hist-item ${win ? 'win' : 'lose'}`;
+                
+                const icon = res === 'heads' ? 'ph-coin' : 'ph-circle';
+                
+                div.innerHTML = `
+                    <div class="hist-side"><i class="ph-fill ${icon}"></i> ${res}</div>
+                    <div class="hist-amt ${win ? 'plus' : 'minus'}">${win ? '+' : '-'}${Math.abs(amount).toFixed(2)}</div>
+                `;
+                
+                c.prepend(div);
+                // Keep max 20 items
+                if(c.children.length > 20) c.lastChild.remove();
+            },
+
+            flip() {
+                if(this.state !== 'IDLE') return;
+                const inpVal = parseFloat(document.getElementById('bet-input').value);
+                if(inpVal > this.balance) return alert("Low Balance!");
+                
+                if(!AudioSys.ctx) AudioSys.init();
+                this.bet = inpVal;
+                this.updateBalance(-this.bet);
+                
+                this.state = 'FLIPPING';
+                document.getElementById('flip-btn').disabled = true;
+                document.getElementById('result-display').classList.remove('active');
+
+                const isHeads = Math.random() < 0.5;
+                const result = isHeads ? 'heads' : 'tails';
+                
+                const startRot = this.coin.rotation.x;
+                const spins = 10; 
+                let spinAngle = Math.PI * 2 * spins;
+                
+                if (this.lastResult !== result) {
+                    spinAngle += Math.PI;
+                }
+                
+                const target = startRot - spinAngle;
+                this.lastResult = result;
+
+                let progress = 0;
+                const dur = 80; 
+                
+                AudioSys.playFlip();
+
+                const loop = () => {
+                    progress++;
+                    const p = progress/dur;
+                    const ease = 1 - Math.pow(1-p, 3); 
+
+                    this.coin.position.y = 1 + (Math.sin(p*Math.PI) * 9); 
+                    this.coin.rotation.x = startRot + (target - startRot) * ease;
+                    this.coin.rotation.z = Math.sin(p*Math.PI*12) * 0.4 * (1-p);
+
+                    if(progress < dur) {
+                        requestAnimationFrame(loop);
+                    } else {
+                        this.coin.rotation.x = target;
+                        this.coin.rotation.z = 0;
+                        this.coin.position.y = 1;
+                        this.endRound(result);
+                    }
+                };
+                loop();
+            },
+
+            endRound(res) {
+                this.state = 'IDLE';
+                document.getElementById('flip-btn').disabled = false;
+
+                const win = (res === this.side);
+                const winAmt = this.bet * 2;
+                
+                // Add History Item (with win status and amount)
+                const histAmt = win ? winAmt - this.bet : this.bet;
+                this.addHistory(res, win, win ? winAmt : this.bet);
+
+                const rDisp = document.getElementById('result-display');
+                const rTitle = document.getElementById('res-title');
+                const rVal = document.getElementById('res-val');
+                
+                rTitle.textContent = res;
+                rTitle.className = `res-main ${win?'win-text':'lose-text'}`;
+                rVal.textContent = win ? `+${winAmt}` : `-${this.bet}`;
+                rVal.style.color = win ? 'var(--accent)' : 'var(--danger)';
+                rDisp.classList.add('active');
+
+                if(win) {
+                    this.updateBalance(winAmt);
+                    AudioSys.playWin();
+                    this.spawnConfetti();
+                } else {
+                    AudioSys.playLose();
+                }
+            },
+
+            spawnConfetti() {
+                for(let i=0; i<30; i++) {
+                    const c = document.createElement('div');
+                    c.className = 'confetti';
+                    c.style.left = Math.random()*100 + '%';
+                    c.style.animationDuration = (1+Math.random()*2)+'s';
+                    c.style.backgroundColor = `hsl(${Math.random()*360}, 100%, 50%)`;
+                    document.body.appendChild(c);
+                    setTimeout(()=>c.remove(), 3000);
+                }
+            },
+
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                if(this.state === 'IDLE') {
+                    this.coin.rotation.z = Math.sin(Date.now()*0.002) * 0.05;
+                    this.coin.position.y = 1 + Math.sin(Date.now()*0.001)*0.1;
+                }
+                this.renderer.render(this.scene, this.camera);
+            }
+        };
+
+        window.onload = () => game.init();
+
+    </script>
+</body>
+</html>
