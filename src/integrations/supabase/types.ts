@@ -83,6 +83,48 @@ export type Database = {
         }
         Relationships: []
       }
+      deposits: {
+        Row: {
+          amount_usd: number
+          created_at: string
+          crypto_currency: string
+          id: string
+          nowpayments_data: Json | null
+          payment_address: string | null
+          payment_amount: number | null
+          payment_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_usd: number
+          created_at?: string
+          crypto_currency?: string
+          id?: string
+          nowpayments_data?: Json | null
+          payment_address?: string | null
+          payment_amount?: number | null
+          payment_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_usd?: number
+          created_at?: string
+          crypto_currency?: string
+          id?: string
+          nowpayments_data?: Json | null
+          payment_address?: string | null
+          payment_amount?: number | null
+          payment_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       friendships: {
         Row: {
           addressee_id: string
