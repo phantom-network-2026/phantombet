@@ -795,7 +795,7 @@
             adjustBet(type) {
                 const inp = document.getElementById('bet-input');
                 let v = parseFloat(inp.value) || 0;
-                if(type==='min') v=10;
+                if(type==='min') v=0.1;
                 if(type==='max') v=this.balance;
                 if(type==='half') v = Math.floor(v/2);
                 if(type==='double') v*=2;
