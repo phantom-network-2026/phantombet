@@ -104,8 +104,8 @@
                 playSound('lose');
                 return;
             }
-            const betAmount = parseInt(ui.betInput.value);
-            if (isNaN(betAmount) || betAmount < 10) return setStatus("Minimum bet: 10", "text-red-500");
+            const betAmount = parseFloat(ui.betInput.value);
+            if (isNaN(betAmount) || betAmount < 0.1) return setStatus("Minimum bet: $0.10", "text-red-500");
             if (betAmount > state.balance) return setStatus("Insufficient Funds", "text-red-500");
 
             state.currentBet = betAmount;

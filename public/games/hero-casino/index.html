@@ -974,8 +974,8 @@
         function startGame() {
             currentBet = parseFloat(elBetInput.value);
             
-            if(isNaN(currentBet) || currentBet < 10) {
-                alert("Minimum bet amount is 10.");
+            if(isNaN(currentBet) || currentBet < 0.1) {
+                alert("Minimum bet amount is $0.10.");
                 return;
             }
             if(currentBet > wallet) {
