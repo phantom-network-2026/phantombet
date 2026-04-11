@@ -510,7 +510,7 @@
             <span class="label">Bet Amount</span>
             <div class="input-wrapper">
                 <i class="ph-fill ph-coins coin-icon"></i>
-                <input type="number" id="bet-input" value="10" min="1">
+                <input type="number" id="bet-input" value="1" min="0.1" max="50" step="0.1">
             </div>
             <div class="multipliers">
                 <button class="mult-btn" onclick="game.adjustBet('min')">MIN</button>
@@ -795,7 +795,7 @@
             adjustBet(type) {
                 const inp = document.getElementById('bet-input');
                 let v = parseFloat(inp.value) || 0;
-                if(type==='min') v=10;
+                if(type==='min') v=0.1;
                 if(type==='max') v=this.balance;
                 if(type==='half') v = Math.floor(v/2);
                 if(type==='double') v*=2;

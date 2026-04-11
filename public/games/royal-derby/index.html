@@ -72,13 +72,13 @@
 
             <div class="control-group">
                 <label>Wager Amount</label>
-                <input type="number" id="bet-amount" value="100" min="10">
+                <input type="number" id="bet-amount" value="1" min="0.1" max="50" step="0.1">
                 
                 <div class="quick-bet-grid">
+                    <button class="quick-bet-btn" onclick="setBet(0.5)">$0.50</button>
+                    <button class="quick-bet-btn" onclick="setBet(1)">$1</button>
+                    <button class="quick-bet-btn" onclick="setBet(5)">$5</button>
                     <button class="quick-bet-btn" onclick="setBet(10)">$10</button>
-                    <button class="quick-bet-btn" onclick="setBet(50)">$50</button>
-                    <button class="quick-bet-btn" onclick="setBet(100)">$100</button>
-                    <button class="quick-bet-btn" onclick="setBet(500)">$500</button>
                 </div>
             </div>
 

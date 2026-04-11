@@ -441,7 +441,7 @@
             startRound() {
                 const b = parseFloat(this.els.betInput.value);
                 if(b > this.wallet) return this.msgFlash("INSUFFICIENT FUNDS", "text-red-500");
-                if(b < 10) return this.msgFlash("MIN BET 10", "text-red-500");
+                if(b < 0.1) return this.msgFlash("MIN BET $0.10", "text-red-500");
 
                 this.wallet -= b;
                 this.bet = b;

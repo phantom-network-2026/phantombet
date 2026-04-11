@@ -2,7 +2,7 @@ const CONFIG = {
             houseEdge: 0.94, 
             baseSpeed: 5,
             trackLengthPercent: 90, 
-            minBet: 10,
+            minBet: 0.1,
             initialBalance: 1000,
             raceDurationMin: 4000, 
             raceDurationMax: 6000  

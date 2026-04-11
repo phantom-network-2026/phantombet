@@ -55,12 +55,15 @@ function calculatePayout(bet: BetType, result: number): number {
   }
 }
 
-const CHIP_VALUES = [0.20, 0.50, 1, 5];
+const CHIP_VALUES = [0.10, 0.20, 0.50, 1, 2, 5, 10];
 const CHIP_COLORS: Record<number, { bg: string; text: string; label: string }> = {
+  0.10: { bg: "linear-gradient(135deg, #bbb, #888)", text: "#222", label: "10¢" },
   0.20: { bg: "linear-gradient(135deg, #d4a8e0, #9b59b6)", text: "#fff", label: "20¢" },
   0.50: { bg: "linear-gradient(135deg, #f5a623, #d4830a)", text: "#fff", label: "50¢" },
   1:    { bg: "linear-gradient(135deg, #5dade2, #2e86c1)", text: "#fff", label: "$1" },
+  2:    { bg: "linear-gradient(135deg, #e67e22, #d35400)", text: "#fff", label: "$2" },
   5:    { bg: "linear-gradient(135deg, #27ae60, #1e8449)", text: "#fff", label: "$5" },
+  10:   { bg: "linear-gradient(135deg, #2ecc71, #16a085)", text: "#fff", label: "$10" },
 };
 
 // ─── Roulette Wheel ─────────────────────────────────────────────
@@ -216,7 +219,7 @@ export default function PennyRoulette() {
   const navigate = useNavigate();
   const [view, setView] = useState<GameView>("table");
   const [bets, setBets] = useState<PlacedBet[]>([]);
-  const [selectedChip, setSelectedChip] = useState(0.20);
+  const [selectedChip, setSelectedChip] = useState(0.10);
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState<number | null>(null);
   const [splashData, setSplashData] = useState<{ resultNumber: number; netAmount: number } | null>(null);
@@ -231,7 +234,7 @@ export default function PennyRoulette() {
   const placeBet = useCallback((type: BetType, label: string) => {
     if (spinning) return;
     if (totalBet + selectedChip > balance) { toast.error("Insufficient balance"); return; }
-    if (totalBet + selectedChip > 5) { toast.error("Maximum total bet is $5"); return; }
+    if (totalBet + selectedChip > 50) { toast.error("Maximum total bet is $50"); return; }
     setBets((prev) => [...prev, { type, amount: selectedChip, label }]);
   }, [spinning, selectedChip, totalBet, balance]);
 
@@ -291,7 +294,7 @@ export default function PennyRoulette() {
     if (spinning || lastBets.length === 0) return;
     const rebetTotal = lastBets.reduce((s, b) => s + b.amount, 0);
     if (rebetTotal > balance) { toast.error("Insufficient balance"); return; }
-    if (rebetTotal > 5) { toast.error("Maximum total bet is $5"); return; }
+    if (rebetTotal > 50) { toast.error("Maximum total bet is $50"); return; }
     setBets(lastBets);
   };
 
@@ -299,7 +302,7 @@ export default function PennyRoulette() {
     if (spinning || lastBets.length === 0) return;
     const rebetTotal = lastBets.reduce((s, b) => s + b.amount, 0);
     if (rebetTotal > balance) { toast.error("Insufficient balance"); return; }
-    if (rebetTotal > 5) { toast.error("Maximum total bet is $5"); return; }
+    if (rebetTotal > 50) { toast.error("Maximum total bet is $50"); return; }
     setBets(lastBets);
     setTimeout(() => spin(), 50);
   };
