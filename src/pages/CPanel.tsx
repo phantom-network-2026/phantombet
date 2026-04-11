@@ -750,7 +750,7 @@ function useAnalytics() {
 }
 
 // ── Main cPanel Page ────────────────────────────────────────────
-type ActivePanel = null | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge";
+type ActivePanel = null | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "promotions";
 
 export default function CPanel() {
   const { isAdmin, loading, profile } = useAuth();
@@ -778,6 +778,8 @@ export default function CPanel() {
           {activePanel === "maintenance" && <MaintenancePanel onBack={back} />}
           {activePanel === "logs" && <ErrorLogs onBack={back} />}
           {activePanel === "house-edge" && <HouseEdgeWrapper onBack={back} />}
+          {activePanel === "game-probability" && <GameProbabilityWrapper onBack={back} />}
+          {activePanel === "promotions" && <PromotionsWrapper onBack={back} />}
         </div>
       </div>
     );
