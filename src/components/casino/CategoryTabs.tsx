@@ -6,7 +6,7 @@ const categories = [
   { id: "slots", label: "Slots" },
   { id: "table", label: "Table" },
   { id: "instant", label: "Instant Wins" },
-  { id: "live", label: "Live" },
+  
   { id: "jackpot", label: "Jackpot" },
 ];
 
