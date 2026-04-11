@@ -691,7 +691,25 @@ function HouseEdgeWrapper({ onBack }: { onBack: () => void }) {
   );
 }
 
-// ── Analytics Overview (inline stats, no drill-down needed) ─────
+// ── Game Probability Wrapper ────────────────────────────────────
+function GameProbabilityWrapper({ onBack }: { onBack: () => void }) {
+  return (
+    <PanelView title="Game Win Probability" onBack={onBack}>
+      <GameProbabilityPanel />
+    </PanelView>
+  );
+}
+
+// ── Promotions Wrapper ──────────────────────────────────────────
+function PromotionsWrapper({ onBack }: { onBack: () => void }) {
+  return (
+    <PanelView title="Promotions Manager" onBack={onBack}>
+      <PromotionsManager />
+    </PanelView>
+  );
+}
+
+
 function useAnalytics() {
   const [stats, setStats] = useState({
     totalUsers: 0, onlineUsers: 0, totalBalance: 0, totalTransactions: 0,
