@@ -70,6 +70,42 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Check game win probability setting
+    if (amount > 0) {
+      const { data: probSetting } = await admin
+        .from("site_settings")
+        .select("value")
+        .eq("key", "game_win_probability")
+        .maybeSingle();
+
+      if (probSetting?.value) {
+        const cfg = probSetting.value as any;
+        let winProbability: number | null = null;
+
+        // Check per-game override first
+        const perGame = (cfg.perGame || []) as any[];
+        const gameOverride = perGame.find(
+          (g: any) => g.enabled && g.gameName?.toLowerCase() === (gameType || "").toLowerCase()
+        );
+        if (gameOverride) {
+          winProbability = gameOverride.probability;
+        } else if (cfg.globalEnabled) {
+          winProbability = cfg.globalProbability;
+        }
+
+        // Apply probability: roll a random number 0-100, if above threshold, convert win to loss
+        if (winProbability !== null && winProbability < 100) {
+          const roll = Math.random() * 100;
+          if (roll >= winProbability) {
+            // Block this win - return as if nothing happened (no payout)
+            return new Response(JSON.stringify({ success: true, balance: null, forced_loss: true }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+        }
+      }
+    }
+
     // Apply house edge on wins
     let adjustedAmount = amount;
     if (amount > 0) {
@@ -94,7 +130,6 @@ Deno.serve(async (req) => {
           }
 
           // Apply edge: positive edge = house takes %, negative = player gets bonus
-          // e.g. 10% edge means player gets 90% of their win
           if (edgePercent !== 0) {
             const multiplier = 1 - edgePercent / 100;
             adjustedAmount = Math.max(0.01, Math.round(amount * multiplier * 100) / 100);
