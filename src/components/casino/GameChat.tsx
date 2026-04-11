@@ -268,8 +268,14 @@ export function GameChat({ gameRoom }: { gameRoom: string }) {
           const isMine = msg.user_id === user?.id;
           return (
             <div key={msg.id} className={`group flex flex-col ${isMine ? "items-end" : "items-start"}`}>
-              <span className="text-[10px] text-muted-foreground mb-0.5">
-                {isMine ? "You" : msg.username || "Anon"}
+              <span className="mb-0.5">
+                {isMine ? (
+                  <span className="text-[10px] text-muted-foreground">You</span>
+                ) : userRoles[msg.user_id] ? (
+                  <StaffUsername username={msg.username || "Anon"} role={userRoles[msg.user_id]} size="xs" />
+                ) : (
+                  <span className="text-[10px] text-muted-foreground">{msg.username || "Anon"}</span>
+                )}
               </span>
               <div className="flex items-center gap-1">
                 {hasStaffAccess && !isMine && (
