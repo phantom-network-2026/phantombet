@@ -898,12 +898,12 @@
         // Adjust Bet via Buttons
         function adjustBet(action) {
             if(isPlaying) return;
-            let val = parseFloat(elBetInput.value) || 10;
+            let val = parseFloat(elBetInput.value) || 1;
             switch(action) {
-                case 'min': val = 10; break;
-                case 'half': val = Math.max(10, Math.floor(val / 2)); break;
-                case 'double': val = Math.min(wallet, val * 2); break;
-                case 'max': val = wallet; break;
+                case 'min': val = 0.1; break;
+                case 'half': val = Math.max(0.1, val / 2); break;
+                case 'double': val = Math.min(50, val * 2); break;
+                case 'max': val = Math.min(50, wallet); break;
             }
             if(val > wallet) val = wallet;
             elBetInput.value = val.toFixed(2);
