@@ -209,8 +209,11 @@ export default function Profile() {
           </div>
           <div className="flex items-center justify-center gap-2">
             <Circle className={`h-3 w-3 ${getStatusColor(appearanceStatus)}`} />
-            <h2 className="font-display text-xl font-bold">{profile.username}</h2>
-            {staffRole && <StaffBadgeInline role={staffRole} />}
+            {staffRole ? (
+              <StaffUsername username={profile.username || ""} role={staffRole} size="md" />
+            ) : (
+              <h2 className="font-display text-xl font-bold">{profile.username}</h2>
+            )}
           </div>
           {profile.bio && <p className="text-sm text-muted-foreground">{profile.bio}</p>}
 
