@@ -11,10 +11,12 @@ import treasureImg from "@/assets/game-treasure.jpg";
 import pokerImg from "@/assets/game-poker.jpg";
 import slotCowboyImg from "@/assets/game-slot-cowboy.jpg";
 import prizeReelImg from "@/assets/game-prize-reel.jpg";
+import scatterBombImg from "@/assets/game-scatter-bomb.jpg";
 
 const imageMap: Record<string, string> = {
   "Slot Cowboy": slotCowboyImg,
   "Prize Reel": prizeReelImg,
+  "Scatter Bomb": scatterBombImg,
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
