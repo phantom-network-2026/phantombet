@@ -10,6 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Header } from "@/components/casino/Header";
 import { toast } from "sonner";
 import { HouseEdgePanel } from "@/components/casino/HouseEdgePanel";
+import { GameProbabilityPanel } from "@/components/casino/GameProbabilityPanel";
+import { PromotionsManager } from "@/components/casino/PromotionsManager";
 import {
   ArrowLeft, FolderOpen, Database, Settings, Upload, Trash2, Download,
   RefreshCw, Search, Table, FileText, Eye, ChevronRight, ChevronDown, ChevronUp,
@@ -17,7 +19,7 @@ import {
   AlertTriangle, Activity, Lock, Megaphone, HardDrive, Clock,
   Ban, Users, BarChart3, Wrench, Power, Bell, Percent, Trophy,
   Gamepad2, CreditCard, MessageSquare, UserCheck, Zap, LayoutGrid,
-  Info, Server, Hash
+  Info, Server, Hash, Gift
 } from "lucide-react";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -689,7 +691,25 @@ function HouseEdgeWrapper({ onBack }: { onBack: () => void }) {
   );
 }
 
-// ── Analytics Overview (inline stats, no drill-down needed) ─────
+// ── Game Probability Wrapper ────────────────────────────────────
+function GameProbabilityWrapper({ onBack }: { onBack: () => void }) {
+  return (
+    <PanelView title="Game Win Probability" onBack={onBack}>
+      <GameProbabilityPanel />
+    </PanelView>
+  );
+}
+
+// ── Promotions Wrapper ──────────────────────────────────────────
+function PromotionsWrapper({ onBack }: { onBack: () => void }) {
+  return (
+    <PanelView title="Promotions Manager" onBack={onBack}>
+      <PromotionsManager />
+    </PanelView>
+  );
+}
+
+
 function useAnalytics() {
   const [stats, setStats] = useState({
     totalUsers: 0, onlineUsers: 0, totalBalance: 0, totalTransactions: 0,
@@ -730,7 +750,7 @@ function useAnalytics() {
 }
 
 // ── Main cPanel Page ────────────────────────────────────────────
-type ActivePanel = null | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge";
+type ActivePanel = null | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "promotions";
 
 export default function CPanel() {
   const { isAdmin, loading, profile } = useAuth();
@@ -758,6 +778,8 @@ export default function CPanel() {
           {activePanel === "maintenance" && <MaintenancePanel onBack={back} />}
           {activePanel === "logs" && <ErrorLogs onBack={back} />}
           {activePanel === "house-edge" && <HouseEdgeWrapper onBack={back} />}
+          {activePanel === "game-probability" && <GameProbabilityWrapper onBack={back} />}
+          {activePanel === "promotions" && <PromotionsWrapper onBack={back} />}
         </div>
       </div>
     );
@@ -823,11 +845,20 @@ export default function CPanel() {
             <CpanelSection title="Games & Finance" icon={<Gamepad2 className="h-5 w-5" />}>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1">
                 <ToolCard icon={<Percent className="h-6 w-6" />} label="House Edge" onClick={() => setActivePanel("house-edge")} />
+                <ToolCard icon={<LayoutGrid className="h-6 w-6" />} label="Win Probability" onClick={() => setActivePanel("game-probability")} />
                 <ToolCard icon={<Gamepad2 className="h-6 w-6" />} label="Game Manager" onClick={() => setActivePanel("database")} />
                 <ToolCard icon={<CreditCard className="h-6 w-6" />} label="Transactions" onClick={() => setActivePanel("logs")} />
                 <ToolCard icon={<Trophy className="h-6 w-6" />} label="Prize Spins" onClick={() => setActivePanel("database")} />
-                <ToolCard icon={<BarChart3 className="h-6 w-6" />} label="Analytics" onClick={() => {}} />
                 <ToolCard icon={<Hash className="h-6 w-6" />} label="Scratch Cards" onClick={() => setActivePanel("database")} />
+              </div>
+            </CpanelSection>
+
+            {/* ── Promotions ─────────────────────────── */}
+            <CpanelSection title="Promotions & Marketing" icon={<Gift className="h-5 w-5" />}>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1">
+                <ToolCard icon={<Gift className="h-6 w-6" />} label="Promotions" onClick={() => setActivePanel("promotions")} />
+                <ToolCard icon={<Megaphone className="h-6 w-6" />} label="Announcements" onClick={() => setActivePanel("maintenance")} />
+                <ToolCard icon={<Bell className="h-6 w-6" />} label="Notifications" onClick={() => setActivePanel("maintenance")} />
               </div>
             </CpanelSection>
 
@@ -921,6 +952,12 @@ export default function CPanel() {
                 </Button>
                 <Button variant="outline" size="sm" className="w-full justify-start text-xs" onClick={() => setActivePanel("house-edge")}>
                   <Percent className="h-3 w-3 mr-2" /> House Edge
+                </Button>
+                <Button variant="outline" size="sm" className="w-full justify-start text-xs" onClick={() => setActivePanel("game-probability")}>
+                  <LayoutGrid className="h-3 w-3 mr-2" /> Win Probability
+                </Button>
+                <Button variant="outline" size="sm" className="w-full justify-start text-xs" onClick={() => setActivePanel("promotions")}>
+                  <Gift className="h-3 w-3 mr-2" /> Promotions
                 </Button>
                 <Button variant="outline" size="sm" className="w-full justify-start text-xs" onClick={() => setActivePanel("maintenance")}>
                   <Wrench className="h-3 w-3 mr-2" /> Maintenance Mode
