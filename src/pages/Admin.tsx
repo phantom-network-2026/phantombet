@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Header } from "@/components/casino/Header";
 import { FakeWinsControlPanel } from "@/components/casino/FakeWinsControlPanel";
+import { StaffUsername, type StaffRole } from "@/components/casino/StaffUsername";
 import { ArrowLeft, Users, DollarSign, Plus, Minus, Edit, Save, Shield, Trash2, Circle, ShieldAlert } from "lucide-react";
 import { getStatusColor, getStatusLabel } from "@/hooks/usePresence";
 import { toast } from "sonner";
@@ -269,7 +270,15 @@ export default function Admin() {
                    <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <Circle className={`h-2.5 w-2.5 ${getStatusColor(user.is_online ? (user.appearance_status || "online") : "offline")}`} />
-                      <p className="font-display font-bold truncate">{user.username || "No username"}</p>
+                      {user.roles.some((r: string) => ["admin", "moderator", "staff"].includes(r)) ? (
+                        <StaffUsername
+                          username={user.username || "No username"}
+                          role={(["admin", "moderator", "staff"].find(r => user.roles.includes(r)) || null) as StaffRole}
+                          size="sm"
+                        />
+                      ) : (
+                        <p className="font-display font-bold truncate">{user.username || "No username"}</p>
+                      )}
                       {user.is_online && (
                         <span className={`text-[10px] font-medium ${user.appearance_status === "idle" ? "text-yellow-400" : user.appearance_status === "offline" ? "text-muted-foreground" : "text-green-400"}`}>
                           {getStatusLabel(user.appearance_status || "online").toUpperCase()}

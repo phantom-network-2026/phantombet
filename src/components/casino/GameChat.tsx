@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, MessageCircle, ShieldAlert, Ban, Trash2, AlertTriangle, X } from "lucide-react";
 import { toast } from "sonner";
+import { StaffUsername, type StaffRole } from "./StaffUsername";
 
 interface ChatMessage {
   id: string;
@@ -25,6 +26,7 @@ export function GameChat({ gameRoom }: { gameRoom: string }) {
   const [showBanModal, setShowBanModal] = useState(false);
   const [banTarget, setBanTarget] = useState<{ userId: string; username: string } | null>(null);
   const [banDuration, setBanDuration] = useState<string>("permanent");
+  const [userRoles, setUserRoles] = useState<Record<string, StaffRole>>({});
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Check if current user is banned
@@ -63,6 +65,42 @@ export function GameChat({ gameRoom }: { gameRoom: string }) {
         if (data) setMessages(data as ChatMessage[]);
       });
 
+    // Fetch roles for users in chat
+    const fetchRoles = async (userIds: string[]) => {
+      if (userIds.length === 0) return;
+      const { data } = await supabase
+        .from("user_roles")
+        .select("user_id, role")
+        .in("user_id", userIds)
+        .in("role", ["admin", "moderator", "staff"]);
+      if (data) {
+        const rolesMap: Record<string, StaffRole> = {};
+        data.forEach((r: any) => {
+          // Priority: admin > moderator > staff
+          const priority = { admin: 3, moderator: 2, staff: 1 };
+          const existing = rolesMap[r.user_id];
+          if (!existing || (priority[r.role as keyof typeof priority] || 0) > (priority[existing as keyof typeof priority] || 0)) {
+            rolesMap[r.user_id] = r.role;
+          }
+        });
+        setUserRoles((prev) => ({ ...prev, ...rolesMap }));
+      }
+    };
+
+    supabase
+      .from("game_chat")
+      .select("*")
+      .eq("game_room", gameRoom)
+      .order("created_at", { ascending: true })
+      .limit(50)
+      .then(({ data }) => {
+        if (data) {
+          setMessages(data as ChatMessage[]);
+          const uniqueIds = [...new Set(data.map((m: any) => m.user_id))];
+          fetchRoles(uniqueIds);
+        }
+      });
+
     const channel = supabase
       .channel(`game-chat-${gameRoom}`)
       .on(
@@ -71,6 +109,8 @@ export function GameChat({ gameRoom }: { gameRoom: string }) {
         (payload) => {
           if (payload.eventType === "INSERT") {
             setMessages((prev) => [...prev.slice(-99), payload.new as ChatMessage]);
+            const newUserId = (payload.new as ChatMessage).user_id;
+            if (!userRoles[newUserId]) fetchRoles([newUserId]);
           } else if (payload.eventType === "DELETE") {
             setMessages((prev) => prev.filter((m) => m.id !== payload.old.id));
           }
@@ -228,8 +268,14 @@ export function GameChat({ gameRoom }: { gameRoom: string }) {
           const isMine = msg.user_id === user?.id;
           return (
             <div key={msg.id} className={`group flex flex-col ${isMine ? "items-end" : "items-start"}`}>
-              <span className="text-[10px] text-muted-foreground mb-0.5">
-                {isMine ? "You" : msg.username || "Anon"}
+              <span className="mb-0.5">
+                {isMine ? (
+                  <span className="text-[10px] text-muted-foreground">You</span>
+                ) : userRoles[msg.user_id] ? (
+                  <StaffUsername username={msg.username || "Anon"} role={userRoles[msg.user_id]} size="xs" />
+                ) : (
+                  <span className="text-[10px] text-muted-foreground">{msg.username || "Anon"}</span>
+                )}
               </span>
               <div className="flex items-center gap-1">
                 {hasStaffAccess && !isMine && (

@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { usePresence, getStatusColor, getStatusLabel, type AppearanceStatus } from "@/hooks/usePresence";
+import { StaffUsername, type StaffRole } from "@/components/casino/StaffUsername";
 
 const BORDER_STYLES = [
   { id: "none", label: "None", price: 0, preview: "" },
@@ -37,6 +38,20 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [staffRole, setStaffRole] = useState<StaffRole>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("user_roles").select("role").eq("user_id", user.id)
+      .in("role", ["admin", "moderator", "staff"])
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          const priority: Record<string, number> = { admin: 3, moderator: 2, staff: 1 };
+          const best = data.reduce((a, b) => (priority[b.role] || 0) > (priority[a.role] || 0) ? b : a);
+          setStaffRole(best.role as StaffRole);
+        }
+      });
+  }, [user]);
 
   useEffect(() => {
     if (!user) { navigate("/login"); return; }
@@ -194,7 +209,11 @@ export default function Profile() {
           </div>
           <div className="flex items-center justify-center gap-2">
             <Circle className={`h-3 w-3 ${getStatusColor(appearanceStatus)}`} />
-            <h2 className="font-display text-xl font-bold">{profile.username}</h2>
+            {staffRole ? (
+              <StaffUsername username={profile.username || ""} role={staffRole} size="md" />
+            ) : (
+              <h2 className="font-display text-xl font-bold">{profile.username}</h2>
+            )}
           </div>
           {profile.bio && <p className="text-sm text-muted-foreground">{profile.bio}</p>}
 
