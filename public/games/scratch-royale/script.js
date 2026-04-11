@@ -85,7 +85,7 @@ const app = {
                     document.getElementById('ad-modal').classList.add('hidden');
                     if(this.activeCallback) {
                         const { type, payload } = this.activeCallback;
-                        if(type === 'add_funds') app.wallet.addFunds(500, 'DEPOSIT', 'Ad Reward');
+                        if(type === 'add_funds') // disabled - uses bridge
                         else if (type === 'withdraw') app.wallet.processWithdraw();
                         else if (type === 'unlock_theme') app.themes.unlock(payload);
                         this.activeCallback = null;

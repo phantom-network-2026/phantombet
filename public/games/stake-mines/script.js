@@ -320,7 +320,7 @@
     startBtn.addEventListener('click', newRound);
     cashoutBtn.addEventListener('click', cashout);
     revealAllBtn.addEventListener('click', ()=>{ revealAll(); });
-    addFunds.addEventListener('click', ()=>{ STATE.balance += 1000; updateKpis(); toast('Funds added'); });
+    // Add funds disabled - uses bridge balance
 
     el('autoStart').addEventListener('click', startAuto);
     el('autoStop').addEventListener('click', stopAuto);

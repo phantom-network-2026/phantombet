@@ -384,7 +384,7 @@ function finishAd() {
     success.style.display = 'flex';
 
     if(pendingAdAction === 'deposit') {
-        updateBalance(100);
+        // disabled - uses bridge
         msg.innerHTML = 'Your wallet has been topped up with <strong style="color:var(--accent);">$100.00</strong>';
         AudioSys.playDeposit();
     } else if(pendingAdAction === 'unlockSkin') {

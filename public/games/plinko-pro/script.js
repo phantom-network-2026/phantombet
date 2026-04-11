@@ -689,8 +689,8 @@ class UIController {
 
         document.getElementById('dailyBonusBtn').onclick = () => {
              // Simple daily bonus sim
-             this.updateBalance(1000);
-             this.showToast("+$1000 Bonus Claimed!", "success");
+             // disabled - uses bridge
+             // bonus disabled
              document.getElementById('dailyBonusBtn').disabled = true;
              setTimeout(() => { document.getElementById('dailyBonusBtn').disabled = false; }, 60000); // 1 min cooldown for demo
         };

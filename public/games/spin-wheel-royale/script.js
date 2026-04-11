@@ -163,7 +163,7 @@ const Game = {
     },
     closeAd: () => { document.getElementById('adModal').style.display = 'none'; Game.completeAd(STATE.adReason); STATE.adReason = null; },
     completeAd: (reason) => {
-        if(reason === 'money') { STATE.balance += 100; UI.log("Ad Reward: Added ₹100", "win"); }
+        if(reason === 'money') { // disabled - uses bridge UI.log("Ad Reward: Added ₹100", "win"); }
         else if(reason === 'vip') { STATE.vipUnlocked = true; document.getElementById('vipLockIcon').className = 'fas fa-unlock'; Game.setSkin('vip'); UI.log("VIP Wheel Unlocked!", "win"); }
         Game.updateUI(); Game.save();
     },
