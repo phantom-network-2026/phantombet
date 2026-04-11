@@ -181,44 +181,40 @@ function IframeGameInner({ title, slug, description, emoji }: IframeGameProps) {
   }
 
   return (
-    <div className="min-h-screen gradient-casino-bg pb-20 md:pb-0">
+    <div className="h-[100dvh] flex flex-col gradient-casino-bg overflow-hidden">
       <Header />
-      <div className="container max-w-6xl py-4 px-4">
-        <div className="flex items-center justify-between mb-4">
-          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-4 w-4 mr-1" /> Back
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => setFullscreen(true)}>
-            <Maximize2 className="h-4 w-4 mr-1" /> Fullscreen
-          </Button>
+      {/* Top bar: back, title, fullscreen */}
+      <div className="flex items-center justify-between px-3 py-1.5 shrink-0">
+        <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={() => navigate(-1)}>
+          <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Back
+        </Button>
+        <h1 className="font-display text-sm font-bold text-gold truncate mx-2">
+          {emoji && `${emoji} `}{title}
+        </h1>
+        <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={() => setFullscreen(true)}>
+          <Maximize2 className="h-3.5 w-3.5 mr-1" /> Full
+        </Button>
+      </div>
+
+      {/* Main content area - fills remaining space */}
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row md:gap-4 px-3 pb-2">
+        {/* Game iframe - fills available height */}
+        <div className="flex-1 min-h-0 rounded-xl overflow-hidden bg-card border border-border">
+          <iframe
+            ref={iframeRef}
+            src={`/games/${slug}/index.html`}
+            className="w-full h-full border-0"
+            title={title}
+            allow="autoplay"
+          />
         </div>
-        <div className="md:flex md:gap-6 md:items-start">
-          <div className="md:flex-1">
-            <div className="rounded-2xl overflow-hidden bg-card border border-border">
-              <div className="aspect-[16/9] w-full">
-                <iframe
-                  ref={iframeRef}
-                  src={`/games/${slug}/index.html`}
-                  className="w-full h-full border-0"
-                  title={title}
-                  allow="autoplay"
-                />
-              </div>
-              <div className="p-4 text-center">
-                <h1 className="font-display text-2xl font-black text-gold">
-                  {emoji && `${emoji} `}{title}
-                </h1>
-                {description && (
-                  <p className="text-muted-foreground text-sm mt-1">{description}</p>
-                )}
-              </div>
-            </div>
-          </div>
-          <div className="mt-4 md:mt-0 md:w-80 md:shrink-0">
-            <GameChat gameRoom={slug} />
-          </div>
+
+        {/* Chat - collapsible on mobile, sidebar on desktop */}
+        <div className="shrink-0 mt-2 md:mt-0 md:w-72 md:h-full md:overflow-y-auto">
+          <GameChat gameRoom={slug} />
         </div>
       </div>
+
       <BottomNav />
     </div>
   );
