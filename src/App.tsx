@@ -30,6 +30,28 @@ import PrizeReel from "./pages/PrizeReel.tsx";
 import CPanel from "./pages/CPanel.tsx";
 import PennyRoulette from "./pages/PennyRoulette.tsx";
 
+// New HTML5 games
+import ChickenCross from "./pages/games/ChickenCross.tsx";
+import ScratchRoyale from "./pages/games/ScratchRoyale.tsx";
+import CryptoCall from "./pages/games/CryptoCall.tsx";
+import CutWirePro from "./pages/games/CutWirePro.tsx";
+import HeadAndTail from "./pages/games/HeadAndTail.tsx";
+import HeroCasino from "./pages/games/HeroCasino.tsx";
+import MeterCrash from "./pages/games/MeterCrash.tsx";
+import Dream11 from "./pages/games/Dream11.tsx";
+import JackpotHighway from "./pages/games/JackpotHighway.tsx";
+import MarvelBetting from "./pages/games/MarvelBetting.tsx";
+import NeonBounce from "./pages/games/NeonBounce.tsx";
+import PlaneCrash from "./pages/games/PlaneCrash.tsx";
+import PlinkoPro from "./pages/games/PlinkoPro.tsx";
+import RaceKings from "./pages/games/RaceKings.tsx";
+import RoyalDerby from "./pages/games/RoyalDerby.tsx";
+import RoyalHeist from "./pages/games/RoyalHeist.tsx";
+import SafeDoor from "./pages/games/SafeDoor.tsx";
+import SpinWheelRoyale from "./pages/games/SpinWheelRoyale.tsx";
+import StackUpCasino from "./pages/games/StackUpCasino.tsx";
+import StakeMines from "./pages/games/StakeMines.tsx";
+
 const queryClient = new QueryClient();
 
 function PresenceTracker({ children }: { children: React.ReactNode }) {
@@ -69,6 +91,27 @@ const App = () => (
               <Route path="/prize-reel" element={<PrizeReel />} />
               <Route path="/cpanel" element={<CPanel />} />
               <Route path="/penny-roulette" element={<PennyRoulette />} />
+              {/* New HTML5 games */}
+              <Route path="/chicken-cross" element={<ChickenCross />} />
+              <Route path="/scratch-royale" element={<ScratchRoyale />} />
+              <Route path="/crypto-call" element={<CryptoCall />} />
+              <Route path="/cut-wire-pro" element={<CutWirePro />} />
+              <Route path="/head-and-tail" element={<HeadAndTail />} />
+              <Route path="/hero-casino" element={<HeroCasino />} />
+              <Route path="/meter-crash" element={<MeterCrash />} />
+              <Route path="/dream-11" element={<Dream11 />} />
+              <Route path="/jackpot-highway" element={<JackpotHighway />} />
+              <Route path="/marvel-betting" element={<MarvelBetting />} />
+              <Route path="/neon-bounce" element={<NeonBounce />} />
+              <Route path="/plane-crash" element={<PlaneCrash />} />
+              <Route path="/plinko-pro" element={<PlinkoPro />} />
+              <Route path="/race-kings" element={<RaceKings />} />
+              <Route path="/royal-derby" element={<RoyalDerby />} />
+              <Route path="/royal-heist" element={<RoyalHeist />} />
+              <Route path="/safe-door" element={<SafeDoor />} />
+              <Route path="/spin-wheel-royale" element={<SpinWheelRoyale />} />
+              <Route path="/stack-up-casino" element={<StackUpCasino />} />
+              <Route path="/stake-mines" element={<StakeMines />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </PresenceTracker>
