@@ -845,11 +845,20 @@ export default function CPanel() {
             <CpanelSection title="Games & Finance" icon={<Gamepad2 className="h-5 w-5" />}>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1">
                 <ToolCard icon={<Percent className="h-6 w-6" />} label="House Edge" onClick={() => setActivePanel("house-edge")} />
+                <ToolCard icon={<LayoutGrid className="h-6 w-6" />} label="Win Probability" onClick={() => setActivePanel("game-probability")} />
                 <ToolCard icon={<Gamepad2 className="h-6 w-6" />} label="Game Manager" onClick={() => setActivePanel("database")} />
                 <ToolCard icon={<CreditCard className="h-6 w-6" />} label="Transactions" onClick={() => setActivePanel("logs")} />
                 <ToolCard icon={<Trophy className="h-6 w-6" />} label="Prize Spins" onClick={() => setActivePanel("database")} />
-                <ToolCard icon={<BarChart3 className="h-6 w-6" />} label="Analytics" onClick={() => {}} />
                 <ToolCard icon={<Hash className="h-6 w-6" />} label="Scratch Cards" onClick={() => setActivePanel("database")} />
+              </div>
+            </CpanelSection>
+
+            {/* ── Promotions ─────────────────────────── */}
+            <CpanelSection title="Promotions & Marketing" icon={<Gift className="h-5 w-5" />}>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1">
+                <ToolCard icon={<Gift className="h-6 w-6" />} label="Promotions" onClick={() => setActivePanel("promotions")} />
+                <ToolCard icon={<Megaphone className="h-6 w-6" />} label="Announcements" onClick={() => setActivePanel("maintenance")} />
+                <ToolCard icon={<Bell className="h-6 w-6" />} label="Notifications" onClick={() => setActivePanel("maintenance")} />
               </div>
             </CpanelSection>
 
