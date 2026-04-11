@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Royal Casino Horse Racing</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- Load p5.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+</head>
+<body>
+
+    <!-- Splash Screen -->
+    <div id="splash-screen">
+        <div class="splash-content">
+            <div class="game-logo-container">
+                <img src="loading.png" alt="Game Logo" class="game-logo-img" onerror="this.style.display='none'">
+            </div>
+            <h1 class="splash-title">Royal Derby</h1>
+            <p class="splash-subtitle">Premium Casino Experience</p>
+            <div class="loading-bar-container">
+                <div class="loading-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Navbar -->
+    <nav id="top-navbar">
+        <div class="logo-section">
+            <i class="fas fa-crown"></i> Royal Derby
+        </div>
+        
+        <div class="nav-actions">
+            <button class="nav-btn" onclick="randomTheme()">
+                <i class="fas fa-palette"></i> <span>Theme</span>
+            </button>
+            <div class="wallet-box">
+                <i class="fas fa-wallet"></i> <span id="wallet-display">1000</span>
+            </div>
+            <button class="nav-btn" onclick="openRules()">
+                <i class="fas fa-info-circle"></i> <span>Rules</span>
+            </button>
+            <button class="nav-btn" onclick="showAd()">
+                <i class="fas fa-play"></i> <span>Watch Ad (+100)</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Game Layout -->
+    <div id="game-layout">
+        <!-- Canvas Area -->
+        <div id="canvas-target"></div>
+        
+        <!-- Sidebar -->
+        <div id="ui-panel">
+            
+            <div id="status-msg">Welcome to the Royal Derby</div>
+
+            <!-- Bet Controls -->
+            <div class="control-group">
+                <label>Select Horse</label>
+                <div id="horse-selector">
+                    <button class="horse-btn" style="border-bottom: 3px solid #e74c3c" onclick="selectHorse(1)">1</button>
+                    <button class="horse-btn" style="border-bottom: 3px solid #3498db" onclick="selectHorse(2)">2</button>
+                    <button class="horse-btn" style="border-bottom: 3px solid #2ecc71" onclick="selectHorse(3)">3</button>
+                    <button class="horse-btn" style="border-bottom: 3px solid #f1c40f" onclick="selectHorse(4)">4</button>
+                    <button class="horse-btn" style="border-bottom: 3px solid #9b59b6" onclick="selectHorse(5)">5</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label>Wager Amount</label>
+                <input type="number" id="bet-amount" value="100" min="10">
+                
+                <div class="quick-bet-grid">
+                    <button class="quick-bet-btn" onclick="setBet(10)">$10</button>
+                    <button class="quick-bet-btn" onclick="setBet(50)">$50</button>
+                    <button class="quick-bet-btn" onclick="setBet(100)">$100</button>
+                    <button class="quick-bet-btn" onclick="setBet(500)">$500</button>
+                </div>
+            </div>
+
+            <button id="start-btn" class="action-btn btn-start" onclick="startRace()">
+                <i class="fas fa-flag-checkered"></i> Start Race
+            </button>
+            
+            <button id="play-again-btn" class="action-btn btn-play-again" onclick="prepareNextRace()">
+                <i class="fas fa-redo"></i> Play Again
+            </button>
+
+            <!-- History Log -->
+            <div id="history-section">
+                <label style="margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; width: 100%; text-align: left;">
+                    <i class="fas fa-history"></i> Recent Activity
+                </label>
+                <div class="history-list" id="history-list">
+                    <!-- History items will appear here -->
+                    <div style="text-align: center; color: var(--secondary-color); font-size: 11px; margin-top: 20px;">No races recorded</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- RULES MODAL -->
+    <div id="rules-modal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title"><i class="fas fa-scroll"></i> Game Rules</h2>
+            <ul class="rules-list">
+                <li>Select a <b>Horse (1-5)</b> to place your bet.</li>
+                <li>Enter your <b>Wager Amount</b> or use quick buttons.</li>
+                <li>Click <b>Start Race</b> to begin the race.</li>
+                <li>If your horse finishes <b>1st</b>, you win <b>5x</b> your bet!</li>
+                <li>Watch an <b>Ad</b> to earn free cash if needed.</li>
+            </ul>
+            <button class="modal-close-btn" onclick="closeRules()">Got it!</button>
+        </div>
+    </div>
+
+    <!-- AD MODAL -->
+    <div id="ad-modal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title" style="color: #fff;">Sponsor</h2>
+            <div class="ad-box">
+                <i class="fas fa-ad" style="font-size: 64px; margin-bottom: 15px; color: #333;"></i>
+                <p style="font-size: 18px; font-weight: bold; color: var(--secondary-color);">Ad Integration</p>
+            </div>
+            <div class="timer-display">Reward in <span id="ad-timer" style="color: var(--accent-color)">10</span>s</div>
+            <p class="ad-warning">Do not close window to claim reward.</p>
+        </div>
+    </div>
+
+    <!-- REWARD POPUP -->
+    <div id="reward-popup" class="modal" style="background: rgba(0,0,0,0.7);">
+        <div class="modal-content" style="border-color: #2ecc71; box-shadow: 0 0 30px rgba(46, 204, 113, 0.2);">
+            <div class="reward-icon"><i class="fas fa-coins"></i></div>
+            <h2 style="color: white; margin: 0; font-family: 'Playfair Display', serif;">Success!</h2>
+            <p style="color: #aaa; margin: 5px 0;">Reward Added</p>
+            <h1 class="reward-amount">+$100</h1>
+            <button class="modal-close-btn" style="background: #2ecc71; color: #000;" onclick="closeRewardPopup()">CLAIM</button>
+        </div>
+    </div>
+
+<script src="script.js"> </script>
+</body>
+</html>

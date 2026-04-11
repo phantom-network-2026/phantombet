@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Highway Fuel Crash - Pro Edition</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- SPLASH SCREEN -->
+    <div id="splash-screen">
+        <div class="splash-icon"><img src="assets/loading.png" width="200" height="200"></div>
+        <div class="loading-bar-bg"><div id="loading-bar-fill"></div></div>
+    </div>
+
+    <!-- NAVBAR -->
+    <nav id="top-nav">
+        <div class="nav-left">
+            <div class="nav-logo">JACKPOT<span style="color:#fff">HIGHWAY</span></div>
+        </div>
+        
+        <div class="nav-center">
+            <div class="nav-stat-item">Distance: <span class="nav-stat-val" id="nav-score">0m</span></div>
+            <div class="nav-stat-item">Speed: <span class="nav-stat-val" id="nav-speed">0 km/h</span></div>
+        </div>
+
+        <div class="nav-right">
+            <button class="history-btn" onclick="toggleHistory(true)">HISTORY</button>
+            <div class="wallet-display">
+                <span style="color:#777; font-size:10px; font-weight:bold;">BALANCE</span>
+                <span class="wallet-val">$<span id="balance-val">1000</span></span>
+            </div>
+        </div>
+    </nav>
+
+    <div id="main-layout">
+        <main id="game-wrapper">
+            <div id="multiplier" class="multiplier-display">1.00x</div>
+            
+            <div id="lobby-overlay">
+                <div class="slogan">ARE YOU READY?</div>
+                <p style="margin-bottom: 20px;">Welcome to the Jackpot Highway!</p>
+                <button class="how-to-btn" onclick="toggleHowTo(true)">HOW TO PLAY?</button>
+            </div>
+
+            <div id="game-container"></div>
+            <div id="touch-layer"></div>
+
+            <div id="game-over-msg">
+                <h1 id="status-title" style="color:var(--primary); font-size:32px; margin:0; letter-spacing:-1px;">TANK EMPTY!</h1>
+                <p id="status-desc" style="color:#aaa; margin:15px 0;">You ran out of fuel.</p>
+                <div style="background:#000; padding:20px; border-radius:12px; margin-bottom:15px; border:1px solid #333;">
+                    <span id="result-text" style="font-size:20px; font-weight:bold;">Loss: $100</span>
+                    <span id="missed-text" class="missed-opportunity"></span>
+                </div>
+                <div id="auto-bet-countdown" style="color:var(--secondary); font-size:14px; margin-bottom:10px; display:none;">Next bet in 10s...</div>
+                <button id="reset-btn" class="bet-btn" onclick="resetUI()">BACK TO LOBBY</button>
+            </div>
+
+            <div id="howto-modal">
+                <h2 style="color:var(--secondary);">How to Play?</h2>
+                <div style="text-align: left; font-size: 14px; line-height: 1.6; color: #ccc;">
+                    1. <b>Betting:</b> Enter your amount and click "Place Bet" to start driving.<br>
+                    2. <b>Multipliers:</b> The longer you drive without running out of fuel, the higher the multiplier grows.<br>
+                    3. <b>Winning:</b> Click the "Cashout" button at any time to secure your winnings.<br>
+                    4. <b>Auto Features:</b> Use Auto Bet for back-to-back rounds or Auto Cashout for automatic exits.<br>
+                    5. <b>Controls:</b> Use <b>Arrow Keys</b> or <b>Swipe</b> to change lanes.
+                </div>
+                <button class="bet-btn" style="margin-top: 20px;" onclick="toggleHowTo(false)">START PLAYING!</button>
+            </div>
+
+            <div id="history-modal">
+                <h2 style="color:var(--primary); margin-top: 0;">Bet History</h2>
+                <div class="history-list-full" id="full-history-list"></div>
+                <button class="bet-btn" style="margin-bottom: 0;" onclick="toggleHistory(false)">CLOSE</button>
+            </div>
+        </main>
+
+        <aside id="right-sidebar">
+            <div class="section-header">Betting Control</div>
+            <div class="bet-input-group">
+                <label>Bet Amount ($)</label>
+                <input type="number" id="bet-amount" value="100" min="10" step="10">
+            </div>
+
+            <button id="start-btn" class="bet-btn" onclick="prepareGame()">Place Bet</button>
+            
+            <!-- CASHOUT BUTTON MOVED HERE -->
+            <button id="cashout-btn" class="cashout-btn" onclick="cashOut()">CASHOUT<br><span id="potential-win" style="font-size:14px; opacity:0.8; font-weight:normal;">$0</span></button>
+
+            <div class="section-header">Auto Betting</div>
+            <div class="auto-section">
+                <div class="auto-row">
+                    <span class="auto-label">AUTO BET</span>
+                    <label class="switch">
+                        <input type="checkbox" id="auto-bet-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="section-header">Auto Cashout</div>
+            <div class="auto-section">
+                <div class="auto-row">
+                    <span class="auto-label">ENABLE</span>
+                    <label class="switch">
+                        <input type="checkbox" id="auto-cashout-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="auto-row with-input">
+                    <span class="auto-label">TARGET (X)</span>
+                    <input type="number" id="auto-cashout-val" value="1.5" step="0.1" min="1.5" style="width: 80px; padding: 5px; font-size: 14px; text-align: center; background: #000; border: 1px solid #333; color: #fff;">
+                </div>
+            </div>
+
+            <div style="margin-top:auto; font-size:11px; color:#555; text-align:center; border-top:1px solid #222; padding-top:20px; line-height:1.6;">
+                <span style="color:var(--primary); font-weight:bold;">HOUSE RULES</span><br>
+                Auto Cashout min: 1.5x<br>
+                Probability of Win: 50%
+            </div>
+        </aside>
+    </div>
+
+<script src="script.js"></script>
+</body>
+</html>

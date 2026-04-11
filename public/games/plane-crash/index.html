@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neon Crash - Advanced Crypto Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- SPLASH SCREEN -->
+<div id="splashScreen" class="splash-screen">
+    <div class="splash-logo">
+       <p>✈️ Plane Crash</p>
+        
+    </div>
+    <div class="loader"></div>
+    <p style="margin-top:20px; color:#8b9bb4; letter-spacing:2px; font-size:0.9rem;">Loading game...</p>
+</div>
+
+<div class="app-container">
+    <!-- Header -->
+    <header class="top-bar">
+        <div class="logo">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff0055" stroke-width="2">
+                <path d="M2 12h20M2 12l10-10M22 12l-10 10"/>
+            </svg>
+            CRASH
+        </div>
+        <div class="header-controls">
+            <!-- Feature Buttons -->
+            <button class="icon-btn" onclick="toggleSound()" title="Sound">
+                <span id="soundIcon">🔊</span>
+            </button>
+            <button class="icon-btn" onclick="openModal('skinsModal')" title="Skins">🎨</button>
+            <button class="icon-btn" onclick="openModal('themeModal')" title="Themes">🌓</button>
+            <button class="icon-btn" onclick="openStats()" title="Stats">📊</button>
+
+            <div class="balance-container">
+                <span>$</span>
+                <span id="userBalance">1000.00</span>
+            </div>
+            <button class="btn-deposit" onclick="startAdSequence('deposit')" title="Deposit">✚</button>
+            
+            <button class="mobile-menu-btn" style="background:none; border:none; color:var(--text-main); font-size:1.5rem;" onclick="toggleSidebar()">☰</button>
+        </div>
+    </header>
+
+    <!-- Main Game -->
+    <main class="game-area" id="gameArea">
+        <div class="history-bar" id="historyBar"></div>
+        <canvas id="crashCanvas"></canvas>
+        <div id="crashOverlay" class="crash-overlay">
+            <div class="crash-text">CRASHED</div>
+            <div class="crash-value" id="crashValueDisplay">@ 1.00x</div>
+        </div>
+        <div id="statusMsg" class="game-status-msg">Next round in 10s...</div>
+    </main>
+
+    <!-- Sidebar (Bets/Chat) -->
+    <aside class="sidebar" id="sidebar">
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('bets')">Bets</div>
+            <div class="tab" onclick="switchTab('chat')">Chat</div>
+        </div>
+        
+        <!-- Bets Tab -->
+        <div id="tab-bets" class="tab-content active">
+            <div class="bets-list" id="betsList"></div>
+            <div style="padding:10px; border-top:1px solid #333; text-align:center; font-size:0.8rem; color:var(--text-dim);">
+                <span id="activePlayersCount">0</span> Players Online
+            </div>
+        </div>
+
+        <!-- Chat Tab -->
+        <div id="tab-chat" class="tab-content">
+            <div class="chat-container">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="chat-msg"><span class="chat-user" style="color:#00ff88">Admin:</span><span class="chat-text">Welcome to Neon Crash! Good luck!</span></div>
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" id="userChatInput" class="chat-input" placeholder="Type here...">
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Controls -->
+    <div class="controls-area">
+        <!-- Panel 1 -->
+        <div class="bet-control-panel" id="panel1">
+            <span class="panel-badge">Main Bet</span>
+            <div class="input-group">
+                <div class="input-wrapper">
+                    <span class="input-label">Bet ($)</span>
+                    <input type="number" id="betInput1" class="game-input" value="10" min="1">
+                </div>
+                <div class="input-wrapper">
+                    <span class="input-label">Auto Cashout (x)</span>
+                    <input type="number" id="cashoutInput1" class="game-input" value="2.00" step="0.1">
+                </div>
+            </div>
+            <div class="toggles">
+                <label class="toggle-wrap"><input type="checkbox" id="autoBet1"><div class="toggle-switch"></div>Auto Bet</label>
+                <label class="toggle-wrap"><input type="checkbox" id="autoCashoutEnable1"><div class="toggle-switch"></div>Auto Cashout</label>
+            </div>
+            <button id="btnAction1" class="action-btn btn-bet">BET</button>
+        </div>
+
+        <!-- Panel 2 -->
+        <div class="bet-control-panel" id="panel2">
+             <span class="panel-badge">Extra Bet</span>
+            <div class="input-group">
+                <div class="input-wrapper">
+                    <span class="input-label">Bet ($)</span>
+                    <input type="number" id="betInput2" class="game-input" value="5" min="1">
+                </div>
+                <div class="input-wrapper">
+                    <span class="input-label">Auto Cashout (x)</span>
+                    <input type="number" id="cashoutInput2" class="game-input" value="10.00" step="0.5">
+                </div>
+            </div>
+            <div class="toggles">
+                <label class="toggle-wrap"><input type="checkbox" id="autoBet2"><div class="toggle-switch"></div>Auto Bet</label>
+                <label class="toggle-wrap"><input type="checkbox" id="autoCashoutEnable2"><div class="toggle-switch"></div>Auto Cashout</label>
+            </div>
+            <button id="btnAction2" class="action-btn btn-bet">BET</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODALS -->
+
+<!-- Generic Ad Modal -->
+<div id="adModal" class="modal">
+    <div class="modal-content">
+        <h3 id="adTitle">Watch Ad to Unlock</h3>
+        <p style="color:var(--text-dim); font-size:0.9rem; margin-bottom:10px;">Please watch the entire ad.</p>
+        <div class="ad-placeholder">[ GOOGLE ADVERTISEMENT ]</div>
+        <div class="timer-circle" id="adTimer">10</div>
+        <p id="adStatus" style="margin-top:10px;">Loading...</p>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div id="successModal" class="success-modal">
+    <div class="success-content">
+        <span class="success-icon">🎉</span>
+        <div class="success-title">Success!</div>
+        <p class="success-msg" id="successMsg">Action Completed.</p>
+        <button class="btn-awesome" onclick="document.getElementById('successModal').style.display='none'">AWESOME</button>
+    </div>
+</div>
+
+<!-- Skins Modal -->
+<div id="skinsModal" class="modal">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeModal('skinsModal')">&times;</span>
+        <h3>Select Skin</h3>
+        <p style="font-size:0.8rem; color:var(--text-dim)">Watch an ad to unlock new skins!</p>
+        <div class="settings-grid" id="skinsGrid">
+            <!-- JS Injected -->
+        </div>
+    </div>
+</div>
+
+<!-- Themes Modal -->
+<div id="themeModal" class="modal">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeModal('themeModal')">&times;</span>
+        <h3>Select Theme</h3>
+        <p style="font-size:0.8rem; color:var(--text-dim)">Watch an ad to unlock premium themes!</p>
+        <div class="settings-grid" id="themeGrid">
+            <!-- JS Injected -->
+        </div>
+    </div>
+</div>
+
+<!-- Stats Modal -->
+<div id="statsModal" class="modal">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeModal('statsModal')">&times;</span>
+        <h3>Your Statistics</h3>
+        <div style="margin-top:20px; text-align:left;">
+            <div class="stats-row"><span>Total Bets</span><span id="statBets">0</span></div>
+            <div class="stats-row"><span>Total Wins</span><span id="statWins">0</span></div>
+            <div class="stats-row"><span>Highest Win</span><span id="statHigh" style="color:var(--accent)">$0.00</span></div>
+            <div class="stats-row"><span>Net Profit</span><span id="statProfit">$0.00</span></div>
+        </div>
+    </div>
+</div>
+
+<script  src="script.js"></script>
+</body>
+</html>

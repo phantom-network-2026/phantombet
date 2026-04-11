@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cut Wire Pro | Premium Casino Experience</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="flex flex-col">
+
+    <!-- Splash Screen -->
+    <div id="splash-screen">
+        <div class="loader-logo font-orbitron uppercase">CUT<span style="color:#ff2d2d">WIRE</span> PRO</div>
+        <div class="loader-bar-bg">
+            <div id="loader-progress" class="loader-progress"></div>
+        </div>
+        <p class="mt-4 text-xs font-rajdhani uppercase tracking-[0.4em] opacity-40">Initializing Security Protocol</p>
+    </div>
+
+    <!-- How to Play Modal -->
+    <div id="how-to-play-modal" class="modal-overlay fixed inset-0 bg-black/90 backdrop-blur-md z-[2000] hidden items-center justify-center p-4">
+        <div class="modal-content bg-[#111] border border-[#333] rounded-3xl text-center">
+            <h2 class="font-orbitron text-xl md:text-2xl font-bold mb-6 text-white tracking-widest uppercase">Operations Manual</h2>
+            <div class="space-y-4 text-xs md:text-sm text-gray-400 font-rajdhani text-left">
+                <div class="flex gap-4">
+                    <span class="text-indigo-500 font-bold">01</span>
+                    <p><span class="text-white font-bold">IDENTIFY:</span> Tap on one of the three colored wires (Red, Green, or Yellow) on the bomb unit.</p>
+                </div>
+                <div class="flex gap-4">
+                    <span class="text-indigo-500 font-bold">02</span>
+                    <p><span class="text-white font-bold">STAKE:</span> Use quick stake buttons or adjust the wager manually in the terminal.</p>
+                </div>
+                <div class="flex gap-4">
+                    <span class="text-indigo-500 font-bold">03</span>
+                    <p><span class="text-white font-bold">LOCK:</span> Press 'PLACE BET' to confirm and lock your wager.</p>
+                </div>
+                <div class="flex gap-4">
+                    <span class="text-indigo-500 font-bold">04</span>
+                    <p><span class="text-white font-bold">NEUTRALIZE:</span> Click 'CUT WIRE' to start the 5-second suspense countdown.</p>
+                </div>
+            </div>
+            <button onclick="toggleHowToPlay(false)" class="mt-8 glass-btn w-full md:w-auto px-12 py-3 rounded-xl font-bold uppercase tracking-widest text-xs">Acknowledge</button>
+        </div>
+    </div>
+
+    <div id="blast-fx"></div>
+
+    <!-- Top Navbar -->
+    <nav class="h-16 border-b border-white/5 flex items-center justify-between px-4 md:px-8 bg-black/40 backdrop-blur-xl z-50 sticky top-0">
+        <div class="flex items-center gap-2 md:gap-4">
+            <div class="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-red-600/20 flex items-center justify-center border border-red-500/20">
+                <i class="fas fa-bomb text-red-500 text-lg md:text-xl"></i>
+            </div>
+            <span class="font-orbitron text-sm md:text-xl font-black tracking-tighter uppercase">CUT<span class="text-red-500">WIRE</span> PRO</span>
+        </div>
+        
+        <div class="flex items-center gap-2 md:gap-6">
+            <button onclick="toggleHowToPlay(true)" class="animate-blink text-indigo-400 text-[10px] md:text-xs font-bold uppercase tracking-widest border border-indigo-500/30 px-2 py-1 md:px-3 md:py-1.5 rounded-lg hover:bg-indigo-500/10 transition-all">
+                <i class="fas fa-question-circle mr-1 md:mr-2"></i> HELP
+            </button>
+
+            <div class="bg-white/5 border border-white/10 px-2 py-1 md:px-4 md:py-2 rounded-lg md:rounded-xl flex items-center gap-2 md:gap-3 shadow-2xl">
+                <i class="fas fa-coins text-yellow-500 text-[10px] md:text-sm"></i>
+                <span id="wallet-balance" class="font-orbitron text-xs md:text-lg font-bold text-white">1000</span>
+            </div>
+            <button onclick="openAd()" class="bg-green-600 hover:bg-green-500 text-white p-2 md:px-4 md:py-2 rounded-lg md:rounded-xl text-[10px] md:text-xs font-bold uppercase transition-all shadow-lg">
+                <i class="fas fa-plus-circle"></i><span class="hidden sm:inline ml-2">ADD +100</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main id="main-container">
+        
+        <!-- TOP/LEFT: Game Stage -->
+        <section id="game-stage">
+            <div id="bomb-unit" class="bomb-unit">
+                <div class="timer-box">
+                    <div class="text-[8px] md:text-[9px] text-red-500 uppercase font-black tracking-[0.3em] md:tracking-[0.5em] mb-1 md:mb-2 opacity-60">System Overload in</div>
+                    <div id="timer-display" class="timer-digits">05.00</div>
+                </div>
+
+                <div class="wire-container">
+                    <svg viewBox="0 0 400 200" class="wire-svg">
+                        <path id="wire-red" class="wire-path text-red-500" d="M 50,0 C 50,120 150,80 150,200" stroke="currentColor" onclick="selectWire('red')"/>
+                        <path id="wire-green" class="wire-path text-green-500" d="M 200,0 C 200,80 200,120 200,200" stroke="currentColor" onclick="selectWire('green')"/>
+                        <path id="wire-yellow" class="wire-path text-yellow-400" d="M 350,0 C 350,120 250,80 250,200" stroke="currentColor" onclick="selectWire('yellow')"/>
+                    </svg>
+                </div>
+
+                <div id="game-status" class="text-center font-rajdhani text-gray-500 text-xs md:text-sm mt-4 md:mt-6 font-bold tracking-widest uppercase opacity-60">
+                    <i class="fas fa-hand-pointer mr-2 animate-bounce"></i> Tap a wire to lock target
+                </div>
+            </div>
+            <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 20px 20px;"></div>
+        </section>
+
+        <!-- BOTTOM/RIGHT: Betting Sidebar -->
+        <aside class="control-panel">
+            <h2 class="font-orbitron text-sm md:text-lg font-bold mb-4 md:mb-8 flex items-center gap-3 opacity-80">
+                <i class="fas fa-sliders-h text-indigo-500"></i> SECURITY TERMINAL
+            </h2>
+
+            <div class="premium-card space-y-4 md:space-y-6 mb-4">
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <label class="text-[9px] md:text-[10px] uppercase tracking-widest text-gray-500 font-black">Quick Stake</label>
+                        <span class="text-[9px] md:text-[10px] text-indigo-400 font-bold uppercase">Multi: x2.0</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="quickBet(50)" class="bg-white/5 hover:bg-white/10 py-2 md:py-3 rounded-xl border border-white/5 text-[10px] md:text-xs font-bold transition-all">50</button>
+                        <button onclick="quickBet(100)" class="bg-white/5 hover:bg-white/10 py-2 md:py-3 rounded-xl border border-white/5 text-[10px] md:text-xs font-bold transition-all">100</button>
+                        <button onclick="quickBet(500)" class="bg-white/5 hover:bg-white/10 py-2 md:py-3 rounded-xl border border-white/5 text-[10px] md:text-xs font-bold transition-all">500</button>
+                    </div>
+                    
+                    <div class="flex items-center gap-2 md:gap-3 pt-1">
+                        <button onclick="adjustBet(-10)" class="w-10 h-10 md:w-12 md:h-12 bg-white/5 hover:bg-white/10 rounded-xl flex items-center justify-center font-bold text-lg border border-white/5">-</button>
+                        <input id="bet-amount" type="number" value="10" min="10" class="flex-grow h-10 md:h-12 bg-black/60 border border-white/10 rounded-xl text-center font-orbitron text-lg focus:outline-none focus:border-indigo-500/50">
+                        <button onclick="adjustBet(10)" class="w-10 h-10 md:w-12 md:h-12 bg-white/5 hover:bg-white/10 rounded-xl flex items-center justify-center font-bold text-lg border border-white/5">+</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2 md:gap-3">
+                    <button id="btn-place-bet" onclick="confirmBet()" class="glass-btn w-full py-3 md:py-4 rounded-xl font-bold text-[10px] md:text-sm uppercase tracking-widest text-white">
+                        Place Bet
+                    </button>
+                    <button id="btn-cut-wire" onclick="executeCut()" disabled class="cut-btn disabled:bg-gray-800 disabled:shadow-none w-full py-3 md:py-4 rounded-xl font-bold text-[10px] md:text-sm uppercase tracking-widest flex items-center justify-center gap-2 md:gap-3 transition-all text-white">
+                        <i class="fas fa-cut"></i> Cut Wire
+                    </button>
+                </div>
+            </div>
+
+            <!-- Transaction History -->
+            <div class="flex-grow flex flex-col min-h-0 overflow-hidden">
+                <div class="flex items-center justify-between mb-2 md:mb-4 px-1">
+                    <h3 class="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Live Log Protocol</h3>
+                    <button onclick="clearHistory()" class="text-[9px] text-gray-700 hover:text-gray-400 font-bold uppercase tracking-wider">Reset</button>
+                </div>
+                <div id="history-list" class="history-list flex-grow space-y-2 pr-1">
+                    <!-- History items -->
+                    <div class="text-center py-8 text-gray-700 text-[9px] uppercase font-bold tracking-widest opacity-40">No activity logged</div>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <!-- Ad Overlay -->
+    <div id="ad-overlay" class="fixed inset-0 bg-black/98 z-[2100] hidden flex-col items-center justify-center p-4 backdrop-blur-md">
+        <div class="max-w-md w-full text-center">
+            <h3 class="font-orbitron text-xl md:text-2xl font-black mb-8 tracking-tight">SPONSORED DATA STREAM</h3>
+            <div class="w-full aspect-video bg-zinc-900 rounded-3xl flex flex-col items-center justify-center border border-white/5 relative overflow-hidden mb-8 shadow-2xl">
+                <div class="text-6xl md:text-8xl font-black font-orbitron text-white/90" id="ad-counter">10</div>
+                <p class="text-[9px] md:text-[10px] uppercase font-black tracking-[0.5em] text-indigo-500 mt-2 md:mt-4">Transmitting Credits</p>
+                <div class="absolute bottom-0 left-0 h-1 bg-indigo-600/40 w-full"></div>
+            </div>
+            <button id="ad-claim-btn" disabled onclick="closeAd()" class="w-full py-4 md:py-5 bg-white/5 text-gray-600 rounded-2xl font-black uppercase tracking-widest transition-all">
+                Processing...
+            </button>
+        </div>
+    </div>
+
+    <!-- Audio Effects -->
+    <audio id="sfx-beep" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"></audio>
+    <audio id="sfx-blast" src="https://assets.mixkit.co/active_storage/sfx/2592/2592-preview.mp3"></audio>
+    <audio id="sfx-win" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3"></audio>
+    <audio id="sfx-click" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
+
+    <script src="script.js"></script>
+</body>
+</html>

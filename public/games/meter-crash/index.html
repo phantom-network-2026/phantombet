@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HEAT METER - Multiplier Mode</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Splash Screen -->
+    <div id="splash-screen" class="fullscreen-layer">
+        <div class="splash-logo">HEAT METER</div>
+        <div class="loader"></div>
+        <div style="margin-top:10px; color:#666; font-size:0.8rem; font-family:'Orbitron'">LOADING ASSETS...</div>
+    </div>
+
+    <!-- Menu Screen -->
+    <div id="menu-screen" class="fullscreen-layer">
+        <div class="menu-title">HEAT METER</div>
+        <button class="menu-btn" onclick="enterGame()">PLAY GAME</button>
+        <button class="menu-btn secondary" onclick="openTutorial()">HOW TO PLAY</button>
+    </div>
+
+    <!-- 3D Background -->
+    <div id="canvas-container"></div>
+    
+    <div id="ice-fx" class="fx-overlay ice-fx"></div>
+    <div id="fire-fx" class="fx-overlay fire-fx"></div>
+
+    <!-- Main Game UI -->
+    <div id="ui-layer">
+        <div class="header interactive">
+            <div class="header-left">
+                <div class="logo">HEAT METER</div>
+                <button class="nav-btn" onclick="openHistory()"><i class="fas fa-history"></i> HISTORY</button>
+            </div>
+            <div class="balance-box">
+                <i class="fas fa-wallet"></i> $<span id="balance">1000</span>
+                <button class="nav-btn" onclick="openEarnModal()">+</button>
+            </div>
+        </div>
+
+        <div class="center-display">
+            <div id="multiplier-text">1.00x</div>
+            <div class="status-label" id="status-text">PLACE YOUR BET</div>
+        </div>
+
+        <div class="sidebar interactive">
+            <div class="control-group">
+                <span class="label">Bet Amount</span>
+                <input type="number" id="bet-amt" class="game-input" value="100">
+            </div>
+
+            <div class="control-group">
+                <span class="label">Prediction</span>
+                <div class="pred-container">
+                    <button class="pred-btn btn-cool" id="btn-cool" onclick="selectPrediction('cool')">
+                        <i class="fas fa-snowflake"></i> COOL
+                    </button>
+                    <button class="pred-btn btn-heat" id="btn-heat" onclick="selectPrediction('heat')">
+                        <i class="fas fa-fire"></i> HEAT
+                    </button>
+                </div>
+            </div>
+
+            <button id="start-btn" class="play-btn" onclick="startGame()">PLACE BET</button>
+
+            <!-- ADVERTISEMENT PLACEHOLDER -->
+            <div class="ad-container">
+                <div>
+                    <i class="fas fa-ad" style="font-size:2rem; margin-bottom:10px; display:block;"></i>
+                    ADVERTISEMENT<br>250 x 300
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Result Modal (Fixed Z-Index) -->
+    <div id="res-modal" class="modal" style="z-index: 3000;">
+        <div class="modal-content" id="res-box">
+            <h1 id="res-title" style="margin:0; font-family:'Orbitron'; font-size:2.5rem;">WIN</h1>
+            <h2 id="res-amt" style="color:#fff; margin-top:5px;">+$500</h2>
+        </div>
+    </div>
+
+    <!-- History Modal -->
+    <div id="history-modal" class="modal" style="z-index: 2500;">
+        <div class="modal-content" id="history-modal-content" style="transform: scale(1);">
+            <h2 style="margin:0; font-family:'Orbitron';">GAME HISTORY</h2>
+            <div class="history-list" id="history-list">
+                <p style="color:#666; padding:20px;">No games yet.</p>
+            </div>
+            <button class="play-btn" onclick="closeHistory()" style="margin-top:15px; padding:10px;">CLOSE</button>
+        </div>
+    </div>
+
+    <!-- Tutorial Modal -->
+    <div id="tutorial-modal" class="modal" style="z-index: 2500;">
+        <div class="modal-content" style="transform: scale(1); max-width: 400px; text-align: left;">
+            <h2 style="margin:0 0 20px 0; font-family:'Orbitron'; text-align: center;">HOW TO PLAY</h2>
+            <div class="tutorial-text">
+                <div class="tut-step">
+                    <div class="tut-icon"><i class="fas fa-hand-pointer"></i></div>
+                    <div><strong>Select Prediction:</strong> Choose HEAT (Red) or COOL (Blue).</div>
+                </div>
+                <div class="tut-step">
+                    <div class="tut-icon"><i class="fas fa-coins"></i></div>
+                    <div><strong>Place Bet:</strong> Enter your bet amount.</div>
+                </div>
+                <div class="tut-step">
+                    <div class="tut-icon"><i class="fas fa-random"></i></div>
+                    <div><strong>Watch Meter:</strong> One meter will rise randomly. If your chosen meter rises, you WIN!</div>
+                </div>
+                <div class="tut-step">
+                    <div class="tut-icon"><i class="fas fa-chart-line"></i></div>
+                    <div><strong>Multiplier:</strong> The higher it goes, the more you earn (up to 6x).</div>
+                </div>
+            </div>
+            <button class="play-btn" onclick="closeTutorial()" style="margin-top:20px;">GOT IT!</button>
+        </div>
+    </div>
+
+    <!-- Watch & Earn Modal -->
+    <div id="earn-modal" class="modal" style="z-index: 2500;">
+        <div class="modal-content" style="transform: scale(1); max-width: 350px;">
+            <h2 style="margin:0 0 10px 0; font-family:'Orbitron'; color:#fff;">WATCH & EARN</h2>
+            <div class="ad-preview">
+                <span>[ SPONSOR VIDEO ]</span>
+            </div>
+            <div id="ad-timer" class="ad-timer">10s</div>
+            <p style="color:#888; font-size:0.8rem;">Watch full ad to claim reward</p>
+            <button id="claim-btn" class="play-btn" onclick="claimReward()" disabled style="background:#444; color:#888;">WAIT...</button>
+            <button class="nav-btn" onclick="closeEarnModal()" style="margin-top:15px; border:none; background:transparent; font-size:0.8rem;">CLOSE</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script src="script.js"> </script>
+</body>
+</html>
