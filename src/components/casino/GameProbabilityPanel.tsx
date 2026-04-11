@@ -310,9 +310,11 @@ export function GameProbabilityPanel() {
           <div
             key={game.gameId}
             className={`rounded-lg border p-3 transition-all ${
-              game.enabled
-                ? getProbabilityBg(game.probability)
-                : "bg-card border-border"
+              !gameVisibility[game.gameId]
+                ? "bg-red-950/20 border-red-500/20 opacity-60"
+                : game.enabled
+                  ? getProbabilityBg(game.probability)
+                  : "bg-card border-border"
             }`}
           >
             <div className="flex items-center justify-between mb-1">
@@ -322,6 +324,14 @@ export function GameProbabilityPanel() {
                 <span className="text-[10px] text-muted-foreground uppercase shrink-0">{game.category}</span>
               </div>
               <div className="flex items-center gap-2 shrink-0">
+                {/* Visibility toggle */}
+                <button
+                  onClick={() => toggleGameVisibility(game.gameId)}
+                  className={`p-1 rounded transition-colors ${gameVisibility[game.gameId] ? "text-green-400 hover:text-green-300" : "text-red-400 hover:text-red-300"}`}
+                  title={gameVisibility[game.gameId] ? "Visible to players — click to hide" : "Hidden from players — click to show"}
+                >
+                  {gameVisibility[game.gameId] ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                </button>
                 {game.enabled && (
                   <span className={`font-mono text-sm font-bold ${getProbabilityColor(game.probability)}`}>
                     {game.probability}%
