@@ -129,14 +129,14 @@
         <div class="panel-section">
             <div class="panel-header">3. Place Bet</div>
             <div class="bet-chips" id="chipContainer">
-                <div class="chip" onclick="game.setBet(10)">10</div>
-                <div class="chip active" onclick="game.setBet(50)">50</div>
-                <div class="chip" onclick="game.setBet(100)">100</div>
-                <div class="chip" onclick="game.setBet(500)">500</div>
-                <div class="chip" onclick="game.setBet(1000)">1k</div>
+                <div class="chip" onclick="game.setBet(0.1)">$0.10</div>
+                <div class="chip" onclick="game.setBet(0.5)">$0.50</div>
+                <div class="chip active" onclick="game.setBet(1)">$1</div>
+                <div class="chip" onclick="game.setBet(5)">$5</div>
+                <div class="chip" onclick="game.setBet(10)">$10</div>
             </div>
             <div style="text-align:center; margin-top:10px; color:#888;">
-                Bet: <span id="currentBetDisplay" style="color:#fff; font-weight:bold;">₹50</span>
+                Bet: <span id="currentBetDisplay" style="color:#fff; font-weight:bold;">$1</span>
             </div>
         </div>
 
