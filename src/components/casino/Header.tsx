@@ -141,7 +141,7 @@ export function Header() {
                   <ArrowDownToLine className="h-4 w-4 mr-1" /> Withdraw
                 </Button>
               </div>
-              {hasStaffAccess && (
+              {hasStaffAccess && (showAdminLink || showCpanelLink || showSlotLink) && (
                 <div className="space-y-1">
                   <Button
                     variant="ghost"
@@ -155,15 +155,21 @@ export function Header() {
                   </Button>
                   {adminExpanded && (
                     <div className="ml-6 space-y-1 border-l border-border pl-3">
-                      <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground" onClick={() => { navigate("/admin"); setMenuOpen(false); }}>
-                        <Shield className="h-3.5 w-3.5 mr-2" /> Admin Panel
-                      </Button>
-                      <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground" onClick={() => { navigate("/cpanel"); setMenuOpen(false); }}>
-                        <Settings className="h-3.5 w-3.5 mr-2" /> cPanel
-                      </Button>
-                      <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground" onClick={() => { navigate("/cpanel?tab=games"); setMenuOpen(false); }}>
-                        <Gamepad2 className="h-3.5 w-3.5 mr-2" /> Slot Panel
-                      </Button>
+                      {showAdminLink && (
+                        <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground" onClick={() => { navigate("/admin"); setMenuOpen(false); }}>
+                          <Shield className="h-3.5 w-3.5 mr-2" /> Admin Panel
+                        </Button>
+                      )}
+                      {showCpanelLink && (
+                        <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground" onClick={() => { navigate("/cpanel"); setMenuOpen(false); }}>
+                          <Settings className="h-3.5 w-3.5 mr-2" /> cPanel
+                        </Button>
+                      )}
+                      {showSlotLink && (
+                        <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground" onClick={() => { navigate("/cpanel?tab=games"); setMenuOpen(false); }}>
+                          <Gamepad2 className="h-3.5 w-3.5 mr-2" /> Slot Panel
+                        </Button>
+                      )}
                     </div>
                   )}
                 </div>
