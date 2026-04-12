@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
-      .select("username, balance, avatar_url, crypto_address, bio, biggest_win, biggest_win_game, social_links, has_animated_avatar, has_animated_border, border_style")
+      .select("username, balance, avatar_url, crypto_address, withdrawal_address, bio, biggest_win, biggest_win_game, social_links, has_animated_avatar, has_animated_border, border_style")
       .eq("user_id", userId)
       .single();
     if (data) setProfile({
@@ -51,6 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       balance: Number(data.balance),
       avatar_url: data.avatar_url,
       crypto_address: data.crypto_address,
+      withdrawal_address: data.withdrawal_address,
       bio: (data as any).bio || "",
       biggest_win: Number((data as any).biggest_win) || 0,
       biggest_win_game: (data as any).biggest_win_game || "",
