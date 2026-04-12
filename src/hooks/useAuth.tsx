@@ -14,6 +14,7 @@ interface ProfileData {
   has_animated_avatar: boolean;
   has_animated_border: boolean;
   border_style: string;
+  withdrawal_address: string | null;
 }
 
 interface AuthContextType {
