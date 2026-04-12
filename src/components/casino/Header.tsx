@@ -18,9 +18,9 @@ export function Header() {
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <FakeWinsTicker />
       <div className="container flex h-14 items-center justify-between">
-        <Link to="/" className="flex items-center shrink min-w-0">
-          <div className="overflow-hidden shrink-0" style={{ height: 22, width: 138 }}>
-            <img src={logo} alt="PhantomBet" className="block w-full h-auto max-w-none" style={{ transform: 'translateY(-68%)' }} />
+        <Link to="/" className="flex items-center shrink-0">
+          <div className="overflow-hidden shrink-0" style={{ height: 40, width: 40 }}>
+            <img src={logo} alt="PhantomBet" className="block w-full h-auto max-w-none" style={{ clipPath: 'inset(0 0 30% 0)' }} />
           </div>
         </Link>
 
