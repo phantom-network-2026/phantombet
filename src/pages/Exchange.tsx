@@ -4,7 +4,7 @@ import { BottomNav } from "@/components/casino/BottomNav";
 import { AuthGuard } from "@/components/casino/AuthGuard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowDownUp, TrendingUp, TrendingDown, Minus, Search } from "lucide-react";
+import { ArrowDownUp, TrendingUp, TrendingDown, Minus, Search, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface CryptoAsset {
@@ -77,6 +77,27 @@ export default function Exchange() {
             <h1 className="font-display text-2xl font-black text-foreground">Exchange</h1>
             <p className="text-xs text-muted-foreground mt-0.5">Trade crypto to USDT instantly</p>
           </div>
+
+          {/* Coming soon banner */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="rounded-xl border border-[hsl(var(--casino-gold))/0.25] bg-[hsl(var(--casino-gold))/0.06] p-4 flex items-center gap-3"
+          >
+            <motion.div
+              animate={{ rotate: [0, 10, -10, 0] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              className="shrink-0 rounded-lg bg-[hsl(var(--casino-gold))/0.12] p-2"
+            >
+              <Clock className="h-5 w-5 text-[hsl(var(--casino-gold))]" />
+            </motion.div>
+            <div>
+              <p className="text-sm font-bold text-[hsl(var(--casino-gold))]">Exchange — Coming Soon</p>
+              <p className="text-[11px] text-muted-foreground leading-relaxed mt-0.5">
+                Swap between cryptocurrencies and USDT directly on PhantomBet. This feature is currently under development.
+              </p>
+            </div>
+          </motion.div>
 
           {/* Swap card */}
           <AnimatePresence mode="wait">
