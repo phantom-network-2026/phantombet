@@ -30,12 +30,7 @@ export function Header() {
         <div className="hidden md:flex items-center gap-3">
           {user ? (
             <>
-              <div className="flex items-center gap-2 rounded-lg bg-secondary px-3 py-1.5">
-                <Wallet className="h-4 w-4 text-casino-gold" />
-                <span className="font-display font-bold text-casino-gold">
-                  ${profile?.balance?.toFixed(2) ?? "0.00"}
-                </span>
-              </div>
+              <BalanceDisplay size="md" />
               <Button variant="gold" size="sm" onClick={() => navigate("/deposit")}>
                 Deposit
               </Button>
