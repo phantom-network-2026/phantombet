@@ -154,9 +154,6 @@ export default function Index() {
               No ID verification required — deposit and withdraw freely with full privacy. 
               <span className="text-[hsl(var(--casino-gold))] font-semibold"> Unlimited withdrawals</span> with no caps or restrictions.
             </p>
-            <p className="text-[10px] text-muted-foreground/80 leading-relaxed mt-1.5 pt-1.5 border-t border-[hsl(var(--casino-green))/0.15]">
-              📧 Email is only used for account recovery. Please double-check your email — <span className="text-[hsl(var(--casino-gold))] font-semibold">we hold no liability for lost accounts.</span>
-            </p>
           </div>
         </div>
       </div>

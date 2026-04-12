@@ -36,8 +36,6 @@ export default function Login() {
 
         <WelcomeBanner variant="login" />
 
-        <SignupPrivacyBanner />
-
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="username">Username</Label>
