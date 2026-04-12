@@ -1,10 +1,10 @@
-import { Shield, Eye, Infinity } from "lucide-react";
+import { Shield, Eye, Infinity as InfinityIcon } from "lucide-react";
 import { motion } from "framer-motion";
 
 const features = [
   { icon: Shield, label: "No KYC Required", delay: 0 },
   { icon: Eye, label: "Full Privacy", delay: 0.1 },
-  { icon: Infinity, label: "Unlimited Withdrawals", delay: 0.2 },
+  { icon: InfinityIcon, label: "Unlimited Withdrawals", delay: 0.2 },
 ];
 
 export default function SignupPrivacyBanner() {
