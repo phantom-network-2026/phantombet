@@ -1511,8 +1511,189 @@ function DepositsWithdrawalsPanel({ onBack }: { onBack: () => void }) {
   );
 }
 
+// ── Ghost Users Panel ────────────────────────────────────────────
+function GhostUsersPanel({ onBack }: { onBack: () => void }) {
+  const [config, setConfig] = useState<any>({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [newUsername, setNewUsername] = useState("");
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from("site_settings").select("value").eq("key", "ghost_users").single();
+      if (data) setConfig(data.value as any || {});
+      setLoading(false);
+    })();
+  }, []);
+
+  const save = async (updates: any) => {
+    setSaving(true);
+    const newConfig = { ...config, ...updates };
+    setConfig(newConfig);
+    const { data: existing } = await supabase.from("site_settings").select("id").eq("key", "ghost_users").single();
+    if (existing) {
+      await supabase.from("site_settings").update({ value: newConfig }).eq("key", "ghost_users");
+    } else {
+      await supabase.from("site_settings").insert({ key: "ghost_users", value: newConfig });
+    }
+    setSaving(false);
+    toast.success("Ghost users config saved");
+  };
+
+  const enabled = config.enabled === true;
+  const usernames: string[] = config.usernames || [];
+  const peakOnline = config.peak_online ?? 45;
+  const minOnline = config.min_online ?? 8;
+  const rampHours = config.ramp_hours ?? 8;
+  const offlinePerHour = config.offline_per_hour ?? 5;
+  const showInChat = config.show_in_chat !== false;
+  const showInPresence = config.show_in_presence !== false;
+
+  const addUsername = () => {
+    if (!newUsername.trim()) return;
+    const updated = [...usernames, newUsername.trim()];
+    save({ usernames: updated });
+    setNewUsername("");
+  };
+
+  const removeUsername = (index: number) => {
+    const updated = usernames.filter((_, i) => i !== index);
+    save({ usernames: updated });
+  };
+
+  const defaultNames = [
+    "LuckyAce", "CryptoKing", "NeonRider", "GoldRush", "ShadowBet",
+    "DiamondHand", "MoonShot", "VegasVault", "RoyalFlush", "HighRoller",
+    "WildCard", "JackpotJoe", "SpinMaster", "CoinFlip", "BetBoss",
+    "PhantomX", "StarStrike", "ThunderBet", "PixelPunk", "NightOwl",
+    "BlazeBet", "IceKing", "GoldenEagle", "SilverFox", "RedLine"
+  ];
+
+  const loadDefaults = () => {
+    save({ usernames: defaultNames });
+  };
+
+  return (
+    <PanelView title="Ghost Users" onBack={onBack}>
+      <div className="space-y-4 max-w-lg">
+        {loading ? <p className="text-muted-foreground text-sm">Loading...</p> : (
+          <>
+            {/* Master Toggle */}
+            <div className="rounded-xl border border-border bg-card p-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-display font-bold text-sm">Ghost Users</p>
+                  <p className={`text-xs font-semibold mt-0.5 ${enabled ? "text-casino-green" : "text-muted-foreground"}`}>
+                    {enabled ? "👻 Active — Fake users are online" : "Disabled"}
+                  </p>
+                </div>
+                <Switch checked={enabled} onCheckedChange={(v) => save({ enabled: v })} disabled={saving} />
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                When enabled, ghost users appear online in the social tab and presence counters. They look like real players but are entirely simulated.
+              </p>
+            </div>
+
+            {/* Online Schedule */}
+            <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+              <p className="font-display font-bold text-sm">Online Schedule</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs">Min Online</Label>
+                  <Input type="number" min="0" max="200" value={minOnline}
+                    onChange={(e) => save({ min_online: Number(e.target.value) })}
+                    className="bg-secondary border-border mt-1 h-9 text-sm" />
+                  <p className="text-[10px] text-muted-foreground mt-1">Minimum ghost users always online</p>
+                </div>
+                <div>
+                  <Label className="text-xs">Peak Online</Label>
+                  <Input type="number" min="0" max="500" value={peakOnline}
+                    onChange={(e) => save({ peak_online: Number(e.target.value) })}
+                    className="bg-secondary border-border mt-1 h-9 text-sm" />
+                  <p className="text-[10px] text-muted-foreground mt-1">Max ghost users during peak hours</p>
+                </div>
+                <div>
+                  <Label className="text-xs">Ramp Up Period (hours)</Label>
+                  <Input type="number" min="1" max="24" value={rampHours}
+                    onChange={(e) => save({ ramp_hours: Number(e.target.value) })}
+                    className="bg-secondary border-border mt-1 h-9 text-sm" />
+                  <p className="text-[10px] text-muted-foreground mt-1">Hours to reach peak from min</p>
+                </div>
+                <div>
+                  <Label className="text-xs">Go Offline / Hour</Label>
+                  <Input type="number" min="1" max="50" value={offlinePerHour}
+                    onChange={(e) => save({ offline_per_hour: Number(e.target.value) })}
+                    className="bg-secondary border-border mt-1 h-9 text-sm" />
+                  <p className="text-[10px] text-muted-foreground mt-1">How many go offline per hour after peak</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Visibility */}
+            <div className="rounded-xl border border-border bg-card p-5 space-y-3">
+              <p className="font-display font-bold text-sm">Visibility Options</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm">Show in social/online list</p>
+                  <p className="text-[10px] text-muted-foreground">Ghost users appear in the online members tab</p>
+                </div>
+                <Switch checked={showInPresence} onCheckedChange={(v) => save({ show_in_presence: v })} />
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm">Show in game chat</p>
+                  <p className="text-[10px] text-muted-foreground">Ghost users occasionally post in game chats</p>
+                </div>
+                <Switch checked={showInChat} onCheckedChange={(v) => save({ show_in_chat: v })} />
+              </div>
+            </div>
+
+            {/* Custom Usernames */}
+            <div className="rounded-xl border border-border bg-card p-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="font-display font-bold text-sm">Custom Usernames ({usernames.length})</p>
+                <Button variant="outline" size="sm" className="h-7 text-xs" onClick={loadDefaults}>
+                  Load Defaults ({defaultNames.length})
+                </Button>
+              </div>
+              <div className="flex gap-2">
+                <Input value={newUsername} onChange={(e) => setNewUsername(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && addUsername()}
+                  placeholder="Add username..." className="bg-secondary border-border text-sm" />
+                <Button variant="gold" size="sm" onClick={addUsername}>Add</Button>
+              </div>
+              {usernames.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto">
+                  {usernames.map((name, i) => (
+                    <span key={i} className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-xs">
+                      {name}
+                      <button onClick={() => removeUsername(i)} className="text-muted-foreground hover:text-destructive">×</button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Info */}
+            <div className="rounded-xl border border-casino-gold/30 bg-casino-gold/5 p-4">
+              <p className="text-xs font-bold mb-1">💡 How Ghost Users Work</p>
+              <ul className="text-xs text-muted-foreground space-y-1">
+                <li>• Ghost users cycle on/off naturally based on your schedule settings</li>
+                <li>• Each ghost picks a random username from your list</li>
+                <li>• They appear in the online counter, social tab, and optionally in game chats</li>
+                <li>• Login/logout times are staggered to appear natural</li>
+                <li>• Ghost users cannot be messaged or friended by real users</li>
+              </ul>
+            </div>
+          </>
+        )}
+      </div>
+    </PanelView>
+  );
+}
+
 // ── Main cPanel Page ────────────────────────────────────────────
-type ActivePanel = null | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "promotions" | "wallet-mode" | "deposits-withdrawals" | "welcome-config";
+type ActivePanel = null | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "promotions" | "wallet-mode" | "deposits-withdrawals" | "welcome-config" | "ghost-users";
 
 export default function CPanel() {
   const { isAdmin, loading, profile } = useAuth();
@@ -1555,6 +1736,7 @@ export default function CPanel() {
           {activePanel === "wallet-mode" && <WalletModePanel onBack={back} />}
           {activePanel === "deposits-withdrawals" && <DepositsWithdrawalsPanel onBack={back} />}
           {activePanel === "welcome-config" && <WelcomeConfigPanel onBack={back} />}
+          {activePanel === "ghost-users" && <GhostUsersPanel onBack={back} />}
         </div>
       </div>
     );
@@ -1624,6 +1806,7 @@ export default function CPanel() {
                 <ToolCard icon={<Activity className="h-6 w-6" />} label="Online Users" onClick={() => navigate("/admin")} />
                 <ToolCard icon={<UserCheck className="h-6 w-6" />} label="Friendships" onClick={() => setActivePanel("database")} />
                 <ToolCard icon={<MessageSquare className="h-6 w-6" />} label="Messages" onClick={() => setActivePanel("database")} />
+                <ToolCard icon={<Users className="h-6 w-6" />} label="Ghost Users" onClick={() => setActivePanel("ghost-users")} active={activePanel === "ghost-users"} />
               </div>
             </CpanelSection>
 

@@ -162,11 +162,13 @@ const CONFIG = {
 
             /* --- CORE LOGIC --- */
             generateOdds() {
+                // Generate truly random weights for each car
                 let weights = Array.from({length: 6}, () => Math.random() * 0.5 + 0.5); 
                 
-                if (Math.random() > 0.7) {
+                // Occasionally give a slight advantage to a random car (not always the same one)
+                if (Math.random() > 0.5) {
                     const fav = Math.floor(Math.random() * 6);
-                    weights[fav] += 1.0;
+                    weights[fav] += Math.random() * 0.8 + 0.3;
                 }
 
                 const totalWeight = weights.reduce((a, b) => a + b, 0);
@@ -189,13 +191,14 @@ const CONFIG = {
             },
 
             determineWinner() {
+                // Use cryptographically secure random for fair winner selection
                 const r = this.getSecureRandom();
                 let cumulative = 0;
                 for (let i = 0; i < 6; i++) {
                     cumulative += this.probabilities[i];
                     if (r <= cumulative) return i;
                 }
-                return 5; 
+                return Math.floor(Math.random() * 6); 
             },
 
             /* --- BETTING ACTIONS --- */

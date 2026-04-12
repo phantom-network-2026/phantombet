@@ -11,7 +11,7 @@ window.addEventListener('load', () => {
 
 /** CONFIGURATION */
 const CONFIG = {
-    minMultiplier: 1.00, maxMultiplier: 10.00, speed: 0.15,
+    minMultiplier: 1.00, maxMultiplier: 25.00, speed: 0.12,
     updateInterval: 16, countdownTime: 10000
 };
 
