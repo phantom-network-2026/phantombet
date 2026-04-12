@@ -15,6 +15,31 @@ interface ProfileData {
   has_animated_border: boolean;
   border_style: string;
   withdrawal_address: string | null;
+  xp: number;
+}
+
+export function getLevel(xp: number): number {
+  return Math.min(150, Math.max(1, Math.floor((-20 + Math.sqrt(400 + 6 * xp)) / 3)));
+}
+
+export function getXpForLevel(level: number): number {
+  return 20 * level + 1.5 * level * level;
+}
+
+export function getTitle(level: number): string {
+  if (level >= 150) return "Veteran";
+  if (level >= 80) return "Big Baller";
+  if (level >= 50) return "Professional";
+  if (level >= 25) return "Amateur";
+  return "Rookie";
+}
+
+export function getTitleColor(level: number): string {
+  if (level >= 150) return "text-red-500";
+  if (level >= 80) return "text-purple-400";
+  if (level >= 50) return "text-blue-400";
+  if (level >= 25) return "text-green-400";
+  return "text-muted-foreground";
 }
 
 interface AuthContextType {
@@ -43,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
-      .select("username, balance, avatar_url, crypto_address, withdrawal_address, bio, biggest_win, biggest_win_game, social_links, has_animated_avatar, has_animated_border, border_style")
+      .select("username, balance, avatar_url, crypto_address, withdrawal_address, bio, biggest_win, biggest_win_game, social_links, has_animated_avatar, has_animated_border, border_style, xp")
       .eq("user_id", userId)
       .single();
     if (data) setProfile({
@@ -59,6 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       has_animated_avatar: (data as any).has_animated_avatar || false,
       has_animated_border: (data as any).has_animated_border || false,
       border_style: (data as any).border_style || "none",
+      xp: Number((data as any).xp) || 0,
     });
 
     const { data: roles } = await supabase

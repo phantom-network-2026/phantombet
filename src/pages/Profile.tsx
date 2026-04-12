@@ -1,16 +1,18 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, getLevel, getXpForLevel, getTitle, getTitleColor } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/casino/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   ArrowLeft, Trophy, Save, User, Link as LinkIcon,
-  Twitter, Instagram, MessageCircle, Globe, Sparkles, Crown, Camera, Circle,
+  Twitter, Instagram, MessageCircle, Globe, Sparkles, Crown, Camera, Circle, Star, Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 import { usePresence, getStatusColor, getStatusLabel, type AppearanceStatus } from "@/hooks/usePresence";
@@ -237,6 +239,36 @@ export default function Profile() {
               </SelectContent>
             </Select>
           </div>
+
+          {/* Level & XP Progression */}
+          {(() => {
+            const level = getLevel(profile.xp);
+            const title = getTitle(level);
+            const titleColor = getTitleColor(level);
+            const currentLevelXp = getXpForLevel(level);
+            const nextLevelXp = getXpForLevel(Math.min(150, level + 1));
+            const xpIntoLevel = profile.xp - currentLevelXp;
+            const xpNeeded = nextLevelXp - currentLevelXp;
+            const progressPct = level >= 150 ? 100 : Math.min(100, (xpIntoLevel / xpNeeded) * 100);
+            return (
+              <div className="rounded-lg bg-secondary/50 p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Star className="h-5 w-5 text-casino-gold" />
+                    <span className="font-display font-bold text-sm">Level {level}</span>
+                  </div>
+                  <Badge className={`${titleColor} border-current bg-transparent text-xs`}>
+                    {title}
+                  </Badge>
+                </div>
+                <Progress value={progressPct} className="h-2" />
+                <div className="flex justify-between text-[10px] text-muted-foreground">
+                  <span>{Math.floor(profile.xp).toLocaleString()} XP</span>
+                  <span>{level >= 150 ? "MAX" : `${Math.floor(nextLevelXp).toLocaleString()} XP`}</span>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Biggest Win */}
           <div className="flex items-center justify-center gap-2 rounded-lg bg-secondary/50 p-3">

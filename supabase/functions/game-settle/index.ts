@@ -181,6 +181,11 @@ Deno.serve(async (req) => {
       .update(updateData)
       .eq("user_id", userId);
 
+    // Grant XP: 10 XP per dollar on wins
+    if (adjustedAmount > 0) {
+      await admin.rpc("grant_xp", { p_user_id: userId, p_amount: Math.round(adjustedAmount * 10) });
+    }
+
     // Record transaction with adjusted amount
     await admin.from("transactions").insert({
       user_id: userId,

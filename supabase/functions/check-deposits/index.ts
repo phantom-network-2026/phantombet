@@ -97,6 +97,9 @@ Deno.serve(async (req) => {
             description: `USDT deposit of $${usdtAmount.toFixed(2)} (tx: ${txId})`,
           });
 
+          // Grant XP: 10 XP per dollar deposited
+          await adminClient.rpc("grant_xp", { p_user_id: addr.user_id, p_amount: Math.round(usdtAmount * 10) });
+
           totalCredited++;
           console.log(`Credited $${usdtAmount} to user ${addr.user_id} from tx ${txId}`);
         }
