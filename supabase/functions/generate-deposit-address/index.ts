@@ -1,10 +1,11 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.102.0";
-import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
+import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.102.0/cors";
+import * as secp256k1 from "https://esm.sh/@noble/secp256k1@2.1.0";
+import { keccak_256 } from "https://esm.sh/@noble/hashes@1.4.0/sha3";
+import { sha256 } from "https://esm.sh/@noble/hashes@1.4.0/sha256";
 
-const TRONGRID_API_KEY = Deno.env.get("TRONGRID_API_KEY")!;
 const ENCRYPTION_KEY = Deno.env.get("TRON_ENCRYPTION_KEY")!;
 
-// Simple XOR-based encryption for private keys (stored encrypted at rest)
 function encrypt(text: string, key: string): string {
   const textBytes = new TextEncoder().encode(text);
   const keyBytes = new TextEncoder().encode(key);
@@ -13,6 +14,66 @@ function encrypt(text: string, key: string): string {
     encrypted[i] = textBytes[i] ^ keyBytes[i % keyBytes.length];
   }
   return btoa(String.fromCharCode(...encrypted));
+}
+
+function bytesToHex(bytes: Uint8Array): string {
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+const BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+function base58Encode(buffer: Uint8Array): string {
+  const digits = [0];
+  for (const byte of buffer) {
+    let carry = byte;
+    for (let j = 0; j < digits.length; j++) {
+      carry += digits[j] << 8;
+      digits[j] = carry % 58;
+      carry = (carry / 58) | 0;
+    }
+    while (carry > 0) {
+      digits.push(carry % 58);
+      carry = (carry / 58) | 0;
+    }
+  }
+  let result = "";
+  for (const byte of buffer) {
+    if (byte !== 0) break;
+    result += "1";
+  }
+  for (let i = digits.length - 1; i >= 0; i--) {
+    result += BASE58_ALPHABET[digits[i]];
+  }
+  return result;
+}
+
+function generateTronAddress(): { privateKey: string; address: string } {
+  // Generate random 32-byte private key
+  const privKeyBytes = secp256k1.utils.randomPrivateKey();
+  const privateKey = bytesToHex(privKeyBytes);
+
+  // Get uncompressed public key (65 bytes, starts with 0x04)
+  const pubKey = secp256k1.getPublicKey(privKeyBytes, false);
+  
+  // Keccak-256 of public key bytes (skip first byte 0x04)
+  const hash = keccak_256(pubKey.slice(1));
+  
+  // Take last 20 bytes, prepend 0x41 (TRON mainnet prefix)
+  const addressBytes = new Uint8Array(21);
+  addressBytes[0] = 0x41;
+  addressBytes.set(hash.slice(12), 1);
+  
+  // Base58Check encode: double SHA-256, take first 4 bytes as checksum
+  const firstHash = sha256(addressBytes);
+  const secondHash = sha256(firstHash);
+  const checksum = secondHash.slice(0, 4);
+  
+  const addressWithChecksum = new Uint8Array(25);
+  addressWithChecksum.set(addressBytes);
+  addressWithChecksum.set(checksum, 21);
+  
+  const address = base58Encode(addressWithChecksum);
+  
+  return { privateKey, address };
 }
 
 Deno.serve(async (req) => {
@@ -31,7 +92,6 @@ Deno.serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) throw new Error("Unauthorized");
 
-    // Check if user already has a deposit address
     const adminClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -49,26 +109,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Generate new TRON address via TronGrid API
-    const generateRes = await fetch("https://api.trongrid.io/wallet/generateaddress", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "TRON-PRO-API-KEY": TRONGRID_API_KEY,
-      },
-    });
+    // Generate TRON address offline
+    const { privateKey, address } = generateTronAddress();
 
-    if (!generateRes.ok) {
-      throw new Error(`TronGrid error: ${generateRes.status}`);
-    }
-
-    const account = await generateRes.json();
-    const address = account.base58 || account.address;
-    const privateKey = account.privateKey;
-
-    if (!address || !privateKey) throw new Error("Failed to generate address");
-
-    // Store encrypted private key
     const encryptedKey = encrypt(privateKey, ENCRYPTION_KEY);
 
     const { error: insertError } = await adminClient
