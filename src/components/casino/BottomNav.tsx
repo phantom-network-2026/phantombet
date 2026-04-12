@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Dice5, Trophy, Users, Search } from "lucide-react";
+import { Home, Dice5, Trophy, Users, HelpCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
@@ -8,7 +8,7 @@ const navItems = [
   { icon: Dice5, label: "Games", path: "/games", requiresAuth: false },
   { icon: Users, label: "Friends", path: "/friends", requiresAuth: true },
   { icon: Trophy, label: "Promos", path: "/promotions", requiresAuth: true },
-  { icon: Search, label: "Search", path: "/search", requiresAuth: true },
+  { icon: HelpCircle, label: "Help", path: "/help", requiresAuth: false },
 ];
 
 export function BottomNav() {
