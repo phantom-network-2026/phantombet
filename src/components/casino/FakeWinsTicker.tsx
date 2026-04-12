@@ -50,9 +50,17 @@ export const DEFAULT_CONFIG: FakeWinsConfig = {
 // Also syncs usernames from ghost_users config if available
 export async function fetchFakeWinsConfig(): Promise<FakeWinsConfig> {
   try {
-    const { data } = await supabase.functions.invoke("get-public-settings", {
-      body: { keys: [SETTINGS_KEY, "ghost_users"] },
-    });
+    const [settingsRes, profilesRes] = await Promise.all([
+      supabase.functions.invoke("get-public-settings", {
+        body: { keys: [SETTINGS_KEY, "ghost_users"] },
+      }),
+      supabase.from("profiles").select("username").not("username", "is", null),
+    ]);
+    const data = settingsRes.data;
+    const realUsernames = new Set(
+      (profilesRes.data || []).map((p: any) => (p.username as string).toLowerCase())
+    );
+
     let config = DEFAULT_CONFIG;
     if (data?.settings?.[SETTINGS_KEY]) {
       config = { ...DEFAULT_CONFIG, ...(data.settings[SETTINGS_KEY] as Partial<FakeWinsConfig>) };
@@ -61,6 +69,13 @@ export async function fetchFakeWinsConfig(): Promise<FakeWinsConfig> {
     const ghostConfig = data?.settings?.["ghost_users"];
     if (ghostConfig?.usernames?.length > 0) {
       config = { ...config, usernames: ghostConfig.usernames };
+    }
+    // Filter out real usernames
+    config.usernames = config.usernames.filter(
+      (name) => !realUsernames.has(name.toLowerCase())
+    );
+    if (config.usernames.length === 0) {
+      config.usernames = DEFAULT_CONFIG.usernames;
     }
     return config;
   } catch {}
