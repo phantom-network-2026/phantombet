@@ -111,8 +111,19 @@ function randomBetween(min: number, max: number) {
   return Math.random() * (max - min) + min;
 }
 
+// Track used usernames to avoid repeats within a cycle
+let usedUsernames: Set<string> = new Set();
+
 function generateWin(config: FakeWinsConfig) {
-  const username = config.usernames[Math.floor(Math.random() * config.usernames.length)];
+  // If all usernames have been used, reset the pool
+  if (usedUsernames.size >= config.usernames.length) {
+    usedUsernames = new Set();
+  }
+  // Pick from remaining unused usernames
+  const available = config.usernames.filter(u => !usedUsernames.has(u));
+  const username = available[Math.floor(Math.random() * available.length)];
+  usedUsernames.add(username);
+
   const game = config.games[Math.floor(Math.random() * config.games.length)];
   const range = GAME_WIN_RANGES[game] || DEFAULT_GAME_FALLBACK;
   const isBig = Math.random() < range.bigChance;
@@ -133,6 +144,7 @@ export function FakeWinsTicker() {
   // Load config from DB on mount
   useEffect(() => {
     fetchFakeWinsConfig().then((c) => {
+      usedUsernames = new Set();
       setConfig(c);
       setLoaded(true);
     });
