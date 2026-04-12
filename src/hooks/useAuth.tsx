@@ -51,6 +51,7 @@ interface AuthContextType {
   loading: boolean;
   profile: ProfileData | null;
   isAdmin: boolean;
+  isOwner: boolean;
   hasStaffAccess: boolean;
   isMockMode: boolean;
   signUp: (email: string, password: string, username: string) => Promise<{ error: any }>;
@@ -67,6 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<AuthContextType["profile"]>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
   const [hasStaffAccess, setHasStaffAccess] = useState(false);
   const [isMockMode, setIsMockMode] = useState(true);
 
@@ -118,8 +120,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .select("role")
       .eq("user_id", userId);
     const userRoles = roles?.map((r) => r.role) ?? [];
-    setIsAdmin(userRoles.includes("admin"));
-    setHasStaffAccess(userRoles.some((r) => ["admin", "moderator", "staff"].includes(r)));
+    setIsOwner(userRoles.includes("owner"));
+    setIsAdmin(userRoles.includes("admin") || userRoles.includes("owner"));
+    setHasStaffAccess(userRoles.some((r) => ["admin", "moderator", "staff", "owner"].includes(r)));
   };
 
   const refreshProfile = async () => {
@@ -135,6 +138,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setProfile(null);
         setIsAdmin(false);
+        setIsOwner(false);
         setHasStaffAccess(false);
       }
       setLoading(false);
@@ -178,11 +182,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut();
     setProfile(null);
     setIsAdmin(false);
+    setIsOwner(false);
     setHasStaffAccess(false);
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, profile, isAdmin, hasStaffAccess, isMockMode, signUp, signIn, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ user, session, loading, profile, isAdmin, isOwner, hasStaffAccess, isMockMode, signUp, signIn, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );
