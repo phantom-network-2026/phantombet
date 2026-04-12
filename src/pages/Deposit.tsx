@@ -22,20 +22,7 @@ export default function Deposit() {
   const generateOrFetchAddress = async () => {
     setLoading(true);
     try {
-      // Check if address already exists
-      const { data: existing } = await supabase
-        .from("deposit_addresses")
-        .select("tron_address")
-        .eq("user_id", user!.id)
-        .single();
-
-      if (existing) {
-        setDepositAddress(existing.tron_address);
-        setLoading(false);
-        return;
-      }
-
-      // Generate new address via edge function
+      // Always use edge function — it returns existing or generates new
       const { data, error } = await supabase.functions.invoke("generate-deposit-address");
       if (error) throw error;
       setDepositAddress(data.address);
