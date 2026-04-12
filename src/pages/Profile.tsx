@@ -240,6 +240,36 @@ export default function Profile() {
             </Select>
           </div>
 
+          {/* Level & XP Progression */}
+          {(() => {
+            const level = getLevel(profile.xp);
+            const title = getTitle(level);
+            const titleColor = getTitleColor(level);
+            const currentLevelXp = getXpForLevel(level);
+            const nextLevelXp = getXpForLevel(Math.min(150, level + 1));
+            const xpIntoLevel = profile.xp - currentLevelXp;
+            const xpNeeded = nextLevelXp - currentLevelXp;
+            const progressPct = level >= 150 ? 100 : Math.min(100, (xpIntoLevel / xpNeeded) * 100);
+            return (
+              <div className="rounded-lg bg-secondary/50 p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Star className="h-5 w-5 text-casino-gold" />
+                    <span className="font-display font-bold text-sm">Level {level}</span>
+                  </div>
+                  <Badge className={`${titleColor} border-current bg-transparent text-xs`}>
+                    {title}
+                  </Badge>
+                </div>
+                <Progress value={progressPct} className="h-2" />
+                <div className="flex justify-between text-[10px] text-muted-foreground">
+                  <span>{Math.floor(profile.xp).toLocaleString()} XP</span>
+                  <span>{level >= 150 ? "MAX" : `${Math.floor(nextLevelXp).toLocaleString()} XP`}</span>
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Biggest Win */}
           <div className="flex items-center justify-center gap-2 rounded-lg bg-secondary/50 p-3">
             <Trophy className="h-5 w-5 text-casino-gold" />
