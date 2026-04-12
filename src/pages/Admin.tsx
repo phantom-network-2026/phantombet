@@ -34,7 +34,7 @@ const ROLE_LABELS: Record<string, { label: string; emoji: string; color: string 
 };
 
 export default function Admin() {
-  const { isAdmin, hasStaffAccess, loading } = useAuth();
+  const { isAdmin, isOwner, hasStaffAccess, loading } = useAuth();
   const navigate = useNavigate();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
@@ -51,9 +51,18 @@ export default function Admin() {
   const [deleting, setDeleting] = useState(false);
   const [forceLoss, setForceLoss] = useState(false);
   const [forceLossLoading, setForceLossLoading] = useState(false);
+  const [accessAllowed, setAccessAllowed] = useState(true);
 
   useEffect(() => {
     if (!loading && !hasStaffAccess) { navigate("/"); return; }
+    if (hasStaffAccess && !isOwner) {
+      // Check if admin panel access is enabled
+      supabase.from("site_settings").select("value").eq("key", "panel_visibility").maybeSingle().then(({ data }) => {
+        const vis = (data?.value as Record<string, boolean>) || {};
+        if (vis.admin_panel_access === false) { navigate("/"); return; }
+        setAccessAllowed(true);
+      });
+    }
     if (hasStaffAccess) fetchUsers();
     if (isAdmin) fetchForceLoss();
   }, [hasStaffAccess, loading]);
