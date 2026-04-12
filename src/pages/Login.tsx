@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import WelcomeBanner from "@/components/casino/WelcomeBanner";
-import SignupPrivacyBanner from "@/components/casino/SignupPrivacyBanner";
 import logo from "@/assets/phantombet-logo.png";
 
 export default function Login() {
