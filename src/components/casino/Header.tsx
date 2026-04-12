@@ -18,11 +18,11 @@ export function Header() {
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <FakeWinsTicker />
       <div className="container flex h-14 items-center justify-between">
-        <Link to="/" className="flex items-center gap-1.5 shrink-0 min-w-0">
-          <div className="overflow-hidden shrink-0 rounded-full" style={{ height: 36, width: 36 }}>
+        <Link to="/" className="flex items-center gap-1.5 shrink min-w-0">
+          <div className="overflow-hidden shrink-0 rounded-full" style={{ height: 32, width: 32 }}>
             <img src={logo} alt="PhantomBet ghost" className="w-full h-auto" style={{ marginBottom: '-30%' }} />
           </div>
-          <div className="overflow-hidden shrink-0" style={{ height: 18, width: 140 }}>
+          <div className="overflow-hidden shrink-0" style={{ height: 16, width: 120 }}>
             <img src={logo} alt="PhantomBet" className="w-full h-auto" style={{ marginTop: '-74%' }} />
           </div>
         </Link>
