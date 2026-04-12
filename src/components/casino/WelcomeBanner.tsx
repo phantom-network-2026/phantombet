@@ -30,7 +30,7 @@ const DEFAULT_REAL_CONFIG = {
   real_title: "🎰 Welcome to PhantomBet",
   real_body: "Join the ultimate crypto casino experience. Deposit USDT and start playing instantly with provably fair games!",
   welcome_bonuses: [
-    { id: "deposit_match", label: "100% Deposit Match", description: "Double your first deposit up to $500", icon: "rocket", amount: 500, enabled: true },
+    { id: "deposit_match", label: "100% Deposit Match", description: "Double your first deposit up to $50", icon: "rocket", amount: 50, enabled: true },
     { id: "free_spins", label: "50 Free Spins", description: "Get 50 free spins on your first $10 deposit and wagered", icon: "sparkles", amount: 0, enabled: true },
     { id: "vip_trial", label: "7-Day VIP Trial", description: "Experience VIP perks free for your first week", icon: "crown", amount: 0, enabled: true },
   ] as WelcomeBonus[],
