@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import WelcomeBanner from "@/components/casino/WelcomeBanner";
+import SignupPrivacyBanner from "@/components/casino/SignupPrivacyBanner";
 import logo from "@/assets/phantombet-logo.png";
 
 export default function Signup() {
@@ -29,7 +30,7 @@ export default function Signup() {
 
   return (
     <div className="min-h-screen gradient-casino-bg flex items-center justify-center p-4">
-      <div className="w-full max-w-sm space-y-6">
+      <div className="w-full max-w-sm space-y-5">
         <div className="text-center">
           <img src={logo} alt="PhantomBet" className="h-16 w-16 mx-auto mb-3" />
           <h1 className="font-display text-3xl font-black text-gold">Join PhantomBet</h1>
@@ -37,6 +38,8 @@ export default function Signup() {
         </div>
 
         <WelcomeBanner variant="signup" onBonusSelect={setSelectedBonus} selectedBonus={selectedBonus} />
+
+        <SignupPrivacyBanner />
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
