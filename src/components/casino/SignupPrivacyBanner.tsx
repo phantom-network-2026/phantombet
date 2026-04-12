@@ -54,6 +54,15 @@ export default function SignupPrivacyBanner() {
           </motion.div>
         ))}
       </div>
+
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.6, duration: 0.4 }}
+        className="relative mt-3 text-[10px] text-muted-foreground/80 leading-relaxed border-t border-border/30 pt-2.5"
+      >
+        📧 Email is only used for account recovery. Please double-check the email you enter — <span className="text-[hsl(var(--casino-gold))] font-semibold">we hold no liability for lost accounts.</span>
+      </motion.p>
     </motion.div>
   );
 }
