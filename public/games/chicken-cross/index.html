@@ -52,8 +52,7 @@
 <header>
     <div class="logo">Chicken Cross 🐔</div>
     <div class="balance-group">
-        <div class="balance-display">₹<span id="ui-balance">0</span></div>
-        <button class="btn-free-money" onclick="Ads.watchAd('money')">📺 +₹100</button>
+        <div class="balance-display">$<span id="ui-balance">0</span></div>
     </div>
     <div class="header-icons">
         <button onclick="Game.toggleLeaderboard()" aria-label="Leaderboard">🏆</button>
@@ -82,8 +81,7 @@
             <h1 style="color:var(--danger-color)">CRASHED! 💥</h1>
             <p>Multiplier reached: <span id="crash-mult" style="font-weight:bold; color:var(--accent-color)">1.2x</span></p>
             <p>Lost Bet: ₹<span id="crash-loss">0</span></p>
-            <p style="font-size:0.9rem; color:#aaa; margin-top:20px;">Short on cash?</p>
-            <button class="btn-3d btn-secondary" onclick="Ads.watchAd('money')">📺 Watch Ad (+₹100)</button>
+            <button class="btn-3d btn-danger" onclick="Game.resetGame()">Try Again</button>
             <button class="btn-3d btn-danger" onclick="Game.resetGame()">Try Again</button>
         </div>
     </div>
