@@ -20,7 +20,7 @@ import {
   AlertTriangle, Activity, Lock, Megaphone, HardDrive, Clock,
   Ban, Users, BarChart3, Wrench, Power, Bell, Percent, Trophy,
   Gamepad2, CreditCard, MessageSquare, UserCheck, Zap, LayoutGrid,
-  Info, Server, Hash, Gift
+  Info, Server, Hash, Gift, Wallet
 } from "lucide-react";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -750,8 +750,107 @@ function useAnalytics() {
   return { stats, loading };
 }
 
+// ── Wallet Mode Panel ───────────────────────────────────────────
+function WalletModePanel({ onBack }: { onBack: () => void }) {
+  const [mockMode, setMockMode] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "wallet_mode")
+        .single();
+      if (data) setMockMode((data.value as any)?.mock === true);
+      setLoading(false);
+    })();
+  }, []);
+
+  const toggleMode = async (isMock: boolean) => {
+    setSaving(true);
+    const value = { mock: isMock };
+    const { data: existing } = await supabase
+      .from("site_settings")
+      .select("id")
+      .eq("key", "wallet_mode")
+      .single();
+
+    if (existing) {
+      await supabase.from("site_settings").update({ value }).eq("key", "wallet_mode");
+    } else {
+      await supabase.from("site_settings").insert({ key: "wallet_mode", value });
+    }
+    setMockMode(isMock);
+    setSaving(false);
+    toast.success(isMock ? "Switched to Mock Funds mode" : "Switched to Real Crypto mode");
+  };
+
+  return (
+    <div>
+      <Button variant="ghost" size="sm" onClick={onBack} className="mb-4">
+        <ArrowLeft className="h-4 w-4 mr-1" /> Back to cPanel
+      </Button>
+      <h2 className="font-display text-xl font-bold mb-4 flex items-center gap-2">
+        <Wallet className="h-5 w-5 text-casino-gold" /> Wallet Mode
+      </h2>
+
+      {loading ? (
+        <p className="text-muted-foreground text-sm">Loading...</p>
+      ) : (
+        <div className="space-y-4 max-w-lg">
+          <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-display font-bold text-sm">Current Mode</p>
+                <p className={`text-xs font-semibold mt-0.5 ${mockMode ? "text-casino-gold" : "text-casino-green"}`}>
+                  {mockMode ? "🎮 Mock Funds (Demo)" : "💰 Real Crypto (USDT)"}
+                </p>
+              </div>
+              <Switch
+                checked={!mockMode}
+                onCheckedChange={(checked) => toggleMode(!checked)}
+                disabled={saving}
+              />
+            </div>
+
+            <div className="border-t border-border pt-3 space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Mode Details</p>
+              {mockMode ? (
+                <ul className="text-xs text-muted-foreground space-y-1">
+                  <li>• New users receive <span className="text-casino-gold font-semibold">$100 mock funds</span></li>
+                  <li>• Deposits & withdrawals are <span className="font-semibold">disabled</span></li>
+                  <li>• Balances are simulated — no real money moves</li>
+                  <li>• Perfect for testing & development</li>
+                </ul>
+              ) : (
+                <ul className="text-xs text-muted-foreground space-y-1">
+                  <li>• Deposits via <span className="text-casino-green font-semibold">USDT (TRC-20)</span> auto-credited</li>
+                  <li>• Withdrawals processed <span className="font-semibold">automatically</span> from master wallet</li>
+                  <li>• Minimum deposit: $5 · Minimum withdrawal: $10</li>
+                  <li>• <span className="text-destructive font-semibold">Real money is at stake!</span></li>
+                </ul>
+              )}
+            </div>
+          </div>
+
+          <div className={`rounded-xl border p-4 ${mockMode ? "border-casino-gold/30 bg-casino-gold/5" : "border-destructive/30 bg-destructive/5"}`}>
+            <p className="text-xs font-bold mb-1">{mockMode ? "⚠️ Demo Mode Active" : "🔴 Live Mode Active"}</p>
+            <p className="text-xs text-muted-foreground">
+              {mockMode
+                ? "Switch to Real Crypto when you're ready to accept real USDT deposits and process automated withdrawals."
+                : "The platform is processing real cryptocurrency. Ensure your master wallet has sufficient USDT and TRX for gas fees."}
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main cPanel Page ────────────────────────────────────────────
-type ActivePanel = null | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "promotions";
+type ActivePanel = null | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "promotions" | "wallet-mode";
 
 export default function CPanel() {
   const { isAdmin, loading, profile } = useAuth();
@@ -791,6 +890,7 @@ export default function CPanel() {
           {activePanel === "house-edge" && <HouseEdgeWrapper onBack={back} />}
           {activePanel === "game-probability" && <GameProbabilityWrapper onBack={back} />}
           {activePanel === "promotions" && <PromotionsWrapper onBack={back} />}
+          {activePanel === "wallet-mode" && <WalletModePanel onBack={back} />}
         </div>
       </div>
     );
@@ -861,6 +961,7 @@ export default function CPanel() {
                 <ToolCard icon={<CreditCard className="h-6 w-6" />} label="Transactions" onClick={() => setActivePanel("logs")} />
                 <ToolCard icon={<Trophy className="h-6 w-6" />} label="Prize Spins" onClick={() => setActivePanel("database")} />
                 <ToolCard icon={<Hash className="h-6 w-6" />} label="Scratch Cards" onClick={() => setActivePanel("database")} />
+                <ToolCard icon={<Wallet className="h-6 w-6" />} label="Wallet Mode" onClick={() => setActivePanel("wallet-mode")} />
               </div>
             </CpanelSection>
 
