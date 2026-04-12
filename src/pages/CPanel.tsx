@@ -989,7 +989,211 @@ function WalletModePanel({ onBack }: { onBack: () => void }) {
   );
 }
 
-// ── Deposits & Withdrawals Panel ────────────────────────────────
+// ── Welcome Config Panel ────────────────────────────────────────
+function WelcomeConfigPanel({ onBack }: { onBack: () => void }) {
+  const [config, setConfig] = useState<any>({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from("site_settings").select("value").eq("key", "welcome_config").single();
+      if (data) setConfig(data.value as any || {});
+      setLoading(false);
+    })();
+  }, []);
+
+  const save = async (updates: any) => {
+    setSaving(true);
+    const newConfig = { ...config, ...updates };
+    setConfig(newConfig);
+    const { data: existing } = await supabase.from("site_settings").select("id").eq("key", "welcome_config").single();
+    if (existing) {
+      await supabase.from("site_settings").update({ value: newConfig }).eq("key", "welcome_config");
+    } else {
+      await supabase.from("site_settings").insert({ key: "welcome_config", value: newConfig });
+    }
+    setSaving(false);
+    toast.success("Welcome config saved");
+  };
+
+  const updateBonus = (index: number, field: string, value: any) => {
+    const bonuses = [...(config.welcome_bonuses || defaultBonuses)];
+    bonuses[index] = { ...bonuses[index], [field]: value };
+    save({ welcome_bonuses: bonuses });
+  };
+
+  const addBonus = () => {
+    const bonuses = [...(config.welcome_bonuses || defaultBonuses)];
+    bonuses.push({ id: `bonus_${Date.now()}`, label: "New Bonus", description: "Describe the bonus", icon: "gift", amount: 0, enabled: true });
+    save({ welcome_bonuses: bonuses });
+  };
+
+  const removeBonus = (index: number) => {
+    const bonuses = [...(config.welcome_bonuses || defaultBonuses)];
+    bonuses.splice(index, 1);
+    save({ welcome_bonuses: bonuses });
+  };
+
+  const defaultBonuses = [
+    { id: "deposit_match", label: "100% Deposit Match", description: "Double your first deposit up to $500", icon: "rocket", amount: 500, enabled: true },
+    { id: "free_spins", label: "50 Free Spins", description: "Get 50 free spins on our top slot games", icon: "sparkles", amount: 0, enabled: true },
+    { id: "vip_trial", label: "7-Day VIP Trial", description: "Experience VIP perks free for your first week", icon: "crown", amount: 0, enabled: true },
+  ];
+
+  const iconOptions = ["rocket", "sparkles", "crown", "gift", "zap"];
+  const bonuses = config.welcome_bonuses || defaultBonuses;
+
+  return (
+    <div>
+      <Button variant="ghost" size="sm" onClick={onBack} className="mb-4">
+        <ArrowLeft className="h-4 w-4 mr-1" /> Back to cPanel
+      </Button>
+      <h2 className="font-display text-xl font-bold mb-4 flex items-center gap-2">
+        <Megaphone className="h-5 w-5 text-casino-gold" /> Welcome Messages
+      </h2>
+
+      {loading ? (
+        <p className="text-muted-foreground text-sm">Loading...</p>
+      ) : (
+        <div className="space-y-6 max-w-lg">
+          {/* Mock Mode Messages */}
+          <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-casino-gold text-lg">🎮</span>
+              <p className="font-display font-bold text-sm">Mock / Demo Mode Message</p>
+            </div>
+            <p className="text-xs text-muted-foreground">Shown on login & signup when in demo mode.</p>
+
+            <div className="space-y-3">
+              <div>
+                <Label className="text-xs">Title</Label>
+                <Input
+                  value={config.mock_title || "🚧 Early Access — Development Mode"}
+                  onChange={(e) => setConfig({ ...config, mock_title: e.target.value })}
+                  onBlur={() => save({ mock_title: config.mock_title })}
+                  className="bg-secondary border-border text-sm"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Body Text</Label>
+                <Textarea
+                  value={config.mock_body || "PhantomBet is still in development. Real deposits are not available yet. Every new account receives $100 in mock funds to explore our games!"}
+                  onChange={(e) => setConfig({ ...config, mock_body: e.target.value })}
+                  onBlur={() => save({ mock_body: config.mock_body })}
+                  className="bg-secondary border-border text-sm min-h-[80px]"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Perk / Incentive Line</Label>
+                <Input
+                  value={config.mock_perk || "🎁 Loyal members who register now will receive a free 3-month VIP subscription on launch day!"}
+                  onChange={(e) => setConfig({ ...config, mock_perk: e.target.value })}
+                  onBlur={() => save({ mock_perk: config.mock_perk })}
+                  className="bg-secondary border-border text-sm"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Real Mode Messages */}
+          <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-casino-green text-lg">💰</span>
+              <p className="font-display font-bold text-sm">Real Funds Mode Message</p>
+            </div>
+            <p className="text-xs text-muted-foreground">Shown on login & signup when in real crypto mode.</p>
+
+            <div className="space-y-3">
+              <div>
+                <Label className="text-xs">Title</Label>
+                <Input
+                  value={config.real_title || "🎰 Welcome to PhantomBet"}
+                  onChange={(e) => setConfig({ ...config, real_title: e.target.value })}
+                  onBlur={() => save({ real_title: config.real_title })}
+                  className="bg-secondary border-border text-sm"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Body Text</Label>
+                <Textarea
+                  value={config.real_body || "Join the ultimate crypto casino experience. Deposit USDT and start playing instantly with provably fair games!"}
+                  onChange={(e) => setConfig({ ...config, real_body: e.target.value })}
+                  onBlur={() => save({ real_body: config.real_body })}
+                  className="bg-secondary border-border text-sm min-h-[80px]"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Welcome Bonuses (Real Mode) */}
+          <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Gift className="h-5 w-5 text-casino-gold" />
+                <p className="font-display font-bold text-sm">Welcome Bonuses (Real Mode)</p>
+              </div>
+              <Button variant="outline" size="sm" onClick={addBonus} className="h-7 text-xs">
+                + Add Bonus
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">Users can pick one bonus when signing up in real mode.</p>
+
+            <div className="space-y-3">
+              {bonuses.map((bonus: any, i: number) => (
+                <div key={bonus.id} className="rounded-lg border border-border bg-secondary/30 p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={bonus.icon}
+                        onChange={(e) => updateBonus(i, "icon", e.target.value)}
+                        className="bg-secondary border border-border rounded px-2 py-1 text-xs"
+                      >
+                        {iconOptions.map(ic => <option key={ic} value={ic}>{ic}</option>)}
+                      </select>
+                      <Switch
+                        checked={bonus.enabled}
+                        onCheckedChange={(v) => updateBonus(i, "enabled", v)}
+                      />
+                      <span className="text-[10px] text-muted-foreground">{bonus.enabled ? "Active" : "Disabled"}</span>
+                    </div>
+                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive" onClick={() => removeBonus(i)}>
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  <Input
+                    value={bonus.label}
+                    onChange={(e) => updateBonus(i, "label", e.target.value)}
+                    className="bg-secondary border-border text-sm h-8"
+                    placeholder="Bonus name"
+                  />
+                  <Input
+                    value={bonus.description}
+                    onChange={(e) => updateBonus(i, "description", e.target.value)}
+                    className="bg-secondary border-border text-xs h-8"
+                    placeholder="Description"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-casino-gold/30 bg-casino-gold/5 p-4">
+            <p className="text-xs font-bold mb-1">💡 How It Works</p>
+            <ul className="text-xs text-muted-foreground space-y-1">
+              <li>• The banner adapts automatically based on your <span className="text-casino-gold font-semibold">Wallet Mode</span> setting</li>
+              <li>• Mock mode shows the development/early access message</li>
+              <li>• Real mode shows the welcome message + bonus picker on signup</li>
+              <li>• Changes are reflected immediately on login & signup screens</li>
+            </ul>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 function DepositsWithdrawalsPanel({ onBack }: { onBack: () => void }) {
   const [settings, setSettings] = useState<any>({});
   const [loading, setLoading] = useState(true);
