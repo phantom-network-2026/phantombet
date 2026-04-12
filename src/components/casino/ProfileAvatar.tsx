@@ -45,15 +45,17 @@ export function ProfileAvatar({
     ? BORDER_STYLES[borderStyle] || ""
     : "";
 
-  const ringClass = borderAnim ? `${borderAnim} ring-2` : "ring-1 ring-border";
+  const hasGlow = !!borderAnim;
 
   return (
-    <div className={`relative ${sizeClasses[size]} rounded-full flex items-center justify-center font-bold bg-secondary text-casino-gold overflow-hidden ${ringClass} ${hasAnimatedAvatar ? "animate-pulse" : ""} ${className}`}>
-      {avatarUrl ? (
-        <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-      ) : (
-        username?.charAt(0).toUpperCase() || "?"
-      )}
+    <div className={`relative ${className}`} style={{ padding: hasGlow ? 3 : 0 }}>
+      <div className={`${sizeClasses[size]} rounded-full flex items-center justify-center font-bold bg-secondary text-casino-gold overflow-hidden ring-1 ring-border ${hasAnimatedAvatar ? "animate-pulse" : ""} ${hasGlow ? borderAnim : ""}`}>
+        {avatarUrl ? (
+          <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+        ) : (
+          username?.charAt(0).toUpperCase() || "?"
+        )}
+      </div>
       {hasAnimatedAvatar && (
         <Sparkles className={`absolute ${sparkleSize[size]} text-casino-gold animate-spin`} style={{ animationDuration: "3s" }} />
       )}
