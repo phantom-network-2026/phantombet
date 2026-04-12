@@ -753,8 +753,12 @@ function useAnalytics() {
 // ── Wallet Mode Panel ───────────────────────────────────────────
 function WalletModePanel({ onBack }: { onBack: () => void }) {
   const [mockMode, setMockMode] = useState(true);
+  const [requireApproval, setRequireApproval] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [pendingWithdrawals, setPendingWithdrawals] = useState<any[]>([]);
+  const [loadingWds, setLoadingWds] = useState(false);
+  const [processingId, setProcessingId] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -763,28 +767,88 @@ function WalletModePanel({ onBack }: { onBack: () => void }) {
         .select("value")
         .eq("key", "wallet_mode")
         .single();
-      if (data) setMockMode((data.value as any)?.mock === true);
+      if (data) {
+        const v = data.value as any;
+        setMockMode(v?.mock === true);
+        setRequireApproval(v?.require_withdrawal_approval === true);
+      }
       setLoading(false);
     })();
+    fetchPendingWithdrawals();
   }, []);
 
-  const toggleMode = async (isMock: boolean) => {
+  const fetchPendingWithdrawals = async () => {
+    setLoadingWds(true);
+    const { data } = await supabase
+      .from("withdrawals")
+      .select("*")
+      .eq("status", "pending_approval")
+      .order("created_at", { ascending: false });
+    setPendingWithdrawals(data || []);
+    setLoadingWds(false);
+  };
+
+  const saveSetting = async (key: string, value: any) => {
     setSaving(true);
-    const value = { mock: isMock };
     const { data: existing } = await supabase
       .from("site_settings")
-      .select("id")
+      .select("id, value")
       .eq("key", "wallet_mode")
       .single();
 
+    const currentValue = (existing?.value as any) || {};
+    const newValue = { ...currentValue, [key]: value };
+
     if (existing) {
-      await supabase.from("site_settings").update({ value }).eq("key", "wallet_mode");
+      await supabase.from("site_settings").update({ value: newValue }).eq("key", "wallet_mode");
     } else {
-      await supabase.from("site_settings").insert({ key: "wallet_mode", value });
+      await supabase.from("site_settings").insert({ key: "wallet_mode", value: newValue });
     }
-    setMockMode(isMock);
     setSaving(false);
+  };
+
+  const toggleMode = async (isMock: boolean) => {
+    await saveSetting("mock", isMock);
+    setMockMode(isMock);
     toast.success(isMock ? "Switched to Mock Funds mode" : "Switched to Real Crypto mode");
+  };
+
+  const toggleApproval = async (needsApproval: boolean) => {
+    await saveSetting("require_withdrawal_approval", needsApproval);
+    setRequireApproval(needsApproval);
+    toast.success(needsApproval ? "Withdrawal approval required" : "Withdrawals will auto-process");
+  };
+
+  const handleApproveWithdrawal = async (id: string) => {
+    setProcessingId(id);
+    try {
+      const { data, error } = await supabase.functions.invoke("process-withdrawal", {
+        body: { withdrawalId: id, adminAction: "approve" },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success("Withdrawal approved and processing");
+      fetchPendingWithdrawals();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to approve");
+    }
+    setProcessingId(null);
+  };
+
+  const handleDenyWithdrawal = async (id: string) => {
+    setProcessingId(id);
+    try {
+      const { data, error } = await supabase.functions.invoke("process-withdrawal", {
+        body: { withdrawalId: id, adminAction: "deny" },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success("Withdrawal denied — funds refunded");
+      fetchPendingWithdrawals();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to deny");
+    }
+    setProcessingId(null);
   };
 
   return (
@@ -800,6 +864,7 @@ function WalletModePanel({ onBack }: { onBack: () => void }) {
         <p className="text-muted-foreground text-sm">Loading...</p>
       ) : (
         <div className="space-y-4 max-w-lg">
+          {/* Mode Toggle */}
           <div className="rounded-xl border border-border bg-card p-5 space-y-4">
             <div className="flex items-center justify-between">
               <div>
@@ -827,12 +892,34 @@ function WalletModePanel({ onBack }: { onBack: () => void }) {
               ) : (
                 <ul className="text-xs text-muted-foreground space-y-1">
                   <li>• Deposits via <span className="text-casino-green font-semibold">USDT (TRC-20)</span> auto-credited</li>
-                  <li>• Withdrawals processed <span className="font-semibold">automatically</span> from master wallet</li>
+                  <li>• Withdrawals {requireApproval ? <span className="text-casino-gold font-semibold">require admin approval</span> : <span className="font-semibold">processed automatically</span>}</li>
                   <li>• Minimum deposit: $5 · Minimum withdrawal: $10</li>
                   <li>• <span className="text-destructive font-semibold">Real money is at stake!</span></li>
                 </ul>
               )}
             </div>
+          </div>
+
+          {/* Withdrawal Approval Toggle */}
+          <div className="rounded-xl border border-border bg-card p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-display font-bold text-sm">Withdrawal Approval</p>
+                <p className={`text-xs font-semibold mt-0.5 ${requireApproval ? "text-casino-gold" : "text-casino-green"}`}>
+                  {requireApproval ? "🔒 Admin Approval Required" : "⚡ Auto-Process (No Approval)"}
+                </p>
+              </div>
+              <Switch
+                checked={requireApproval}
+                onCheckedChange={toggleApproval}
+                disabled={saving}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {requireApproval
+                ? "All withdrawal requests will be held for admin review. You must manually approve or deny each request below."
+                : "Withdrawals are processed automatically from the master wallet — no admin intervention needed."}
+            </p>
           </div>
 
           <div className={`rounded-xl border p-4 ${mockMode ? "border-casino-gold/30 bg-casino-gold/5" : "border-destructive/30 bg-destructive/5"}`}>
@@ -843,6 +930,59 @@ function WalletModePanel({ onBack }: { onBack: () => void }) {
                 : "The platform is processing real cryptocurrency. Ensure your master wallet has sufficient USDT and TRX for gas fees."}
             </p>
           </div>
+
+          {/* Pending Withdrawals */}
+          {requireApproval && (
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+              <div className="px-5 py-3 bg-secondary/60 flex items-center justify-between">
+                <h3 className="font-display text-sm font-bold">Pending Withdrawals</h3>
+                <Button variant="ghost" size="sm" onClick={fetchPendingWithdrawals} className="h-7 px-2">
+                  <RefreshCw className="h-3 w-3" />
+                </Button>
+              </div>
+              <div className="p-4">
+                {loadingWds ? (
+                  <p className="text-xs text-muted-foreground">Loading...</p>
+                ) : pendingWithdrawals.length === 0 ? (
+                  <p className="text-xs text-muted-foreground text-center py-4">No pending withdrawal requests</p>
+                ) : (
+                  <div className="space-y-3">
+                    {pendingWithdrawals.map((wd) => (
+                      <div key={wd.id} className="rounded-lg border border-border bg-secondary/30 p-3 space-y-2">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-display text-sm font-bold text-casino-gold">${wd.amount.toFixed(2)}</p>
+                            <p className="text-[10px] text-muted-foreground font-mono truncate max-w-[200px]">{wd.destination_address}</p>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground">{new Date(wd.created_at).toLocaleDateString()}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1 text-xs border-casino-green/50 text-casino-green hover:bg-casino-green/10"
+                            onClick={() => handleApproveWithdrawal(wd.id)}
+                            disabled={processingId === wd.id}
+                          >
+                            {processingId === wd.id ? "..." : "✓ Approve"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1 text-xs border-destructive/50 text-destructive hover:bg-destructive/10"
+                            onClick={() => handleDenyWithdrawal(wd.id)}
+                            disabled={processingId === wd.id}
+                          >
+                            {processingId === wd.id ? "..." : "✗ Deny"}
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
