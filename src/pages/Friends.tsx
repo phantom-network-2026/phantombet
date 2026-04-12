@@ -55,10 +55,10 @@ export default function Friends() {
         const { data: profs } = await supabase
           .from("profiles_public" as any)
           .select("user_id, username")
-          .in("user_id", Array.from(userIds));
+          .in("user_id", Array.from(userIds)) as { data: any[] | null };
         if (profs) {
           const map: Record<string, string> = {};
-          profs.forEach((p) => { map[p.user_id] = p.username || "Unknown"; });
+          profs.forEach((p: any) => { map[p.user_id] = p.username || "Unknown"; });
           setProfiles(map);
         }
       }
@@ -72,8 +72,8 @@ export default function Friends() {
       .select("user_id, username")
       .ilike("username", `%${searchQuery}%`)
       .neq("user_id", user.id)
-      .limit(10);
-    setSearchResults(data || []);
+      .limit(10) as { data: any[] | null };
+    setSearchResults((data || []) as any);
   };
 
   const sendRequest = async (targetId: string) => {
