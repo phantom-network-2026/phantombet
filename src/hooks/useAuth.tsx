@@ -5,6 +5,8 @@ import type { User, Session } from "@supabase/supabase-js";
 interface ProfileData {
   username: string;
   balance: number;
+  real_balance: number;
+  mock_balance: number;
   avatar_url: string | null;
   crypto_address: string | null;
   bio: string;
