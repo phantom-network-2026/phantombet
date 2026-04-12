@@ -416,6 +416,8 @@ export default function Profile() {
                 {style.price > 0 ? (
                   profile.border_style === style.id ? (
                     <p className="text-casino-green text-[10px]">Equipped</p>
+                  ) : profile.purchased_borders?.includes(style.id) ? (
+                    <p className="text-casino-green text-[10px]">Owned — Equip</p>
                   ) : (
                     <p className="text-casino-gold text-[10px]">${style.price}</p>
                   )
