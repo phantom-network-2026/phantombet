@@ -1,5 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.102.0";
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.102.0/cors";
+import * as secp256k1 from "https://esm.sh/@noble/secp256k1@2.1.0";
+import { keccak_256 } from "https://esm.sh/@noble/hashes@1.4.0/sha3";
+import { sha256 } from "https://esm.sh/@noble/hashes@1.4.0/sha256";
 
 const ENCRYPTION_KEY = Deno.env.get("TRON_ENCRYPTION_KEY")!;
 
@@ -11,6 +14,66 @@ function encrypt(text: string, key: string): string {
     encrypted[i] = textBytes[i] ^ keyBytes[i % keyBytes.length];
   }
   return btoa(String.fromCharCode(...encrypted));
+}
+
+function bytesToHex(bytes: Uint8Array): string {
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+const BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+function base58Encode(buffer: Uint8Array): string {
+  const digits = [0];
+  for (const byte of buffer) {
+    let carry = byte;
+    for (let j = 0; j < digits.length; j++) {
+      carry += digits[j] << 8;
+      digits[j] = carry % 58;
+      carry = (carry / 58) | 0;
+    }
+    while (carry > 0) {
+      digits.push(carry % 58);
+      carry = (carry / 58) | 0;
+    }
+  }
+  let result = "";
+  for (const byte of buffer) {
+    if (byte !== 0) break;
+    result += "1";
+  }
+  for (let i = digits.length - 1; i >= 0; i--) {
+    result += BASE58_ALPHABET[digits[i]];
+  }
+  return result;
+}
+
+function generateTronAddress(): { privateKey: string; address: string } {
+  // Generate random 32-byte private key
+  const privKeyBytes = secp256k1.utils.randomPrivateKey();
+  const privateKey = bytesToHex(privKeyBytes);
+
+  // Get uncompressed public key (65 bytes, starts with 0x04)
+  const pubKey = secp256k1.getPublicKey(privKeyBytes, false);
+  
+  // Keccak-256 of public key bytes (skip first byte 0x04)
+  const hash = keccak_256(pubKey.slice(1));
+  
+  // Take last 20 bytes, prepend 0x41 (TRON mainnet prefix)
+  const addressBytes = new Uint8Array(21);
+  addressBytes[0] = 0x41;
+  addressBytes.set(hash.slice(12), 1);
+  
+  // Base58Check encode: double SHA-256, take first 4 bytes as checksum
+  const firstHash = sha256(addressBytes);
+  const secondHash = sha256(firstHash);
+  const checksum = secondHash.slice(0, 4);
+  
+  const addressWithChecksum = new Uint8Array(25);
+  addressWithChecksum.set(addressBytes);
+  addressWithChecksum.set(checksum, 21);
+  
+  const address = base58Encode(addressWithChecksum);
+  
+  return { privateKey, address };
 }
 
 Deno.serve(async (req) => {
@@ -46,22 +109,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Generate address via Shasta testnet API (keys are network-agnostic, work on mainnet)
-    const generateRes = await fetch("https://api.shasta.trongrid.io/wallet/generateaddress", {
-      method: "GET",
-      headers: { "Accept": "application/json" },
-    });
-
-    if (!generateRes.ok) {
-      const body = await generateRes.text();
-      throw new Error(`TronGrid error: ${generateRes.status} - ${body}`);
-    }
-
-    const account = await generateRes.json();
-    const address = account.base58;
-    const privateKey = account.privateKey;
-
-    if (!address || !privateKey) throw new Error("Failed to generate address");
+    // Generate TRON address offline
+    const { privateKey, address } = generateTronAddress();
 
     const encryptedKey = encrypt(privateKey, ENCRYPTION_KEY);
 
