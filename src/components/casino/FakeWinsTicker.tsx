@@ -144,6 +144,7 @@ export function FakeWinsTicker() {
   // Load config from DB on mount
   useEffect(() => {
     fetchFakeWinsConfig().then((c) => {
+      usedUsernames = new Set();
       setConfig(c);
       setLoaded(true);
     });
