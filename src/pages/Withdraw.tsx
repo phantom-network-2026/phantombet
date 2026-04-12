@@ -61,9 +61,15 @@ export default function Withdraw() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      toast.success(`Withdrawal of $${Number(amount).toFixed(2)} processed! TX: ${data.txHash?.slice(0, 12)}...`);
-      await refreshProfile();
-      navigate("/");
+      if (data?.status === "pending_approval") {
+        toast.success("Withdrawal submitted for admin approval!");
+        await refreshProfile();
+        navigate("/");
+      } else {
+        toast.success(`Withdrawal of $${Number(amount).toFixed(2)} processed! TX: ${data.txHash?.slice(0, 12)}...`);
+        await refreshProfile();
+        navigate("/");
+      }
     } catch (err: any) {
       toast.error(err.message || "Withdrawal failed");
     }
