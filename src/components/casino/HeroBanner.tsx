@@ -28,7 +28,7 @@ export function HeroBanner() {
           ) : (
             <>
               <Button variant="gold" size="sm" onClick={() => navigate("/signup")}>
-                Sign Up To Claim Free Spins Or Up To $50 Welcome Bonus
+                Sign Up To Claim Free Spins Or Up To $50
               </Button>
               <Button variant="outline" size="sm" onClick={() => navigate("/login")}>
                 Log In
