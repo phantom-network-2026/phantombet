@@ -1559,6 +1559,10 @@ function GhostUsersPanel({ onBack }: { onBack: () => void }) {
 
   const addUsername = () => {
     if (!newUsername.trim()) return;
+    if (realUsernames.has(newUsername.trim().toLowerCase())) {
+      toast.error(`"${newUsername.trim()}" is a real user — cannot add as ghost`);
+      return;
+    }
     const updated = [...usernames, newUsername.trim()];
     save({ usernames: updated });
     setNewUsername("");
