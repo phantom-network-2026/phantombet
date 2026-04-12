@@ -5,7 +5,7 @@ export type StaffRole = "admin" | "moderator" | "staff" | null;
 const ROLE_CONFIG: Record<string, { icon: typeof Shield; prefix: string; colorClass: string; glowClass: string }> = {
   admin: {
     icon: Crown,
-    prefix: "OWNER",
+    prefix: "ADMINISTRATOR",
     colorClass: "text-red-400",
     glowClass: "drop-shadow-[0_0_6px_rgba(248,113,113,0.8)]",
   },

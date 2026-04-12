@@ -10,6 +10,7 @@ const PUBLIC_KEYS = [
   "fake_wins_config",
   "welcome_config",
   "ghost_users",
+  "panel_visibility",
 ];
 
 Deno.serve(async (req) => {

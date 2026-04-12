@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { LogOut, Shield, Menu, X, ArrowDownToLine, User, Gamepad2, Settings, ChevronDown, Wallet } from "lucide-react";
 import { FakeWinsTicker } from "./FakeWinsTicker";
@@ -9,10 +10,32 @@ import { ProfileAvatar } from "./ProfileAvatar";
 import logo from "@/assets/phantombet-logo.png";
 
 export function Header() {
-  const { user, profile, isAdmin, hasStaffAccess, signOut } = useAuth();
+  const { user, profile, isAdmin, isOwner, hasStaffAccess, signOut } = useAuth();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [adminExpanded, setAdminExpanded] = useState(false);
+  const [panelVis, setPanelVis] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (!hasStaffAccess && !isOwner) return;
+    (async () => {
+      try {
+        if (isOwner || isAdmin) {
+          // Admins/owners can read site_settings directly
+          const { data } = await supabase.from("site_settings").select("value").eq("key", "panel_visibility").maybeSingle();
+          if (data?.value) setPanelVis(data.value as Record<string, boolean>);
+        } else {
+          // Staff use public settings endpoint
+          const { data } = await supabase.functions.invoke("get-public-settings", { body: { keys: ["panel_visibility"] } });
+          if (data?.settings?.panel_visibility) setPanelVis(data.settings.panel_visibility);
+        }
+      } catch {}
+    })();
+  }, [hasStaffAccess, isOwner, isAdmin]);
+
+  const showAdminLink = isOwner || (panelVis.admin_panel_visible !== false);
+  const showCpanelLink = isOwner || (panelVis.cpanel_visible !== false);
+  const showSlotLink = isOwner || (panelVis.slot_panel_visible !== false);
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -40,7 +63,7 @@ export function Header() {
               <Button variant="pink" size="sm" onClick={() => navigate("/withdraw")}>
                 <ArrowDownToLine className="h-4 w-4 mr-1" /> Withdraw
               </Button>
-              {hasStaffAccess && (
+              {hasStaffAccess && showAdminLink && (
                 <Button variant="ghost" size="sm" onClick={() => navigate("/admin")} className="text-casino-pink">
                   <Shield className="h-4 w-4 mr-1" /> Admin
                 </Button>
@@ -125,7 +148,7 @@ export function Header() {
                   <ArrowDownToLine className="h-4 w-4 mr-1" /> Withdraw
                 </Button>
               </div>
-              {hasStaffAccess && (
+              {hasStaffAccess && (showAdminLink || showCpanelLink || showSlotLink) && (
                 <div className="space-y-1">
                   <Button
                     variant="ghost"
@@ -139,15 +162,21 @@ export function Header() {
                   </Button>
                   {adminExpanded && (
                     <div className="ml-6 space-y-1 border-l border-border pl-3">
-                      <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground" onClick={() => { navigate("/admin"); setMenuOpen(false); }}>
-                        <Shield className="h-3.5 w-3.5 mr-2" /> Admin Panel
-                      </Button>
-                      <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground" onClick={() => { navigate("/cpanel"); setMenuOpen(false); }}>
-                        <Settings className="h-3.5 w-3.5 mr-2" /> cPanel
-                      </Button>
-                      <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground" onClick={() => { navigate("/cpanel?tab=games"); setMenuOpen(false); }}>
-                        <Gamepad2 className="h-3.5 w-3.5 mr-2" /> Slot Panel
-                      </Button>
+                      {showAdminLink && (
+                        <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground" onClick={() => { navigate("/admin"); setMenuOpen(false); }}>
+                          <Shield className="h-3.5 w-3.5 mr-2" /> Admin Panel
+                        </Button>
+                      )}
+                      {showCpanelLink && (
+                        <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground" onClick={() => { navigate("/cpanel"); setMenuOpen(false); }}>
+                          <Settings className="h-3.5 w-3.5 mr-2" /> cPanel
+                        </Button>
+                      )}
+                      {showSlotLink && (
+                        <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground" onClick={() => { navigate("/cpanel?tab=games"); setMenuOpen(false); }}>
+                          <Gamepad2 className="h-3.5 w-3.5 mr-2" /> Slot Panel
+                        </Button>
+                      )}
                     </div>
                   )}
                 </div>
