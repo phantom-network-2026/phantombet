@@ -28,7 +28,7 @@ export default function Login() {
     <div className="min-h-screen gradient-casino-bg flex items-center justify-center p-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
-          <img src={logo} alt="PhantomBet" className="h-64 w-64 mx-auto mb-3" />
+          <img src={logo} alt="PhantomBet" className="h-96 w-96 mx-auto mb-3" />
           <h1 className="font-display text-3xl font-black text-gold">Welcome Back</h1>
           <p className="text-muted-foreground text-sm mt-1">Log in to your PhantomBet account</p>
         </div>
