@@ -1512,7 +1512,7 @@ function DepositsWithdrawalsPanel({ onBack }: { onBack: () => void }) {
 }
 
 // ── Main cPanel Page ────────────────────────────────────────────
-type ActivePanel = null | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "promotions" | "wallet-mode" | "deposits-withdrawals" | "welcome-config";
+type ActivePanel = null | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "promotions" | "wallet-mode" | "deposits-withdrawals" | "welcome-config" | "ghost-users";
 
 export default function CPanel() {
   const { isAdmin, loading, profile } = useAuth();
@@ -1555,6 +1555,7 @@ export default function CPanel() {
           {activePanel === "wallet-mode" && <WalletModePanel onBack={back} />}
           {activePanel === "deposits-withdrawals" && <DepositsWithdrawalsPanel onBack={back} />}
           {activePanel === "welcome-config" && <WelcomeConfigPanel onBack={back} />}
+          {activePanel === "ghost-users" && <GhostUsersPanel onBack={back} />}
         </div>
       </div>
     );
@@ -1624,6 +1625,7 @@ export default function CPanel() {
                 <ToolCard icon={<Activity className="h-6 w-6" />} label="Online Users" onClick={() => navigate("/admin")} />
                 <ToolCard icon={<UserCheck className="h-6 w-6" />} label="Friendships" onClick={() => setActivePanel("database")} />
                 <ToolCard icon={<MessageSquare className="h-6 w-6" />} label="Messages" onClick={() => setActivePanel("database")} />
+                <ToolCard icon={<Users className="h-6 w-6" />} label="Ghost Users" onClick={() => setActivePanel("ghost-users")} active={activePanel === "ghost-users"} />
               </div>
             </CpanelSection>
 
