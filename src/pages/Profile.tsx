@@ -128,10 +128,9 @@ export default function Profile() {
     const { error } = await supabase.functions.invoke("game-settle", {
       body: {
         userId: user.id,
-        game: "profile-upgrade",
-        betAmount: ANIMATED_AVATAR_PRICE,
-        result: "loss",
-        payout: 0,
+        amount: -ANIMATED_AVATAR_PRICE,
+        gameType: "profile-upgrade",
+        outcome: "purchase",
       },
     });
     if (error) { toast.error("Purchase failed"); return; }
@@ -160,10 +159,9 @@ export default function Profile() {
     const { error } = await supabase.functions.invoke("game-settle", {
       body: {
         userId: user.id,
-        game: "profile-upgrade",
-        betAmount: style.price,
-        result: "loss",
-        payout: 0,
+        amount: -style.price,
+        gameType: "profile-upgrade",
+        outcome: "purchase",
       },
     });
     if (error) { toast.error("Purchase failed"); return; }
