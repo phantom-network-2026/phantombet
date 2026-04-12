@@ -30,6 +30,7 @@ import PrizeReel from "./pages/PrizeReel.tsx";
 import CPanel from "./pages/CPanel.tsx";
 import PennyRoulette from "./pages/PennyRoulette.tsx";
 import Help from "./pages/Help.tsx";
+import Exchange from "./pages/Exchange.tsx";
 
 // New HTML5 games
 import ChickenCross from "./pages/games/ChickenCross.tsx";
@@ -94,6 +95,7 @@ const App = () => (
               <Route path="/cpanel" element={<CPanel />} />
               <Route path="/penny-roulette" element={<PennyRoulette />} />
               <Route path="/help" element={<Help />} />
+              <Route path="/exchange" element={<Exchange />} />
               {/* New HTML5 games */}
               <Route path="/chicken-cross" element={<ChickenCross />} />
               <Route path="/scratch-royale" element={<ScratchRoyale />} />
