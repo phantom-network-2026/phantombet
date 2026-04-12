@@ -1,16 +1,18 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, getLevel, getXpForLevel, getTitle, getTitleColor } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/casino/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   ArrowLeft, Trophy, Save, User, Link as LinkIcon,
-  Twitter, Instagram, MessageCircle, Globe, Sparkles, Crown, Camera, Circle,
+  Twitter, Instagram, MessageCircle, Globe, Sparkles, Crown, Camera, Circle, Star, Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 import { usePresence, getStatusColor, getStatusLabel, type AppearanceStatus } from "@/hooks/usePresence";
