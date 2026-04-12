@@ -19,8 +19,8 @@ export function HeroBanner() {
             </h2>
             <p className="text-[11px] md:text-sm text-foreground/80 mt-1 mb-3 max-w-[200px] md:max-w-none">Up to $50 welcome bonus or 50 free spins — no wagering requirements!</p>
           </div>
-          <div className="shrink-0 -mr-2 overflow-hidden" style={{ height: '10rem', width: '10rem' }}>
-            <img src={logo} alt="PhantomBet" className="w-full drop-shadow-lg" style={{ clipPath: 'inset(0 0 25% 0)' }} />
+          <div className="shrink-0 -mr-2 overflow-hidden" style={{ height: '8rem', width: '10rem' }}>
+            <img src={logo} alt="PhantomBet" className="w-full drop-shadow-lg" style={{ clipPath: 'inset(0 0 35% 0)' }} />
           </div>
         </div>
         <div className="flex gap-2">
