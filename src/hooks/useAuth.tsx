@@ -52,6 +52,7 @@ interface AuthContextType {
   profile: ProfileData | null;
   isAdmin: boolean;
   hasStaffAccess: boolean;
+  isMockMode: boolean;
   signUp: (email: string, password: string, username: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
