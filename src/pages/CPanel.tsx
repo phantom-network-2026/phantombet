@@ -1349,6 +1349,7 @@ export default function CPanel() {
           {activePanel === "game-probability" && <GameProbabilityWrapper onBack={back} />}
           {activePanel === "promotions" && <PromotionsWrapper onBack={back} />}
           {activePanel === "wallet-mode" && <WalletModePanel onBack={back} />}
+          {activePanel === "deposits-withdrawals" && <DepositsWithdrawalsPanel onBack={back} />}
         </div>
       </div>
     );
@@ -1396,6 +1397,16 @@ export default function CPanel() {
                   <StatCard icon={<UserCheck className="h-4 w-4" />} label="Friendships" value={stats.activeFriendships} color="text-blue-400" />
                 </div>
               )}
+            </CpanelSection>
+
+            {/* ── Deposits & Withdrawals ─────────────── */}
+            <CpanelSection title="Deposits & Withdrawals" icon={<CreditCard className="h-5 w-5" />}>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1">
+                <ToolCard icon={<CreditCard className="h-6 w-6" />} label="Payment Hub" onClick={() => setActivePanel("deposits-withdrawals")} />
+                <ToolCard icon={<Shield className="h-6 w-6" />} label="Withdrawal Approval" onClick={() => setActivePanel("deposits-withdrawals")} />
+                <ToolCard icon={<Wallet className="h-6 w-6" />} label="Wallet Mode" onClick={() => setActivePanel("wallet-mode")} />
+                <ToolCard icon={<Activity className="h-6 w-6" />} label="Transaction Log" onClick={() => setActivePanel("deposits-withdrawals")} />
+              </div>
             </CpanelSection>
 
             {/* ── User Management ────────────────────── */}
