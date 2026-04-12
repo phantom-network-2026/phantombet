@@ -51,12 +51,11 @@ Deno.serve(async (req) => {
 
     // Generate new TRON address via TronGrid API
     const generateRes = await fetch("https://api.trongrid.io/wallet/generateaddress", {
-      method: "POST",
+      method: "GET",
       headers: {
-        "Content-Type": "application/json",
+        "Accept": "application/json",
         "TRON-PRO-API-KEY": TRONGRID_API_KEY,
       },
-      body: JSON.stringify({}),
     });
 
     if (!generateRes.ok) {
