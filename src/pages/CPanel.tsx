@@ -1517,11 +1517,19 @@ function GhostUsersPanel({ onBack }: { onBack: () => void }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [newUsername, setNewUsername] = useState("");
+  const [realUsernames, setRealUsernames] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase.from("site_settings").select("value").eq("key", "ghost_users").single();
-      if (data) setConfig(data.value as any || {});
+      const [settingsRes, profilesRes] = await Promise.all([
+        supabase.from("site_settings").select("value").eq("key", "ghost_users").single(),
+        supabase.from("profiles").select("username").not("username", "is", null),
+      ]);
+      if (settingsRes.data) setConfig(settingsRes.data.value as any || {});
+      if (profilesRes.data) {
+        const names = new Set(profilesRes.data.map((p: any) => (p.username as string).toLowerCase()));
+        setRealUsernames(names);
+      }
       setLoading(false);
     })();
   }, []);
