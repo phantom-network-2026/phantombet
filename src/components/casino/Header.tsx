@@ -2,10 +2,10 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { LogOut, Shield, Menu, X, ArrowDownToLine, User, Gamepad2, Settings, ChevronDown, Wallet } from "lucide-react";
 import { FakeWinsTicker } from "./FakeWinsTicker";
 import { BalanceDisplay } from "./BalanceDisplay";
+import { ProfileAvatar } from "./ProfileAvatar";
 import logo from "@/assets/phantombet-logo.png";
 
 export function Header() {
@@ -43,10 +43,14 @@ export function Header() {
                 <Wallet className="h-5 w-5" />
               </Button>
               <Button variant="ghost" size="sm" onClick={() => navigate("/profile")} className="text-casino-gold p-1">
-                <Avatar className="h-7 w-7">
-                  {profile?.avatar_url && <AvatarImage src={profile.avatar_url} />}
-                  <AvatarFallback className="bg-secondary text-casino-gold text-xs">{profile?.username?.charAt(0).toUpperCase() || "?"}</AvatarFallback>
-                </Avatar>
+                <ProfileAvatar
+                  avatarUrl={profile?.avatar_url}
+                  username={profile?.username}
+                  borderStyle={profile?.border_style}
+                  hasAnimatedBorder={profile?.has_animated_border}
+                  hasAnimatedAvatar={profile?.has_animated_avatar}
+                  size="sm"
+                />
               </Button>
               <Button variant="ghost" size="sm" onClick={signOut}>
                 <LogOut className="h-4 w-4" />
@@ -54,10 +58,10 @@ export function Header() {
             </>
           ) : (
             <>
-              <Button variant="ghost" size="sm" onClick={() => navigate("/login")}>
+              <Button variant="ghost" size="sm" className="text-xs h-8 px-2" onClick={() => navigate("/login")}>
                 Log In
               </Button>
-              <Button variant="gold" size="sm" onClick={() => navigate("/signup")}>
+              <Button variant="gold" size="sm" className="text-xs h-8 px-3" onClick={() => navigate("/signup")}>
                 Sign Up
               </Button>
             </>
@@ -73,10 +77,14 @@ export function Header() {
                 <Wallet className="h-5 w-5" />
               </button>
               <button onClick={() => navigate("/profile")}>
-                <Avatar className="h-7 w-7">
-                  {profile?.avatar_url && <AvatarImage src={profile.avatar_url} />}
-                  <AvatarFallback className="bg-secondary text-casino-gold text-xs">{profile?.username?.charAt(0).toUpperCase() || "?"}</AvatarFallback>
-                </Avatar>
+                <ProfileAvatar
+                  avatarUrl={profile?.avatar_url}
+                  username={profile?.username}
+                  borderStyle={profile?.border_style}
+                  hasAnimatedBorder={profile?.has_animated_border}
+                  hasAnimatedAvatar={profile?.has_animated_avatar}
+                  size="sm"
+                />
               </button>
             </>
           )}
