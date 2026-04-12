@@ -14,7 +14,7 @@ export function HeroBanner() {
         <h2 className="font-display text-2xl md:text-4xl font-black text-gold leading-tight">
           WIN BIG<br />AT PHANTOMBET
         </h2>
-        <p className="text-sm text-foreground/80 mt-1 mb-3">Up to $500 welcome bonus!</p>
+        <p className="text-sm text-foreground/80 mt-1 mb-3">Up to $50 welcome bonus or 50 free spins — no wagering requirements!</p>
         <div className="flex gap-2">
           {user ? (
             <>
