@@ -93,6 +93,7 @@ const App = () => (
               <Route path="/prize-reel" element={<PrizeReel />} />
               <Route path="/cpanel" element={<CPanel />} />
               <Route path="/penny-roulette" element={<PennyRoulette />} />
+              <Route path="/help" element={<Help />} />
               {/* New HTML5 games */}
               <Route path="/chicken-cross" element={<ChickenCross />} />
               <Route path="/scratch-royale" element={<ScratchRoyale />} />
