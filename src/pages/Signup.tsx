@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import WelcomeBanner from "@/components/casino/WelcomeBanner";
 import logo from "@/assets/phantombet-logo.png";
 
 export default function Signup() {
@@ -12,6 +13,7 @@ export default function Signup() {
   const [username, setUsername] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [selectedBonus, setSelectedBonus] = useState("");
   const { signUp } = useAuth();
   const navigate = useNavigate();
 
@@ -34,16 +36,7 @@ export default function Signup() {
           <p className="text-muted-foreground text-sm mt-1">Create your account & start winning</p>
         </div>
 
-        {/* Early access banner */}
-        <div className="rounded-xl border border-[hsl(var(--casino-gold))/0.3] bg-[hsl(var(--casino-gold))/0.08] p-4 space-y-2">
-          <p className="text-sm font-bold text-[hsl(var(--casino-gold))]">🚧 Early Access — Development Mode</p>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            PhantomBet is still in development. Real deposits are not available yet. Every new account receives <span className="text-[hsl(var(--casino-gold))] font-bold">$100 in mock funds</span> to explore our games!
-          </p>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            🎁 <span className="text-[hsl(var(--casino-green))] font-semibold">Loyal members who register now will receive a free 3-month VIP subscription on launch day!</span>
-          </p>
-        </div>
+        <WelcomeBanner variant="signup" onBonusSelect={setSelectedBonus} selectedBonus={selectedBonus} />
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -60,7 +53,7 @@ export default function Signup() {
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" variant="gold" className="w-full" disabled={loading}>
-            {loading ? "Creating account..." : "Sign Up & Get $100 Free"}
+            {loading ? "Creating account..." : "Sign Up"}
           </Button>
         </form>
 
