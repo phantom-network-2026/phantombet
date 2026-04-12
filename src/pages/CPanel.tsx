@@ -2007,7 +2007,7 @@ function GhostUsersPanel({ onBack }: { onBack: () => void }) {
 type ActivePanel = null | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "promotions" | "wallet-mode" | "deposits-withdrawals" | "welcome-config" | "ghost-users";
 
 export default function CPanel() {
-  const { isAdmin, loading, profile } = useAuth();
+  const { isAdmin, isOwner, loading, profile } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get("tab");
@@ -2023,7 +2023,13 @@ export default function CPanel() {
   }, [tabParam]);
 
   useEffect(() => {
-    if (!loading && !isAdmin) navigate("/");
+    if (!loading && !isAdmin) { navigate("/"); return; }
+    if (isAdmin && !isOwner) {
+      supabase.from("site_settings").select("value").eq("key", "panel_visibility").maybeSingle().then(({ data }) => {
+        const vis = (data?.value as Record<string, boolean>) || {};
+        if (vis.cpanel_access === false) navigate("/");
+      });
+    }
   }, [isAdmin, loading]);
 
   if (loading) return <div className="min-h-screen gradient-casino-bg flex items-center justify-center"><p>Loading...</p></div>;
