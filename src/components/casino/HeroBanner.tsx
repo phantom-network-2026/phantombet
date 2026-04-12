@@ -26,14 +26,14 @@ export function HeroBanner() {
               </Button>
             </>
           ) : (
-            <>
-              <Button variant="gold" size="sm" onClick={() => navigate("/signup")}>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="gold" size="sm" className="text-xs px-3 py-1.5 h-auto" onClick={() => navigate("/signup")}>
                 Sign Up To Claim Free Spins Or Up To $50
               </Button>
-              <Button variant="outline" size="sm" onClick={() => navigate("/login")}>
+              <Button variant="outline" size="sm" className="text-xs px-3 py-1.5 h-auto" onClick={() => navigate("/login")}>
                 Log In
               </Button>
-            </>
+            </div>
           )}
         </div>
       </div>
