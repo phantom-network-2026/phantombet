@@ -5,6 +5,8 @@ import type { User, Session } from "@supabase/supabase-js";
 interface ProfileData {
   username: string;
   balance: number;
+  real_balance: number;
+  mock_balance: number;
   avatar_url: string | null;
   crypto_address: string | null;
   bio: string;
@@ -50,6 +52,7 @@ interface AuthContextType {
   profile: ProfileData | null;
   isAdmin: boolean;
   hasStaffAccess: boolean;
+  isMockMode: boolean;
   signUp: (email: string, password: string, username: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -65,29 +68,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<AuthContextType["profile"]>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [hasStaffAccess, setHasStaffAccess] = useState(false);
+  const [isMockMode, setIsMockMode] = useState(true);
+
+  // Fetch wallet mode once on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await supabase.functions.invoke("get-public-settings", {
+          body: { keys: ["wallet_mode"] },
+        });
+        if (data?.settings?.wallet_mode) {
+          setIsMockMode(data.settings.wallet_mode.mock !== false);
+        }
+      } catch {}
+    })();
+  }, []);
 
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
-      .select("username, balance, avatar_url, crypto_address, withdrawal_address, bio, biggest_win, biggest_win_game, social_links, has_animated_avatar, has_animated_border, border_style, xp, purchased_borders")
+      .select("username, balance, real_balance, avatar_url, crypto_address, withdrawal_address, bio, biggest_win, biggest_win_game, social_links, has_animated_avatar, has_animated_border, border_style, xp, purchased_borders")
       .eq("user_id", userId)
       .single();
-    if (data) setProfile({
-      username: data.username || "",
-      balance: Number(data.balance),
-      avatar_url: data.avatar_url,
-      crypto_address: data.crypto_address,
-      withdrawal_address: data.withdrawal_address,
-      bio: (data as any).bio || "",
-      biggest_win: Number((data as any).biggest_win) || 0,
-      biggest_win_game: (data as any).biggest_win_game || "",
-      social_links: (data as any).social_links || {},
-      has_animated_avatar: (data as any).has_animated_avatar || false,
-      has_animated_border: (data as any).has_animated_border || false,
-      border_style: (data as any).border_style || "none",
-      xp: Number((data as any).xp) || 0,
-      purchased_borders: (data as any).purchased_borders || [],
-    });
+    if (data) {
+      const mockBal = Number(data.balance);
+      const realBal = Number((data as any).real_balance) || 0;
+      setProfile({
+        username: data.username || "",
+        balance: isMockMode ? mockBal : realBal,
+        mock_balance: mockBal,
+        real_balance: realBal,
+        avatar_url: data.avatar_url,
+        crypto_address: data.crypto_address,
+        withdrawal_address: data.withdrawal_address,
+        bio: (data as any).bio || "",
+        biggest_win: Number((data as any).biggest_win) || 0,
+        biggest_win_game: (data as any).biggest_win_game || "",
+        social_links: (data as any).social_links || {},
+        has_animated_avatar: (data as any).has_animated_avatar || false,
+        has_animated_border: (data as any).has_animated_border || false,
+        border_style: (data as any).border_style || "none",
+        xp: Number((data as any).xp) || 0,
+        purchased_borders: (data as any).purchased_borders || [],
+      });
+    }
 
     const { data: roles } = await supabase
       .from("user_roles")
@@ -137,7 +161,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (username: string, password: string) => {
     try {
-      // Resolve username to email via edge function
       const { data: fnData, error: fnError } = await supabase.functions.invoke("resolve-username", {
         body: { username },
       });
@@ -159,7 +182,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, profile, isAdmin, hasStaffAccess, signUp, signIn, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ user, session, loading, profile, isAdmin, hasStaffAccess, isMockMode, signUp, signIn, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );
