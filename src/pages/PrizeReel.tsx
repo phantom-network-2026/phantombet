@@ -352,26 +352,39 @@ function PrizeReelInner() {
     setShowSplash(false);
     setWonPrize(null);
 
-    const prize = pickPrize(isLoyaltySpin);
-    // Find the prize index on the reel strip
-    const prizeIdx = REEL_STRIP.findIndex(p => p.label === prize.label);
-    setTargetIndex(prizeIdx >= 0 ? prizeIdx : 0);
-    setWonPrize(prize);
-
-    // Save to database
     try {
-      await supabase.from("daily_spins").insert({
-        user_id: user.id,
-        prize_type: prize.type,
-        prize_value: isLoyaltySpin ? prize.value * 2 : prize.value,
-        prize_detail: prize.label + (isLoyaltySpin ? " (x2 Loyalty)" : ""),
-        is_loyalty_spin: isLoyaltySpin,
-        streak_count: streak + 1,
+      // Use server-side RPC for spin
+      const { data, error } = await supabase.rpc("perform_daily_spin" as any, {
+        p_user_id: user.id,
       });
+
+      if (error) {
+        toast.error(error.message || "Spin failed");
+        setSpinning(false);
+        return;
+      }
+
+      const result = Array.isArray(data) ? data[0] : data;
+      // Map server result to a display prize
+      const displayPrize: Prize = {
+        label: result.prize_detail || "Prize",
+        type: "free_spin",
+        value: Number(result.prize_value),
+        detail: result.prize_detail || "",
+        icon: "🎰",
+        color: "hsl(43,80%,50%)",
+        weight: 1,
+      };
+
+      const prizeIdx = REEL_STRIP.findIndex(p => p.label === displayPrize.label);
+      setTargetIndex(prizeIdx >= 0 ? prizeIdx : Math.floor(Math.random() * REEL_STRIP.length));
+      setWonPrize(displayPrize);
     } catch (e) {
-      console.error("Failed to save spin:", e);
+      console.error("Failed to spin:", e);
+      toast.error("Spin failed. Please try again.");
+      setSpinning(false);
     }
-  }, [user, spinning, canSpin, isLoyaltySpin, streak]);
+  }, [user, spinning, canSpin]);
 
   const onReelComplete = useCallback(() => {
     setSpinning(false);
