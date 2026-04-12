@@ -16,6 +16,7 @@ interface ProfileData {
   border_style: string;
   withdrawal_address: string | null;
   xp: number;
+  purchased_borders: string[];
 }
 
 export function getLevel(xp: number): number {
@@ -68,7 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
-      .select("username, balance, avatar_url, crypto_address, withdrawal_address, bio, biggest_win, biggest_win_game, social_links, has_animated_avatar, has_animated_border, border_style, xp")
+      .select("username, balance, avatar_url, crypto_address, withdrawal_address, bio, biggest_win, biggest_win_game, social_links, has_animated_avatar, has_animated_border, border_style, xp, purchased_borders")
       .eq("user_id", userId)
       .single();
     if (data) setProfile({
@@ -85,6 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       has_animated_border: (data as any).has_animated_border || false,
       border_style: (data as any).border_style || "none",
       xp: Number((data as any).xp) || 0,
+      purchased_borders: (data as any).purchased_borders || [],
     });
 
     const { data: roles } = await supabase

@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN purchased_borders text[] NOT NULL DEFAULT '{}'::text[];

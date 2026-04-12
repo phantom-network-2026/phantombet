@@ -312,6 +312,7 @@ export type Database = {
           has_animated_avatar: boolean | null
           has_animated_border: boolean | null
           id: string
+          purchased_borders: string[]
           social_links: Json | null
           updated_at: string
           user_id: string
@@ -331,6 +332,7 @@ export type Database = {
           has_animated_avatar?: boolean | null
           has_animated_border?: boolean | null
           id?: string
+          purchased_borders?: string[]
           social_links?: Json | null
           updated_at?: string
           user_id: string
@@ -350,6 +352,7 @@ export type Database = {
           has_animated_avatar?: boolean | null
           has_animated_border?: boolean | null
           id?: string
+          purchased_borders?: string[]
           social_links?: Json | null
           updated_at?: string
           user_id?: string
