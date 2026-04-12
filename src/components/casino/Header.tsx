@@ -20,10 +20,10 @@ export function Header() {
       <div className="container flex h-14 items-center justify-between">
         <Link to="/" className="flex items-center gap-1.5 shrink min-w-0">
           <div className="overflow-hidden shrink-0 rounded-full" style={{ height: 32, width: 32 }}>
-            <img src={logo} alt="PhantomBet ghost" className="w-full h-auto" style={{ marginBottom: '-30%' }} />
+            <img src={logo} alt="PhantomBet ghost" className="block w-full h-auto" style={{ marginBottom: '-30%' }} />
           </div>
-          <div className="overflow-hidden shrink-0" style={{ height: 16, width: 120 }}>
-            <img src={logo} alt="PhantomBet" className="w-full h-auto" style={{ marginTop: '-74%' }} />
+          <div className="overflow-hidden shrink-0" style={{ height: 22, width: 138 }}>
+            <img src={logo} alt="PhantomBet" className="block w-full h-auto max-w-none" style={{ transform: 'translateY(-68%)' }} />
           </div>
         </Link>
 
