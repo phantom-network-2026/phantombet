@@ -4,7 +4,7 @@ import { BottomNav } from "@/components/casino/BottomNav";
 import { AuthGuard } from "@/components/casino/AuthGuard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowDownUp, TrendingUp, TrendingDown, Minus, Search } from "lucide-react";
+import { ArrowDownUp, TrendingUp, TrendingDown, Minus, Search, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface CryptoAsset {
@@ -77,6 +77,27 @@ export default function Exchange() {
             <h1 className="font-display text-2xl font-black text-foreground">Exchange</h1>
             <p className="text-xs text-muted-foreground mt-0.5">Trade crypto to USDT instantly</p>
           </div>
+
+          {/* Coming soon banner */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="rounded-xl border border-[hsl(var(--casino-gold))/0.25] bg-[hsl(var(--casino-gold))/0.06] p-4 flex items-center gap-3"
+          >
+            <motion.div
+              animate={{ rotate: [0, 10, -10, 0] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              className="shrink-0 rounded-lg bg-[hsl(var(--casino-gold))/0.12] p-2"
+            >
+              <Clock className="h-5 w-5 text-[hsl(var(--casino-gold))]" />
+            </motion.div>
+            <div>
+              <p className="text-sm font-bold text-[hsl(var(--casino-gold))]">Exchange — Coming Soon</p>
+              <p className="text-[11px] text-muted-foreground leading-relaxed mt-0.5">
+                Swap between cryptocurrencies and USDT directly on PhantomBet. This feature is currently under development.
+              </p>
+            </div>
+          </motion.div>
 
           {/* Swap card */}
           <AnimatePresence mode="wait">
@@ -182,16 +203,12 @@ export default function Exchange() {
                         </div>
                       ))
                     : filtered.map((crypto, i) => (
-                        <motion.button
+                        <motion.div
                           key={crypto.id}
                           initial={{ opacity: 0, y: 8 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: i * 0.03 }}
-                          onClick={() => {
-                            setSelected(crypto);
-                            setAmount("");
-                          }}
-                          className="w-full rounded-xl bg-card border border-border hover:border-[hsl(var(--casino-gold))/0.4] p-4 flex items-center gap-3 transition-all duration-200 group"
+                          className="w-full rounded-xl bg-card border border-border p-4 flex items-center gap-3 opacity-60 cursor-not-allowed"
                         >
                           <div className="h-10 w-10 rounded-full bg-gradient-to-br from-secondary to-secondary/60 flex items-center justify-center text-lg font-bold text-foreground shrink-0 group-hover:from-[hsl(var(--casino-gold))/0.2] group-hover:to-[hsl(var(--casino-gold))/0.05] transition-all">
                             {crypto.icon}
@@ -221,7 +238,7 @@ export default function Exchange() {
                               {Math.abs(crypto.change24h).toFixed(2)}%
                             </div>
                           </div>
-                        </motion.button>
+                        </motion.div>
                       ))}
                   {!loading && filtered.length === 0 && (
                     <p className="text-center text-sm text-muted-foreground py-8">No coins found</p>
