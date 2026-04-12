@@ -8,6 +8,7 @@ const PUBLIC_KEYS = [
   "promotions_config",
   "wallet_mode",
   "fake_wins_config",
+  "welcome_config",
 ];
 
 Deno.serve(async (req) => {
