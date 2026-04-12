@@ -8,7 +8,7 @@ const navItems = [
   { icon: Dice5, label: "Games", path: "/games", requiresAuth: false },
   { icon: Users, label: "Friends", path: "/friends", requiresAuth: true },
   { icon: Trophy, label: "Promos", path: "/promotions", requiresAuth: true },
-  { icon: Search, label: "Search", path: "/search", requiresAuth: true },
+  { icon: HelpCircle, label: "Help", path: "/help", requiresAuth: false },
 ];
 
 export function BottomNav() {
