@@ -1,6 +1,5 @@
 import { Wallet } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useUsdtRate } from "@/hooks/useUsdtRate";
 
 interface BalanceDisplayProps {
   size?: "sm" | "md" | "lg";
@@ -10,15 +9,13 @@ interface BalanceDisplayProps {
 
 export function BalanceDisplay({ size = "md", className = "", showIcon = true }: BalanceDisplayProps) {
   const { profile, isMockMode } = useAuth();
-  const { rate } = useUsdtRate();
 
-  const balance = profile?.balance ?? 0;
-  const usdValue = balance * rate;
+  const balance = isMockMode ? (profile?.balance ?? 0) : (profile?.real_balance ?? 0);
 
   const sizeClasses = {
-    sm: "text-xs gap-1 px-2 py-0.5",
-    md: "text-sm gap-1.5 px-2.5 py-1",
-    lg: "text-base gap-2 px-3 py-1.5",
+    sm: "text-xs gap-1.5 px-2.5 py-1",
+    md: "text-sm gap-1.5 px-3 py-1.5",
+    lg: "text-base gap-2 px-3.5 py-2",
   };
 
   const iconSize = {
@@ -28,25 +25,14 @@ export function BalanceDisplay({ size = "md", className = "", showIcon = true }:
   };
 
   return (
-    <div className={`flex items-center rounded-lg bg-secondary font-display font-bold ${sizeClasses[size]} ${className}`}>
+    <div className={`flex items-center rounded-full bg-secondary/80 border border-border/50 font-display font-bold shrink-0 ${sizeClasses[size]} ${className}`}>
       {showIcon && <Wallet className={`${iconSize[size]} text-casino-gold`} />}
-      <span className="text-casino-gold">
-        {balance.toFixed(2)} {isMockMode ? "MC" : "USDT"}
+      <span className="text-casino-gold whitespace-nowrap">
+        ${balance.toFixed(2)}
       </span>
-      <span className="text-muted-foreground font-normal">
-        ≈ ${usdValue.toFixed(2)}
+      <span className="text-muted-foreground font-normal text-[0.7em] whitespace-nowrap">
+        {isMockMode ? "MOCK" : "USDT"}
       </span>
-    </div>
-  );
-}
-
-export function ExchangeRateBadge() {
-  const { rate, loading } = useUsdtRate();
-
-  return (
-    <div className="flex items-center gap-1 text-xs text-muted-foreground bg-secondary/50 rounded px-1.5 py-0.5">
-      <span className="text-green-400 animate-pulse">●</span>
-      <span>1 USDT = ${loading ? "..." : rate.toFixed(4)}</span>
     </div>
   );
 }
