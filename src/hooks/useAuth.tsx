@@ -15,6 +15,31 @@ interface ProfileData {
   has_animated_border: boolean;
   border_style: string;
   withdrawal_address: string | null;
+  xp: number;
+}
+
+export function getLevel(xp: number): number {
+  return Math.min(150, Math.max(1, Math.floor((-20 + Math.sqrt(400 + 6 * xp)) / 3)));
+}
+
+export function getXpForLevel(level: number): number {
+  return 20 * level + 1.5 * level * level;
+}
+
+export function getTitle(level: number): string {
+  if (level >= 150) return "Veteran";
+  if (level >= 80) return "Big Baller";
+  if (level >= 50) return "Professional";
+  if (level >= 25) return "Amateur";
+  return "Rookie";
+}
+
+export function getTitleColor(level: number): string {
+  if (level >= 150) return "text-red-500";
+  if (level >= 80) return "text-purple-400";
+  if (level >= 50) return "text-blue-400";
+  if (level >= 25) return "text-green-400";
+  return "text-muted-foreground";
 }
 
 interface AuthContextType {
