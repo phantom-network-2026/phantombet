@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { LogOut, Shield, Menu, X, ArrowDownToLine, User, Gamepad2, Settings, ChevronDown, Wallet } from "lucide-react";
 import { FakeWinsTicker } from "./FakeWinsTicker";
@@ -9,10 +10,25 @@ import { ProfileAvatar } from "./ProfileAvatar";
 import logo from "@/assets/phantombet-logo.png";
 
 export function Header() {
-  const { user, profile, isAdmin, hasStaffAccess, signOut } = useAuth();
+  const { user, profile, isAdmin, isOwner, hasStaffAccess, signOut } = useAuth();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [adminExpanded, setAdminExpanded] = useState(false);
+  const [panelVis, setPanelVis] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (!hasStaffAccess && !isOwner) return;
+    (async () => {
+      try {
+        const { data } = await supabase.from("site_settings").select("value").eq("key", "panel_visibility").maybeSingle();
+        if (data?.value) setPanelVis(data.value as Record<string, boolean>);
+      } catch {}
+    })();
+  }, [hasStaffAccess, isOwner]);
+
+  const showAdminLink = isOwner || (panelVis.admin_panel_visible !== false);
+  const showCpanelLink = isOwner || (panelVis.cpanel_visible !== false);
+  const showSlotLink = isOwner || (panelVis.slot_panel_visible !== false);
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -40,7 +56,7 @@ export function Header() {
               <Button variant="pink" size="sm" onClick={() => navigate("/withdraw")}>
                 <ArrowDownToLine className="h-4 w-4 mr-1" /> Withdraw
               </Button>
-              {hasStaffAccess && (
+              {hasStaffAccess && showAdminLink && (
                 <Button variant="ghost" size="sm" onClick={() => navigate("/admin")} className="text-casino-pink">
                   <Shield className="h-4 w-4 mr-1" /> Admin
                 </Button>
