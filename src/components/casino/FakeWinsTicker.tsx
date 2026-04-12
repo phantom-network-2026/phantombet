@@ -47,14 +47,22 @@ export const DEFAULT_CONFIG: FakeWinsConfig = {
 };
 
 // Fetch config via public settings endpoint, fallback to defaults
+// Also syncs usernames from ghost_users config if available
 export async function fetchFakeWinsConfig(): Promise<FakeWinsConfig> {
   try {
     const { data } = await supabase.functions.invoke("get-public-settings", {
-      body: { keys: [SETTINGS_KEY] },
+      body: { keys: [SETTINGS_KEY, "ghost_users"] },
     });
+    let config = DEFAULT_CONFIG;
     if (data?.settings?.[SETTINGS_KEY]) {
-      return { ...DEFAULT_CONFIG, ...(data.settings[SETTINGS_KEY] as Partial<FakeWinsConfig>) };
+      config = { ...DEFAULT_CONFIG, ...(data.settings[SETTINGS_KEY] as Partial<FakeWinsConfig>) };
     }
+    // Sync usernames from ghost_users pool if it has names
+    const ghostConfig = data?.settings?.["ghost_users"];
+    if (ghostConfig?.usernames?.length > 0) {
+      config = { ...config, usernames: ghostConfig.usernames };
+    }
+    return config;
   } catch {}
   return DEFAULT_CONFIG;
 }
