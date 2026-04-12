@@ -9,6 +9,7 @@ const PUBLIC_KEYS = [
   "wallet_mode",
   "fake_wins_config",
   "welcome_config",
+  "ghost_users",
 ];
 
 Deno.serve(async (req) => {
