@@ -31,7 +31,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
           </p>
           <div className="flex flex-col gap-3 max-w-xs mx-auto">
             <Button variant="gold" size="lg" onClick={() => navigate("/signup")}>
-              Sign Up To Claim Free Spins Or Up To $50 Welcome Bonus
+              Sign Up To Claim Free Spins Or Up To $50
             </Button>
             <Button variant="outline" size="lg" onClick={() => navigate("/login")}>
               Already have an account? Log In
