@@ -68,9 +68,9 @@ export function Header() {
           )}
         </div>
 
-        {/* Mobile: balance + profile + menu toggle */}
+        {/* Mobile: guest auth buttons or user controls + menu toggle */}
         <div className="flex md:hidden items-center gap-2">
-          {user && (
+          {user ? (
             <>
               <BalanceDisplay size="sm" />
               <button onClick={() => navigate("/wallet")} className="text-casino-gold">
@@ -87,8 +87,17 @@ export function Header() {
                 />
               </button>
             </>
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={() => navigate("/login")}>
+                Log In
+              </Button>
+              <Button variant="gold" size="sm" className="h-8 px-3 text-xs" onClick={() => navigate("/signup")}>
+                Sign Up
+              </Button>
+            </>
           )}
-          <button className="text-foreground" onClick={() => setMenuOpen(!menuOpen)}>
+          <button className="text-foreground shrink-0" onClick={() => setMenuOpen(!menuOpen)}>
             {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
         </div>
