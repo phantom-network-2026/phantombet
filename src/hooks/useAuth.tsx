@@ -84,6 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       has_animated_avatar: (data as any).has_animated_avatar || false,
       has_animated_border: (data as any).has_animated_border || false,
       border_style: (data as any).border_style || "none",
+      xp: Number((data as any).xp) || 0,
     });
 
     const { data: roles } = await supabase
