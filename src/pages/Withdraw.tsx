@@ -4,7 +4,7 @@ import { Header } from "@/components/casino/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Wallet, AlertTriangle, CheckCircle } from "lucide-react";
+import { ArrowLeft, Wallet, AlertTriangle, CheckCircle, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -13,35 +13,35 @@ export default function Withdraw() {
   const navigate = useNavigate();
   const { user, profile, refreshProfile } = useAuth();
   const [amount, setAmount] = useState("");
-  const [cryptoAddress, setCryptoAddress] = useState(profile?.crypto_address || "");
+  const [cryptoAddress, setCryptoAddress] = useState(profile?.withdrawal_address || profile?.crypto_address || "");
   const [saving, setSaving] = useState(false);
   const [step, setStep] = useState<"address" | "amount" | "confirm">(
-    profile?.crypto_address ? "amount" : "address"
+    (profile?.withdrawal_address || profile?.crypto_address) ? "amount" : "address"
   );
 
   if (!user) { navigate("/login"); return null; }
 
   const handleSaveAddress = async () => {
     if (!cryptoAddress.trim() || cryptoAddress.trim().length < 10) {
-      toast.error("Please enter a valid crypto address");
+      toast.error("Please enter a valid USDT (TRC-20) address");
       return;
     }
     setSaving(true);
     const { error } = await supabase
       .from("profiles")
-      .update({ crypto_address: cryptoAddress.trim() })
+      .update({ withdrawal_address: cryptoAddress.trim() })
       .eq("user_id", user.id);
     setSaving(false);
     if (error) { toast.error("Failed to save address"); return; }
-    toast.success("Crypto address saved!");
+    toast.success("Withdrawal address saved!");
     await refreshProfile();
     setStep("amount");
   };
 
-  const handleWithdraw = async () => {
+  const handleWithdraw = () => {
     const withdrawAmount = Number(amount);
-    if (!withdrawAmount || withdrawAmount <= 0) {
-      toast.error("Enter a valid amount");
+    if (!withdrawAmount || withdrawAmount < 10) {
+      toast.error("Minimum withdrawal is $10");
       return;
     }
     if (withdrawAmount > (profile?.balance || 0)) {
@@ -53,38 +53,24 @@ export default function Withdraw() {
 
   const handleConfirm = async () => {
     setSaving(true);
-    const withdrawAmount = Number(amount);
+    try {
+      const { data, error } = await supabase.functions.invoke("process-withdrawal", {
+        body: { amount: Number(amount) },
+      });
 
-    // Create transaction
-    const { error: txError } = await supabase.from("transactions").insert({
-      user_id: user.id,
-      amount: -withdrawAmount,
-      type: "withdrawal",
-      description: `Withdrawal to ${profile?.crypto_address || cryptoAddress}`,
-    });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
-    if (txError) {
-      // User can't insert transactions directly, this is admin-only
-      // For now, show a pending message
-      toast.success("Withdrawal request submitted! An admin will process it shortly.");
-      setSaving(false);
+      toast.success(`Withdrawal of $${Number(amount).toFixed(2)} processed! TX: ${data.txHash?.slice(0, 12)}...`);
+      await refreshProfile();
       navigate("/");
-      return;
+    } catch (err: any) {
+      toast.error(err.message || "Withdrawal failed");
     }
-
-    // Update balance
-    const { error } = await supabase
-      .from("profiles")
-      .update({ balance: (profile?.balance || 0) - withdrawAmount })
-      .eq("user_id", user.id);
-
-    if (error) { toast.error("Failed to process withdrawal"); setSaving(false); return; }
-
-    toast.success(`Withdrawal of $${withdrawAmount.toFixed(2)} submitted!`);
-    await refreshProfile();
     setSaving(false);
-    navigate("/");
   };
+
+  const destAddress = profile?.withdrawal_address || profile?.crypto_address || cryptoAddress;
 
   return (
     <div className="min-h-screen gradient-casino-bg">
@@ -95,7 +81,8 @@ export default function Withdraw() {
         </Button>
 
         <div className="text-center mb-6">
-          <h1 className="font-display text-2xl font-black text-gold">Withdraw Funds</h1>
+          <h1 className="font-display text-2xl font-black text-gold">Withdraw USDT</h1>
+          <p className="text-muted-foreground text-sm mt-1">TRC-20 Network • Auto-processed</p>
           <div className="mt-3 inline-flex items-center gap-2 rounded-xl bg-card border border-border px-5 py-3">
             <Wallet className="h-5 w-5 text-casino-gold" />
             <span className="font-display text-xl font-bold text-casino-gold">
@@ -104,25 +91,24 @@ export default function Withdraw() {
           </div>
         </div>
 
-        {/* Step 1: Crypto Address */}
         {step === "address" && (
           <div className="rounded-xl bg-card border border-border p-5 space-y-4">
             <div className="flex items-start gap-3">
               <AlertTriangle className="h-5 w-5 text-casino-gold shrink-0 mt-0.5" />
               <p className="text-sm text-muted-foreground">
-                You must attach a crypto receiving address before you can withdraw funds.
+                Enter your USDT (TRC-20) receiving address for withdrawals.
               </p>
             </div>
             <div>
-              <Label>Crypto Wallet Address</Label>
+              <Label>USDT Withdrawal Address (TRC-20)</Label>
               <Input
                 value={cryptoAddress}
                 onChange={(e) => setCryptoAddress(e.target.value)}
-                placeholder="Enter your BTC/ETH/USDT address..."
+                placeholder="T... (TRON address)"
                 className="bg-secondary border-border mt-1"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Ensure this address is correct. Funds sent to the wrong address cannot be recovered.
+                Ensure this is a valid TRC-20 address. Funds sent to wrong addresses cannot be recovered.
               </p>
             </div>
             <Button variant="gold" className="w-full" onClick={handleSaveAddress} disabled={saving}>
@@ -131,7 +117,6 @@ export default function Withdraw() {
           </div>
         )}
 
-        {/* Step 2: Amount */}
         {step === "amount" && (
           <div className="space-y-4">
             <div className="rounded-xl bg-card border border-border p-4">
@@ -139,22 +124,21 @@ export default function Withdraw() {
                 <CheckCircle className="h-4 w-4 text-casino-green" />
                 <p className="text-sm font-semibold">Withdrawal Address</p>
               </div>
-              <p className="text-xs text-muted-foreground font-mono truncate">
-                {profile?.crypto_address || cryptoAddress}
-              </p>
+              <p className="text-xs text-muted-foreground font-mono truncate">{destAddress}</p>
               <Button variant="ghost" size="sm" className="mt-1 text-xs" onClick={() => setStep("address")}>
                 Change address
               </Button>
             </div>
 
             <div className="rounded-xl bg-card border border-border p-5 space-y-3">
-              <Label>Withdrawal Amount ($)</Label>
+              <Label>Withdrawal Amount (USDT)</Label>
               <Input
                 type="number"
                 step="0.01"
+                min="10"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                placeholder="0.00"
+                placeholder="Min $10.00"
                 className="bg-secondary border-border text-lg font-display"
               />
               <div className="grid grid-cols-3 gap-2">
@@ -186,20 +170,21 @@ export default function Withdraw() {
           </div>
         )}
 
-        {/* Step 3: Confirm */}
         {step === "confirm" && (
           <div className="rounded-xl bg-card border border-border p-5 space-y-4">
             <h3 className="font-display font-bold text-lg text-center">Confirm Withdrawal</h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Amount</span>
-                <span className="font-display font-bold text-casino-gold">${Number(amount).toFixed(2)}</span>
+                <span className="font-display font-bold text-casino-gold">${Number(amount).toFixed(2)} USDT</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">To Address</span>
-                <span className="font-mono text-xs truncate max-w-[180px]">
-                  {profile?.crypto_address || cryptoAddress}
-                </span>
+                <span className="font-mono text-xs truncate max-w-[180px]">{destAddress}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Network</span>
+                <span className="font-semibold">TRC-20 (TRON)</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Remaining Balance</span>
@@ -213,7 +198,7 @@ export default function Withdraw() {
                 Back
               </Button>
               <Button variant="gold" className="flex-1" onClick={handleConfirm} disabled={saving}>
-                {saving ? "Processing..." : "Confirm"}
+                {saving ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Processing...</> : "Confirm Withdrawal"}
               </Button>
             </div>
           </div>
