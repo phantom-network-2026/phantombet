@@ -238,7 +238,7 @@ export default function Exchange() {
                               {Math.abs(crypto.change24h).toFixed(2)}%
                             </div>
                           </div>
-                        </motion.button>
+                        </motion.div>
                       ))}
                   {!loading && filtered.length === 0 && (
                     <p className="text-center text-sm text-muted-foreground py-8">No coins found</p>
