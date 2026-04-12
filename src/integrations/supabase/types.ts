@@ -317,6 +317,7 @@ export type Database = {
           user_id: string
           username: string | null
           withdrawal_address: string | null
+          xp: number
         }
         Insert: {
           avatar_url?: string | null
@@ -335,6 +336,7 @@ export type Database = {
           user_id: string
           username?: string | null
           withdrawal_address?: string | null
+          xp?: number
         }
         Update: {
           avatar_url?: string | null
@@ -353,6 +355,7 @@ export type Database = {
           user_id?: string
           username?: string | null
           withdrawal_address?: string | null
+          xp?: number
         }
         Relationships: []
       }
@@ -571,6 +574,13 @@ export type Database = {
           is_winner: boolean
           payout_multiplier: number
           symbols: string[]
+        }[]
+      }
+      grant_xp: {
+        Args: { p_amount: number; p_user_id: string }
+        Returns: {
+          new_level: number
+          new_xp: number
         }[]
       }
       has_role: {
