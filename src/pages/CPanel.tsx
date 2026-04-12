@@ -751,7 +751,7 @@ function useAnalytics() {
 }
 
 // ── Main cPanel Page ────────────────────────────────────────────
-type ActivePanel = null | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "promotions";
+type ActivePanel = null | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "promotions" | "wallet-mode";
 
 export default function CPanel() {
   const { isAdmin, loading, profile } = useAuth();
@@ -791,6 +791,7 @@ export default function CPanel() {
           {activePanel === "house-edge" && <HouseEdgeWrapper onBack={back} />}
           {activePanel === "game-probability" && <GameProbabilityWrapper onBack={back} />}
           {activePanel === "promotions" && <PromotionsWrapper onBack={back} />}
+          {activePanel === "wallet-mode" && <WalletModePanel onBack={back} />}
         </div>
       </div>
     );
@@ -861,6 +862,7 @@ export default function CPanel() {
                 <ToolCard icon={<CreditCard className="h-6 w-6" />} label="Transactions" onClick={() => setActivePanel("logs")} />
                 <ToolCard icon={<Trophy className="h-6 w-6" />} label="Prize Spins" onClick={() => setActivePanel("database")} />
                 <ToolCard icon={<Hash className="h-6 w-6" />} label="Scratch Cards" onClick={() => setActivePanel("database")} />
+                <ToolCard icon={<Wallet className="h-6 w-6" />} label="Wallet Mode" onClick={() => setActivePanel("wallet-mode")} />
               </div>
             </CpanelSection>
 
