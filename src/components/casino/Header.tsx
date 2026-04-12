@@ -20,11 +20,18 @@ export function Header() {
     if (!hasStaffAccess && !isOwner) return;
     (async () => {
       try {
-        const { data } = await supabase.from("site_settings").select("value").eq("key", "panel_visibility").maybeSingle();
-        if (data?.value) setPanelVis(data.value as Record<string, boolean>);
+        if (isOwner || isAdmin) {
+          // Admins/owners can read site_settings directly
+          const { data } = await supabase.from("site_settings").select("value").eq("key", "panel_visibility").maybeSingle();
+          if (data?.value) setPanelVis(data.value as Record<string, boolean>);
+        } else {
+          // Staff use public settings endpoint
+          const { data } = await supabase.functions.invoke("get-public-settings", { body: { keys: ["panel_visibility"] } });
+          if (data?.settings?.panel_visibility) setPanelVis(data.settings.panel_visibility);
+        }
       } catch {}
     })();
-  }, [hasStaffAccess, isOwner]);
+  }, [hasStaffAccess, isOwner, isAdmin]);
 
   const showAdminLink = isOwner || (panelVis.admin_panel_visible !== false);
   const showCpanelLink = isOwner || (panelVis.cpanel_visible !== false);
