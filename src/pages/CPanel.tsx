@@ -1308,7 +1308,7 @@ function DepositsWithdrawalsPanel({ onBack }: { onBack: () => void }) {
 }
 
 // ── Main cPanel Page ────────────────────────────────────────────
-type ActivePanel = null | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "promotions" | "wallet-mode" | "deposits-withdrawals";
+type ActivePanel = null | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "promotions" | "wallet-mode" | "deposits-withdrawals" | "welcome-config";
 
 export default function CPanel() {
   const { isAdmin, loading, profile } = useAuth();
@@ -1350,6 +1350,7 @@ export default function CPanel() {
           {activePanel === "promotions" && <PromotionsWrapper onBack={back} />}
           {activePanel === "wallet-mode" && <WalletModePanel onBack={back} />}
           {activePanel === "deposits-withdrawals" && <DepositsWithdrawalsPanel onBack={back} />}
+          {activePanel === "welcome-config" && <WelcomeConfigPanel onBack={back} />}
         </div>
       </div>
     );
@@ -1405,6 +1406,7 @@ export default function CPanel() {
                 <ToolCard icon={<CreditCard className="h-6 w-6" />} label="Payment Hub" onClick={() => setActivePanel("deposits-withdrawals")} />
                 <ToolCard icon={<Shield className="h-6 w-6" />} label="Withdrawal Approval" onClick={() => setActivePanel("deposits-withdrawals")} />
                 <ToolCard icon={<Wallet className="h-6 w-6" />} label="Wallet Mode" onClick={() => setActivePanel("wallet-mode")} />
+                <ToolCard icon={<Megaphone className="h-6 w-6" />} label="Welcome Messages" onClick={() => setActivePanel("welcome-config")} />
                 <ToolCard icon={<Activity className="h-6 w-6" />} label="Transaction Log" onClick={() => setActivePanel("deposits-withdrawals")} />
               </div>
             </CpanelSection>
