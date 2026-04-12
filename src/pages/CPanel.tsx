@@ -1877,7 +1877,8 @@ function GhostUsersPanel({ onBack }: { onBack: () => void }) {
   ];
 
   const loadDefaults = () => {
-    save({ usernames: defaultNames });
+    const filtered = defaultNames.filter(n => !realUsernames.has(n.toLowerCase()));
+    save({ usernames: filtered });
   };
 
   return (
