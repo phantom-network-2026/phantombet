@@ -3,8 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Wallet, LogOut, Shield, Menu, X, ArrowDownToLine, User, Gamepad2, Settings, ChevronDown } from "lucide-react";
+import { LogOut, Shield, Menu, X, ArrowDownToLine, User, Gamepad2, Settings, ChevronDown } from "lucide-react";
 import { FakeWinsTicker } from "./FakeWinsTicker";
+import { BalanceDisplay, ExchangeRateBadge } from "./BalanceDisplay";
 import logo from "@/assets/phantombet-logo.png";
 
 export function Header() {
@@ -17,21 +18,19 @@ export function Header() {
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <FakeWinsTicker />
       <div className="container flex h-14 items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
-          <img src={logo} alt="PhantomBet" className="h-10 w-10" />
-          <span className="font-display text-xl font-bold text-gold">PhantomBet</span>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2">
+            <img src={logo} alt="PhantomBet" className="h-10 w-10" />
+            <span className="font-display text-xl font-bold text-gold hidden sm:inline">PhantomBet</span>
+          </Link>
+          <ExchangeRateBadge />
+        </div>
 
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-3">
           {user ? (
             <>
-              <div className="flex items-center gap-2 rounded-lg bg-secondary px-3 py-1.5">
-                <Wallet className="h-4 w-4 text-casino-gold" />
-                <span className="font-display font-bold text-casino-gold">
-                  ${profile?.balance?.toFixed(2) ?? "0.00"}
-                </span>
-              </div>
+              <BalanceDisplay size="md" />
               <Button variant="gold" size="sm" onClick={() => navigate("/deposit")}>
                 Deposit
               </Button>
@@ -69,12 +68,7 @@ export function Header() {
         <div className="flex md:hidden items-center gap-2">
           {user && (
             <>
-              <div className="flex items-center gap-1.5 rounded-lg bg-secondary px-2.5 py-1">
-                <Wallet className="h-3.5 w-3.5 text-casino-gold" />
-                <span className="font-display text-sm font-bold text-casino-gold">
-                  ${profile?.balance?.toFixed(2) ?? "0.00"}
-                </span>
-              </div>
+              <BalanceDisplay size="sm" />
               <button onClick={() => navigate("/profile")}>
                 <Avatar className="h-7 w-7">
                   {profile?.avatar_url && <AvatarImage src={profile.avatar_url} />}
