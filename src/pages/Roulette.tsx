@@ -224,12 +224,8 @@ export default function Roulette() {
     setSplashData(null);
     setLastBets(bets);
 
-    // Check force_loss setting
-    let forceActive = false;
-    try {
-      const { data: fl } = await supabase.from("site_settings").select("value").eq("key", "force_loss").maybeSingle();
-      forceActive = (fl?.value as any)?.enabled === true;
-    } catch {}
+    // force_loss is now enforced server-side only
+    const forceActive = false;
 
     let winningNumber: number;
     if (forceActive) {

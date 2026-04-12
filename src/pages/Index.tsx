@@ -98,13 +98,13 @@ export default function Index() {
       }
     });
 
-    // Fetch announcement & maintenance
-    supabase.from("site_settings").select("key, value").in("key", ["announcement", "maintenance_mode"]).then(({ data }) => {
-      if (data) {
-        const ann = data.find(d => d.key === "announcement");
-        const maint = data.find(d => d.key === "maintenance_mode");
-        if (ann?.value) setAnnouncement(ann.value as any);
-        if (maint?.value) setMaintenanceMode(maint.value as any);
+    // Fetch announcement & maintenance via public settings endpoint
+    supabase.functions.invoke("get-public-settings", {
+      body: { keys: ["announcement", "maintenance_mode"] },
+    }).then(({ data }) => {
+      if (data?.settings) {
+        if (data.settings.announcement) setAnnouncement(data.settings.announcement);
+        if (data.settings.maintenance_mode) setMaintenanceMode(data.settings.maintenance_mode);
       }
     });
   }, []);

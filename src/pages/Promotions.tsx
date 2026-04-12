@@ -24,18 +24,15 @@ export default function Promotions() {
   const [promos, setPromos] = useState(defaultPromos);
 
   useEffect(() => {
-    supabase
-      .from("site_settings")
-      .select("value")
-      .eq("key", "promotions_config")
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data?.value) {
-          const saved = (data.value as any).promotions || [];
-          const active = saved.filter((p: any) => p.active);
-          if (active.length > 0) setPromos(active);
-        }
-      });
+    supabase.functions.invoke("get-public-settings", {
+      body: { keys: ["promotions_config"] },
+    }).then(({ data }) => {
+      if (data?.settings?.promotions_config) {
+        const saved = data.settings.promotions_config.promotions || [];
+        const active = saved.filter((p: any) => p.active);
+        if (active.length > 0) setPromos(active);
+      }
+    });
   }, []);
 
   return (
