@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.102.0";
-import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
+import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.102.0/cors";
 
 const TRONGRID_API_KEY = Deno.env.get("TRONGRID_API_KEY")!;
 const ENCRYPTION_KEY = Deno.env.get("TRON_ENCRYPTION_KEY")!;
