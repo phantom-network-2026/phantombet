@@ -756,8 +756,18 @@ type ActivePanel = null | "files" | "database" | "config" | "security" | "mainte
 export default function CPanel() {
   const { isAdmin, loading, profile } = useAuth();
   const navigate = useNavigate();
-  const [activePanel, setActivePanel] = useState<ActivePanel>(null);
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const initialPanel: ActivePanel = tabParam === "games" ? "game-probability" : null;
+  const [activePanel, setActivePanel] = useState<ActivePanel>(initialPanel);
   const { stats, loading: analyticsLoading } = useAnalytics();
+
+  // React to tab query param changes
+  useEffect(() => {
+    if (tabParam === "games") {
+      setActivePanel("game-probability");
+    }
+  }, [tabParam]);
 
   useEffect(() => {
     if (!loading && !isAdmin) navigate("/");
