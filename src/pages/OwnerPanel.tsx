@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Header } from "@/components/casino/Header";
 import { FakeWinsControlPanel } from "@/components/casino/FakeWinsControlPanel";
 import { StaffUsername, type StaffRole } from "@/components/casino/StaffUsername";
-import { ArrowLeft, Users, DollarSign, Plus, Minus, Edit, Save, Shield, Trash2, Circle, ShieldAlert } from "lucide-react";
+import { ArrowLeft, Users, DollarSign, Plus, Minus, Edit, Save, Shield, Trash2, Circle, ShieldAlert, Eye, EyeOff, Crown, Lock } from "lucide-react";
 import { getStatusColor, getStatusLabel } from "@/hooks/usePresence";
 import { toast } from "sonner";
 
@@ -24,8 +24,9 @@ interface UserProfile {
   last_seen: string | null;
 }
 
-const ALL_ROLES = ["admin", "moderator", "staff", "active_user", "user"] as const;
+const ALL_ROLES = ["owner", "admin", "moderator", "staff", "active_user", "user"] as const;
 const ROLE_LABELS: Record<string, { label: string; emoji: string; color: string }> = {
+  owner: { label: "Owner", emoji: "👑", color: "text-red-500" },
   admin: { label: "Administrator", emoji: "👑", color: "text-casino-gold" },
   moderator: { label: "Moderator", emoji: "🛡️", color: "text-blue-400" },
   staff: { label: "Staff", emoji: "🔧", color: "text-purple-400" },
@@ -33,8 +34,18 @@ const ROLE_LABELS: Record<string, { label: string; emoji: string; color: string 
   user: { label: "User", emoji: "👤", color: "text-muted-foreground" },
 };
 
-export default function Admin() {
-  const { isAdmin, hasStaffAccess, loading } = useAuth();
+// Panel visibility setting keys
+const PANEL_TOGGLES = [
+  { key: "admin_panel_visible", label: "Admin Panel visible in menu", default: true },
+  { key: "admin_panel_access", label: "Admin Panel accessible", default: true },
+  { key: "cpanel_visible", label: "cPanel visible in menu", default: true },
+  { key: "cpanel_access", label: "cPanel accessible", default: true },
+  { key: "slot_panel_visible", label: "Slot Panel visible in menu", default: true },
+  { key: "slot_panel_access", label: "Slot Panel accessible", default: true },
+];
+
+export default function OwnerPanel() {
+  const { isOwner, loading } = useAuth();
   const navigate = useNavigate();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
@@ -51,12 +62,38 @@ export default function Admin() {
   const [deleting, setDeleting] = useState(false);
   const [forceLoss, setForceLoss] = useState(false);
   const [forceLossLoading, setForceLossLoading] = useState(false);
+  const [panelToggles, setPanelToggles] = useState<Record<string, boolean>>({});
+  const [togglesLoading, setTogglesLoading] = useState(true);
 
   useEffect(() => {
-    if (!loading && !hasStaffAccess) { navigate("/"); return; }
-    if (hasStaffAccess) fetchUsers();
-    if (isAdmin) fetchForceLoss();
-  }, [hasStaffAccess, loading]);
+    if (!loading && !isOwner) { navigate("/"); return; }
+    if (isOwner) {
+      fetchUsers();
+      fetchForceLoss();
+      fetchPanelToggles();
+    }
+  }, [isOwner, loading]);
+
+  const fetchPanelToggles = async () => {
+    const { data } = await supabase.from("site_settings").select("value").eq("key", "panel_visibility").maybeSingle();
+    const saved = (data?.value as Record<string, boolean>) || {};
+    const merged: Record<string, boolean> = {};
+    PANEL_TOGGLES.forEach(t => { merged[t.key] = saved[t.key] ?? t.default; });
+    setPanelToggles(merged);
+    setTogglesLoading(false);
+  };
+
+  const handlePanelToggle = async (key: string, checked: boolean) => {
+    const updated = { ...panelToggles, [key]: checked };
+    setPanelToggles(updated);
+    const { data: existing } = await supabase.from("site_settings").select("id").eq("key", "panel_visibility").maybeSingle();
+    if (existing) {
+      await supabase.from("site_settings").update({ value: updated as any }).eq("key", "panel_visibility");
+    } else {
+      await supabase.from("site_settings").insert({ key: "panel_visibility", value: updated as any });
+    }
+    toast.success(`${key.replace(/_/g, " ")} ${checked ? "enabled" : "disabled"}`);
+  };
 
   const fetchForceLoss = async () => {
     const { data } = await supabase.from("site_settings").select("value").eq("key", "force_loss").maybeSingle();
@@ -73,7 +110,7 @@ export default function Admin() {
     }
     setForceLoss(checked);
     setForceLossLoading(false);
-    toast.success(checked ? "Force Loss ON — all bets will lose" : "Force Loss OFF — casino runs normally");
+    toast.success(checked ? "Force Loss ON" : "Force Loss OFF");
   };
 
   const fetchUsers = async () => {
@@ -84,9 +121,7 @@ export default function Admin() {
     if (profiles) {
       const usersWithRoles = profiles.map((p) => {
         const userPresence = (presence as any[])?.find((pr: any) => pr.user_id === p.user_id);
-        const isOnline = userPresence?.is_online && 
-          userPresence?.last_seen && 
-          (Date.now() - new Date(userPresence.last_seen).getTime()) < 60000;
+        const isOnline = userPresence?.is_online && userPresence?.last_seen && (Date.now() - new Date(userPresence.last_seen).getTime()) < 60000;
         return {
           user_id: p.user_id,
           username: p.username,
@@ -98,7 +133,6 @@ export default function Admin() {
           last_seen: userPresence?.last_seen || null,
         };
       });
-      // Sort: online first, then by username
       usersWithRoles.sort((a, b) => {
         if (a.is_online !== b.is_online) return a.is_online ? -1 : 1;
         return (a.username || "").localeCompare(b.username || "");
@@ -108,17 +142,16 @@ export default function Admin() {
     setLoadingUsers(false);
   };
 
-  // Refresh presence every 15s
   useEffect(() => {
-    if (!hasStaffAccess) return;
+    if (!isOwner) return;
     const interval = setInterval(fetchUsers, 15000);
     return () => clearInterval(interval);
-  }, [hasStaffAccess]);
+  }, [isOwner]);
 
   const handleAdjustBalance = async (userId: string, amount: number) => {
     const { error: txError } = await supabase.from("transactions").insert({
       user_id: userId, amount, type: "adjustment",
-      description: adjustDescription || `Admin balance adjustment: ${amount > 0 ? "+" : ""}${amount}`,
+      description: adjustDescription || `Owner balance adjustment: ${amount > 0 ? "+" : ""}${amount}`,
     });
     if (txError) { toast.error("Failed to create transaction"); return; }
     const user = users.find((u) => u.user_id === userId);
@@ -144,8 +177,7 @@ export default function Admin() {
   const handleEditUser = (userId: string) => {
     if (editUserId === userId) { setEditUserId(null); return; }
     setEditUserId(userId);
-    setEditEmail("");
-    setEditPassword("");
+    setEditEmail(""); setEditPassword("");
     const u = users.find((u) => u.user_id === userId);
     setEditUsername(u?.username || "");
   };
@@ -180,19 +212,18 @@ export default function Admin() {
     });
     if (error || data?.error) {
       toast.error(data?.error || "Failed to delete user");
-      setDeleting(false);
-      setDeleteConfirmId(null);
+      setDeleting(false); setDeleteConfirmId(null);
       return;
     }
     toast.success("User account deleted permanently");
-    setDeleteConfirmId(null);
-    setDeleting(false);
+    setDeleteConfirmId(null); setDeleting(false);
     fetchUsers();
   };
 
   const onlineCount = users.filter(u => u.is_online).length;
 
   if (loading) return <div className="min-h-screen gradient-casino-bg flex items-center justify-center"><p>Loading...</p></div>;
+  if (!isOwner) return null;
 
   return (
     <div className="min-h-screen gradient-casino-bg">
@@ -202,13 +233,33 @@ export default function Admin() {
           <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="font-display text-2xl font-black text-gold flex items-center gap-2">
-            <Users className="h-6 w-6" /> Admin Panel
+          <h1 className="font-display text-2xl font-black text-red-500 flex items-center gap-2">
+            <Crown className="h-6 w-6" /> Owner Panel
           </h1>
-          {isAdmin && (
-            <Button variant="outline" size="sm" className="ml-auto" onClick={() => navigate("/cpanel")}>
-              <Shield className="h-3 w-3 mr-1" /> cPanel
-            </Button>
+        </div>
+
+        {/* Panel Visibility Controls */}
+        <div className="rounded-xl bg-card border border-red-500/30 p-4 mb-6">
+          <h2 className="font-display font-bold text-sm mb-3 flex items-center gap-2 text-red-400">
+            <Lock className="h-4 w-4" /> Panel Access & Visibility Controls
+          </h2>
+          <p className="text-xs text-muted-foreground mb-3">Control what admins/staff can see and access</p>
+          {!togglesLoading && (
+            <div className="space-y-3">
+              {PANEL_TOGGLES.map(t => (
+                <div key={t.key} className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {t.key.includes("visible") ? (
+                      panelToggles[t.key] ? <Eye className="h-4 w-4 text-green-400" /> : <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <Lock className={`h-4 w-4 ${panelToggles[t.key] ? "text-green-400" : "text-destructive"}`} />
+                    )}
+                    <span className="text-sm">{t.label}</span>
+                  </div>
+                  <Switch checked={panelToggles[t.key] ?? true} onCheckedChange={(c) => handlePanelToggle(t.key, c)} />
+                </div>
+              ))}
+            </div>
           )}
         </div>
 
@@ -232,31 +283,22 @@ export default function Admin() {
           </div>
         </div>
 
-        {/* Fake Wins Ticker Control */}
-        {isAdmin && <FakeWinsControlPanel />}
+        <FakeWinsControlPanel />
 
         {/* Force Loss Toggle */}
-        {isAdmin && (
-          <div className="rounded-xl bg-card border border-border p-4 mb-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <ShieldAlert className="h-5 w-5 text-destructive" />
-                <div>
-                  <p className="font-display font-bold text-sm">Force Loss Mode</p>
-                  <p className="text-xs text-muted-foreground">When ON, every bet a player places will be a loss. No wins issued.</p>
-                </div>
+        <div className="rounded-xl bg-card border border-border p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <ShieldAlert className="h-5 w-5 text-destructive" />
+              <div>
+                <p className="font-display font-bold text-sm">Force Loss Mode</p>
+                <p className="text-xs text-muted-foreground">When ON, every bet will be a loss</p>
               </div>
-              <Switch
-                checked={forceLoss}
-                onCheckedChange={handleToggleForceLoss}
-                disabled={forceLossLoading}
-              />
             </div>
-            {forceLoss && (
-              <p className="text-xs text-destructive mt-2 font-medium">⚠️ ACTIVE — All player bets will result in losses</p>
-            )}
+            <Switch checked={forceLoss} onCheckedChange={handleToggleForceLoss} disabled={forceLossLoading} />
           </div>
-        )}
+          {forceLoss && <p className="text-xs text-destructive mt-2 font-medium">⚠️ ACTIVE</p>}
+        </div>
 
         {/* User List */}
         <div className="space-y-3">
@@ -267,7 +309,7 @@ export default function Admin() {
             users.map((user) => (
               <div key={user.user_id} className="rounded-xl bg-card border border-border p-4">
                 <div className="flex items-center justify-between mb-2 gap-2">
-                   <div className="min-w-0 flex-1">
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <Circle className={`h-2.5 w-2.5 ${getStatusColor(user.is_online ? (user.appearance_status || "online") : "offline")}`} />
                       {user.roles.some((r: string) => ["admin", "moderator", "staff"].includes(r)) ? (
@@ -279,11 +321,8 @@ export default function Admin() {
                       ) : (
                         <p className="font-display font-bold truncate">{user.username || "No username"}</p>
                       )}
-                      {user.is_online && (
-                        <span className={`text-[10px] font-medium ${user.appearance_status === "idle" ? "text-yellow-400" : user.appearance_status === "offline" ? "text-muted-foreground" : "text-green-400"}`}>
-                          {getStatusLabel(user.appearance_status || "online").toUpperCase()}
-                          {user.appearance_status !== "online" && " (actually online)"}
-                        </span>
+                      {user.roles.includes("owner") && (
+                        <span className="text-[9px] font-black text-red-500 bg-red-500/10 px-1.5 py-0.5 rounded">OWNER</span>
                       )}
                     </div>
                     <div className="flex flex-wrap gap-1 mt-1">
@@ -298,9 +337,7 @@ export default function Admin() {
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
                       Joined {new Date(user.created_at).toLocaleDateString()}
-                      {user.last_seen && !user.is_online && (
-                        <> · Last seen {new Date(user.last_seen).toLocaleString()}</>
-                      )}
+                      {user.last_seen && !user.is_online && <> · Last seen {new Date(user.last_seen).toLocaleString()}</>}
                     </p>
                   </div>
                   <div className="text-right shrink-0 ml-2">
@@ -309,43 +346,35 @@ export default function Admin() {
                 </div>
 
                 <div className="flex gap-2 flex-wrap">
-                  {isAdmin && (
-                    <Button variant="outline" size="sm" onClick={() => setAdjustUserId(adjustUserId === user.user_id ? null : user.user_id)}>
-                      <DollarSign className="h-3 w-3 mr-1" /> Balance
-                    </Button>
-                  )}
+                  <Button variant="outline" size="sm" onClick={() => setAdjustUserId(adjustUserId === user.user_id ? null : user.user_id)}>
+                    <DollarSign className="h-3 w-3 mr-1" /> Balance
+                  </Button>
                   <Button variant="outline" size="sm" onClick={() => handleEditUser(user.user_id)}>
                     <Edit className="h-3 w-3 mr-1" /> Edit
                   </Button>
-                  {isAdmin && (
-                    <Button variant="outline" size="sm" onClick={() => setRolesUserId(rolesUserId === user.user_id ? null : user.user_id)}>
-                      <Shield className="h-3 w-3 mr-1" /> Roles
-                    </Button>
-                  )}
-                  {isAdmin && (
-                    <Button variant="destructive" size="sm" onClick={() => setDeleteConfirmId(deleteConfirmId === user.user_id ? null : user.user_id)}>
-                      <Trash2 className="h-3 w-3 mr-1" /> Delete
-                    </Button>
-                  )}
+                  <Button variant="outline" size="sm" onClick={() => setRolesUserId(rolesUserId === user.user_id ? null : user.user_id)}>
+                    <Shield className="h-3 w-3 mr-1" /> Roles
+                  </Button>
+                  <Button variant="destructive" size="sm" onClick={() => setDeleteConfirmId(deleteConfirmId === user.user_id ? null : user.user_id)}>
+                    <Trash2 className="h-3 w-3 mr-1" /> Delete
+                  </Button>
                 </div>
 
                 {/* Delete Confirmation */}
                 {deleteConfirmId === user.user_id && (
                   <div className="mt-3 p-3 rounded-lg bg-destructive/10 border border-destructive/30 space-y-2 animate-slide-up">
                     <p className="text-sm font-semibold text-destructive">⚠️ Permanently delete {user.username || "this user"}?</p>
-                    <p className="text-xs text-muted-foreground">This will remove their account, profile, roles, and all associated data. This cannot be undone.</p>
+                    <p className="text-xs text-muted-foreground">This cannot be undone.</p>
                     <div className="flex gap-2">
                       <Button variant="destructive" size="sm" onClick={() => handleDeleteUser(user.user_id)} disabled={deleting}>
                         <Trash2 className="h-3 w-3 mr-1" /> {deleting ? "Deleting..." : "Yes, Delete"}
                       </Button>
-                      <Button variant="outline" size="sm" onClick={() => setDeleteConfirmId(null)}>
-                        Cancel
-                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => setDeleteConfirmId(null)}>Cancel</Button>
                     </div>
                   </div>
                 )}
 
-                {/* Role Management */}
+                {/* Role Management — includes owner */}
                 {rolesUserId === user.user_id && (
                   <div className="mt-3 p-3 rounded-lg bg-secondary space-y-2 animate-slide-up">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Assign Roles</p>
@@ -377,11 +406,11 @@ export default function Admin() {
                     </div>
                     <div>
                       <Label className="text-xs">Email</Label>
-                      <Input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} placeholder="New email (leave empty to keep)" className="bg-background border-border" />
+                      <Input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} placeholder="New email" className="bg-background border-border" />
                     </div>
                     <div>
                       <Label className="text-xs">Password</Label>
-                      <Input type="password" value={editPassword} onChange={(e) => setEditPassword(e.target.value)} placeholder="New password (leave empty to keep)" className="bg-background border-border" />
+                      <Input type="password" value={editPassword} onChange={(e) => setEditPassword(e.target.value)} placeholder="New password" className="bg-background border-border" />
                     </div>
                     <Button variant="gold" size="sm" onClick={() => handleSaveUserDetails(user.user_id)} disabled={saving}>
                       <Save className="h-3 w-3 mr-1" /> {saving ? "Saving..." : "Save Changes"}
