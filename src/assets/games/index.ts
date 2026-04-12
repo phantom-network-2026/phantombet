@@ -1,0 +1,57 @@
+import blackjack from "./blackjack.jpg";
+import slotCowboy from "./slot-cowboy.jpg";
+import roulette from "./roulette.jpg";
+import scratchCard from "./scratch-card.jpg";
+import prizeReel from "./prize-reel.jpg";
+import pennyRoulette from "./penny-roulette.jpg";
+import chickenCross from "./chicken-cross.jpg";
+import scratchRoyale from "./scratch-royale.jpg";
+import cryptoCall from "./crypto-call.jpg";
+import cutWirePro from "./cut-wire-pro.jpg";
+import headAndTail from "./head-and-tail.jpg";
+import heroCasino from "./hero-casino.jpg";
+import meterCrash from "./meter-crash.jpg";
+import jackpotHighway from "./jackpot-highway.jpg";
+import neonBounce from "./neon-bounce.jpg";
+import planeCrash from "./plane-crash.jpg";
+import plinkoPro from "./plinko-pro.jpg";
+import royalHeist from "./royal-heist.jpg";
+import safeDoor from "./safe-door.jpg";
+import spinWheelRoyale from "./spin-wheel-royale.jpg";
+import stackUpCasino from "./stack-up-casino.jpg";
+import stakeMines from "./stake-mines.jpg";
+import dream11 from "./dream-11.jpg";
+import marvelBetting from "./marvel-betting.jpg";
+import raceKings from "./race-kings.jpg";
+import royalDerby from "./royal-derby.jpg";
+import scatterBomb from "./scatter-bomb.jpg";
+
+export const gameImages: Record<string, string> = {
+  "Blackjack": blackjack,
+  "Slot Cowboy": slotCowboy,
+  "Roulette": roulette,
+  "Lucky Scratch Card": scratchCard,
+  "Prize Reel": prizeReel,
+  "Penny Roulette": pennyRoulette,
+  "Chicken Cross": chickenCross,
+  "Scratch Royale": scratchRoyale,
+  "Crypto Call": cryptoCall,
+  "Cut Wire Pro": cutWirePro,
+  "Head & Tail": headAndTail,
+  "Hero Casino": heroCasino,
+  "Meter Crash": meterCrash,
+  "Jackpot Highway": jackpotHighway,
+  "Neon Bounce": neonBounce,
+  "Plane Crash": planeCrash,
+  "Plinko Pro": plinkoPro,
+  "Royal Heist": royalHeist,
+  "Safe Door": safeDoor,
+  "Spin Wheel Royale": spinWheelRoyale,
+  "Stack Up Casino": stackUpCasino,
+  "Stake Mines": stakeMines,
+  "Dream 11": dream11,
+  "Marvel Betting": marvelBetting,
+  "Race Kings": raceKings,
+  "Royal Derby": royalDerby,
+  "Scatter Bomb": scatterBomb,
+};
