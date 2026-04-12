@@ -12,8 +12,8 @@ export function HeroBanner() {
     <div className="relative overflow-hidden rounded-2xl mx-4 mt-4">
       <img src={heroBanner} alt="PhantomBet Casino - Win Big!" className="w-full h-56 md:h-64 object-cover" />
       <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/40 to-transparent flex flex-col justify-end p-5">
-        <div className="flex items-end justify-between gap-4">
-          <div className="flex-1">
+        <div className="flex items-end justify-between gap-2">
+          <div className="flex-1 min-w-0">
             <h2 className="font-display text-2xl md:text-4xl font-black text-casino-gold leading-none tracking-tight">
               WIN BIG AT PHANTOMBET
             </h2>
@@ -40,8 +40,8 @@ export function HeroBanner() {
               )}
             </div>
           </div>
-          <div className="shrink-0 overflow-hidden" style={{ height: '7rem', width: '7rem' }}>
-            <img src={logo} alt="PhantomBet" className="w-full drop-shadow-lg" style={{ clipPath: 'inset(0 0 35% 0)' }} />
+          <div className="shrink-0 overflow-hidden self-stretch flex items-center" style={{ width: '10rem' }}>
+            <img src={logo} alt="PhantomBet" className="w-full drop-shadow-lg" style={{ clipPath: 'inset(0 0 30% 0)' }} />
           </div>
         </div>
       </div>
