@@ -101,7 +101,7 @@ export default function Admin() {
           username: p.username,
           balance: Number(p.balance),
           created_at: p.created_at,
-          roles: roles?.filter((r) => r.user_id === p.user_id).map((r) => r.role) || [],
+          roles: (roles?.filter((r) => r.user_id === p.user_id).map((r) => r.role) || []).filter(r => r !== "owner"),
           is_online: !!isOnline,
           appearance_status: userPresence?.appearance_status || "offline",
           last_seen: userPresence?.last_seen || null,
