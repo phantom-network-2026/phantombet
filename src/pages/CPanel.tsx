@@ -989,8 +989,326 @@ function WalletModePanel({ onBack }: { onBack: () => void }) {
   );
 }
 
+// ── Deposits & Withdrawals Panel ────────────────────────────────
+function DepositsWithdrawalsPanel({ onBack }: { onBack: () => void }) {
+  const [settings, setSettings] = useState<any>({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [pendingWithdrawals, setPendingWithdrawals] = useState<any[]>([]);
+  const [loadingWds, setLoadingWds] = useState(false);
+  const [processingId, setProcessingId] = useState<string | null>(null);
+  const [recentDeposits, setRecentDeposits] = useState<any[]>([]);
+  const [recentWithdrawals, setRecentWithdrawals] = useState<any[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "payments_config")
+        .single();
+      if (data) setSettings(data.value as any);
+      setLoading(false);
+    })();
+    fetchPendingWithdrawals();
+    fetchRecentActivity();
+  }, []);
+
+  const fetchPendingWithdrawals = async () => {
+    setLoadingWds(true);
+    const { data } = await supabase
+      .from("withdrawals")
+      .select("*")
+      .eq("status", "pending_approval")
+      .order("created_at", { ascending: false });
+    setPendingWithdrawals(data || []);
+    setLoadingWds(false);
+  };
+
+  const fetchRecentActivity = async () => {
+    const [deps, wds] = await Promise.all([
+      supabase.from("deposits").select("*").order("created_at", { ascending: false }).limit(10),
+      supabase.from("withdrawals").select("*").order("created_at", { ascending: false }).limit(10),
+    ]);
+    setRecentDeposits(deps.data || []);
+    setRecentWithdrawals(wds.data || []);
+  };
+
+  const updateSetting = async (key: string, value: any) => {
+    setSaving(true);
+    const newSettings = { ...settings, [key]: value };
+    const { data: existing } = await supabase
+      .from("site_settings")
+      .select("id")
+      .eq("key", "payments_config")
+      .single();
+
+    if (existing) {
+      await supabase.from("site_settings").update({ value: newSettings }).eq("key", "payments_config");
+    } else {
+      await supabase.from("site_settings").insert({ key: "payments_config", value: newSettings });
+    }
+    setSettings(newSettings);
+    setSaving(false);
+    toast.success("Setting updated");
+  };
+
+  // Also sync the withdrawal approval to wallet_mode setting for backward compat
+  const toggleWithdrawalApproval = async (val: boolean) => {
+    await updateSetting("require_withdrawal_approval", val);
+    // Sync to wallet_mode setting too
+    const { data: wmRow } = await supabase.from("site_settings").select("value").eq("key", "wallet_mode").single();
+    const wmVal = (wmRow?.value as any) || {};
+    if (wmRow) {
+      await supabase.from("site_settings").update({ value: { ...wmVal, require_withdrawal_approval: val } }).eq("key", "wallet_mode");
+    }
+  };
+
+  const handleApproveWithdrawal = async (id: string) => {
+    setProcessingId(id);
+    try {
+      const { data, error } = await supabase.functions.invoke("process-withdrawal", {
+        body: { withdrawalId: id, adminAction: "approve" },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success("Withdrawal approved and processing");
+      fetchPendingWithdrawals();
+      fetchRecentActivity();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to approve");
+    }
+    setProcessingId(null);
+  };
+
+  const handleDenyWithdrawal = async (id: string) => {
+    setProcessingId(id);
+    try {
+      const { data, error } = await supabase.functions.invoke("process-withdrawal", {
+        body: { withdrawalId: id, adminAction: "deny" },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success("Withdrawal denied — funds refunded");
+      fetchPendingWithdrawals();
+      fetchRecentActivity();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to deny");
+    }
+    setProcessingId(null);
+  };
+
+  const requireApproval = settings.require_withdrawal_approval === true;
+  const minDeposit = settings.min_deposit ?? 5;
+  const minWithdrawal = settings.min_withdrawal ?? 10;
+  const maxWithdrawal = settings.max_withdrawal ?? 10000;
+  const dailyWithdrawalLimit = settings.daily_withdrawal_limit ?? 50000;
+  const depositEnabled = settings.deposits_enabled !== false;
+  const withdrawalEnabled = settings.withdrawals_enabled !== false;
+
+  return (
+    <div>
+      <Button variant="ghost" size="sm" onClick={onBack} className="mb-4">
+        <ArrowLeft className="h-4 w-4 mr-1" /> Back to cPanel
+      </Button>
+      <h2 className="font-display text-xl font-bold mb-4 flex items-center gap-2">
+        <CreditCard className="h-5 w-5 text-casino-gold" /> Deposits & Withdrawals
+      </h2>
+
+      {loading ? (
+        <p className="text-muted-foreground text-sm">Loading...</p>
+      ) : (
+        <div className="space-y-4 max-w-2xl">
+          {/* Toggle Controls */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Deposits Enabled */}
+            <div className="rounded-xl border border-border bg-card p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-display font-bold text-sm">Deposits</p>
+                  <p className={`text-xs font-semibold ${depositEnabled ? "text-casino-green" : "text-destructive"}`}>
+                    {depositEnabled ? "✓ Enabled" : "✗ Disabled"}
+                  </p>
+                </div>
+                <Switch checked={depositEnabled} onCheckedChange={(v) => updateSetting("deposits_enabled", v)} disabled={saving} />
+              </div>
+              <p className="text-[11px] text-muted-foreground">Allow users to deposit USDT (TRC-20) to their account.</p>
+            </div>
+
+            {/* Withdrawals Enabled */}
+            <div className="rounded-xl border border-border bg-card p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-display font-bold text-sm">Withdrawals</p>
+                  <p className={`text-xs font-semibold ${withdrawalEnabled ? "text-casino-green" : "text-destructive"}`}>
+                    {withdrawalEnabled ? "✓ Enabled" : "✗ Disabled"}
+                  </p>
+                </div>
+                <Switch checked={withdrawalEnabled} onCheckedChange={(v) => updateSetting("withdrawals_enabled", v)} disabled={saving} />
+              </div>
+              <p className="text-[11px] text-muted-foreground">Allow users to withdraw USDT from their balance.</p>
+            </div>
+          </div>
+
+          {/* Withdrawal Approval */}
+          <div className="rounded-xl border border-border bg-card p-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-display font-bold text-sm">Withdrawal Approval</p>
+                <p className={`text-xs font-semibold ${requireApproval ? "text-casino-gold" : "text-casino-green"}`}>
+                  {requireApproval ? "🔒 Admin Approval Required" : "⚡ Auto-Process"}
+                </p>
+              </div>
+              <Switch checked={requireApproval} onCheckedChange={toggleWithdrawalApproval} disabled={saving} />
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              {requireApproval
+                ? "All withdrawal requests are held for admin review before processing."
+                : "Withdrawals are processed automatically — no admin intervention needed."}
+            </p>
+          </div>
+
+          {/* Limits */}
+          <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+            <p className="font-display font-bold text-sm">Limits & Thresholds</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-xs">Min Deposit ($)</Label>
+                <Input
+                  type="number" min="1" value={minDeposit}
+                  onChange={(e) => updateSetting("min_deposit", Number(e.target.value))}
+                  className="bg-secondary border-border mt-1 h-9 text-sm"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Min Withdrawal ($)</Label>
+                <Input
+                  type="number" min="1" value={minWithdrawal}
+                  onChange={(e) => updateSetting("min_withdrawal", Number(e.target.value))}
+                  className="bg-secondary border-border mt-1 h-9 text-sm"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Max Withdrawal ($)</Label>
+                <Input
+                  type="number" min="10" value={maxWithdrawal}
+                  onChange={(e) => updateSetting("max_withdrawal", Number(e.target.value))}
+                  className="bg-secondary border-border mt-1 h-9 text-sm"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Daily Limit ($)</Label>
+                <Input
+                  type="number" min="100" value={dailyWithdrawalLimit}
+                  onChange={(e) => updateSetting("daily_withdrawal_limit", Number(e.target.value))}
+                  className="bg-secondary border-border mt-1 h-9 text-sm"
+                />
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground">These limits apply to all users. Admins are exempt.</p>
+          </div>
+
+          {/* Pending Withdrawals */}
+          {requireApproval && (
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+              <div className="px-5 py-3 bg-secondary/60 flex items-center justify-between">
+                <h3 className="font-display text-sm font-bold">
+                  Pending Withdrawals {pendingWithdrawals.length > 0 && <span className="text-casino-gold">({pendingWithdrawals.length})</span>}
+                </h3>
+                <Button variant="ghost" size="sm" onClick={fetchPendingWithdrawals} className="h-7 px-2">
+                  <RefreshCw className="h-3 w-3" />
+                </Button>
+              </div>
+              <div className="p-4">
+                {loadingWds ? (
+                  <p className="text-xs text-muted-foreground">Loading...</p>
+                ) : pendingWithdrawals.length === 0 ? (
+                  <p className="text-xs text-muted-foreground text-center py-4">No pending withdrawal requests</p>
+                ) : (
+                  <div className="space-y-3">
+                    {pendingWithdrawals.map((wd) => (
+                      <div key={wd.id} className="rounded-lg border border-border bg-secondary/30 p-3 space-y-2">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-display text-sm font-bold text-casino-gold">${wd.amount.toFixed(2)}</p>
+                            <p className="text-[10px] text-muted-foreground font-mono truncate max-w-[200px]">{wd.destination_address}</p>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground">{new Date(wd.created_at).toLocaleDateString()}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm" variant="outline"
+                            className="flex-1 text-xs border-casino-green/50 text-casino-green hover:bg-casino-green/10"
+                            onClick={() => handleApproveWithdrawal(wd.id)}
+                            disabled={processingId === wd.id}
+                          >
+                            {processingId === wd.id ? "..." : "✓ Approve"}
+                          </Button>
+                          <Button
+                            size="sm" variant="outline"
+                            className="flex-1 text-xs border-destructive/50 text-destructive hover:bg-destructive/10"
+                            onClick={() => handleDenyWithdrawal(wd.id)}
+                            disabled={processingId === wd.id}
+                          >
+                            {processingId === wd.id ? "..." : "✗ Deny"}
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Recent Activity */}
+          <div className="rounded-xl border border-border bg-card overflow-hidden">
+            <div className="px-5 py-3 bg-secondary/60 flex items-center justify-between">
+              <h3 className="font-display text-sm font-bold">Recent Activity</h3>
+              <Button variant="ghost" size="sm" onClick={fetchRecentActivity} className="h-7 px-2">
+                <RefreshCw className="h-3 w-3" />
+              </Button>
+            </div>
+            <div className="p-4 space-y-2 max-h-64 overflow-y-auto">
+              {[...recentDeposits.map(d => ({ ...d, _type: "deposit" })), ...recentWithdrawals.map(w => ({ ...w, _type: "withdrawal" }))]
+                .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                .slice(0, 15)
+                .map((item) => (
+                  <div key={item.id} className="flex items-center justify-between py-1.5 border-b border-border last:border-0">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs font-bold ${item._type === "deposit" ? "text-casino-green" : "text-casino-gold"}`}>
+                        {item._type === "deposit" ? "↓ DEP" : "↑ WD"}
+                      </span>
+                      <span className="text-xs font-display font-bold">
+                        ${(item.amount_usd || item.amount || 0).toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${
+                        item.status === "completed" ? "bg-casino-green/20 text-casino-green" :
+                        item.status === "pending_approval" ? "bg-casino-gold/20 text-casino-gold" :
+                        item.status === "failed" || item.status === "denied" ? "bg-destructive/20 text-destructive" :
+                        "bg-secondary text-muted-foreground"
+                      }`}>
+                        {item.status}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">{new Date(item.created_at).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                ))}
+              {recentDeposits.length === 0 && recentWithdrawals.length === 0 && (
+                <p className="text-xs text-muted-foreground text-center py-4">No recent activity</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main cPanel Page ────────────────────────────────────────────
-type ActivePanel = null | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "promotions" | "wallet-mode";
+type ActivePanel = null | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "promotions" | "wallet-mode" | "deposits-withdrawals";
 
 export default function CPanel() {
   const { isAdmin, loading, profile } = useAuth();
