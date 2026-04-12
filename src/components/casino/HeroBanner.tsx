@@ -12,11 +12,15 @@ export function HeroBanner() {
     <div className="relative overflow-hidden rounded-2xl mx-4 mt-4">
       <img src={heroBanner} alt="PhantomBet Casino - Win Big!" className="w-full h-44 md:h-56 object-cover" />
       <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/60 to-transparent flex flex-col justify-center p-5">
-        <img src={logo} alt="PhantomBet" className="h-10 md:h-14 w-auto mb-1 drop-shadow-lg" />
-        <h2 className="font-display text-xl md:text-4xl font-black text-gold leading-tight">
-          WIN BIG<br />AT PHANTOMBET
-        </h2>
-        <p className="text-[11px] md:text-sm text-foreground/80 mt-1 mb-3 max-w-[200px] md:max-w-none">Up to $50 welcome bonus or 50 free spins — no wagering requirements!</p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h2 className="font-display text-xl md:text-4xl font-black text-gold leading-tight">
+              WIN BIG<br />AT PHANTOMBET
+            </h2>
+            <p className="text-[11px] md:text-sm text-foreground/80 mt-1 mb-3 max-w-[200px] md:max-w-none">Up to $50 welcome bonus or 50 free spins — no wagering requirements!</p>
+          </div>
+          <img src={logo} alt="PhantomBet" className="h-16 md:h-24 w-auto drop-shadow-lg shrink-0" />
+        </div>
         <div className="flex gap-2">
           {user ? (
             <>
