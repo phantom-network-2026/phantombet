@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { AuthGuard } from "@/components/casino/AuthGuard";
 import { GameChat } from "@/components/casino/GameChat";
 import { motion, AnimatePresence } from "framer-motion";
-import { RotateCw, X } from "lucide-react";
+import { RotateCw, X, Volume2, VolumeX } from "lucide-react";
+import { useRouletteAudio } from "@/hooks/useRouletteAudio";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import phantomLogo from "@/assets/phantombet-logo.png";
@@ -191,7 +192,10 @@ export default function PennyRoulette() {
   const [lastBets, setLastBets] = useState<PlacedBet[]>([]);
   const [winLoss, setWinLoss] = useState(0);
   const [showChat, setShowChat] = useState(false);
+  const [soundOn, setSoundOn] = useState(true);
   const pendingSpinRef = useRef(false);
+  const audio = useRouletteAudio();
+  const ballTickCleanupRef = useRef<(() => void) | null>(null);
 
   const totalBet = bets.reduce((s, b) => s + b.amount, 0);
   const balance = profile?.balance ?? 0;
@@ -200,8 +204,9 @@ export default function PennyRoulette() {
     if (spinning) return;
     if (totalBet + selectedChip > balance) { toast.error("Insufficient balance"); return; }
     if (totalBet + selectedChip > 50) { toast.error("Maximum total bet is $50"); return; }
+    audio.chipPlace();
     setBets((prev) => [...prev, { type, amount: selectedChip, label }]);
-  }, [spinning, selectedChip, totalBet, balance]);
+  }, [spinning, selectedChip, totalBet, balance, audio]);
 
   // Place multiple bets at once (for neighbour/racetrack bets)
   const placeMultipleBets = useCallback((betDefs: { type: BetType; label: string }[]) => {
@@ -215,7 +220,7 @@ export default function PennyRoulette() {
     ]);
   }, [spinning, selectedChip, totalBet, balance]);
 
-  const clearBets = () => { if (!spinning) setBets([]); };
+  const clearBets = () => { if (!spinning) { audio.clearSound(); setBets([]); } };
 
   const spin = useCallback(async (overrideBets?: PlacedBet[]) => {
     const activeBets = overrideBets || bets;
@@ -225,6 +230,11 @@ export default function PennyRoulette() {
     setSplashData(null);
     setLastBets(activeBets);
 
+    // Play spin sound + ball ticks
+    audio.spinStart();
+    const cleanup = audio.startBallTicks();
+    ballTickCleanupRef.current = cleanup;
+
     const winningNumber = Math.floor(Math.random() * 37);
 
     let netAmount = 0;
@@ -232,7 +242,13 @@ export default function PennyRoulette() {
 
     setResult(winningNumber);
     setView("wheel");
-    await new Promise((r) => setTimeout(r, 5000));
+    await new Promise((r) => setTimeout(r, 4500));
+
+    // Ball landing sound
+    if (ballTickCleanupRef.current) { ballTickCleanupRef.current(); ballTickCleanupRef.current = null; }
+    audio.ballLand();
+
+    await new Promise((r) => setTimeout(r, 500));
 
     try {
       const { error } = await supabase.functions.invoke("game-settle", {
@@ -243,12 +259,16 @@ export default function PennyRoulette() {
       await refreshProfile();
     } catch { toast.error("Failed to settle bet"); }
 
+    // Win/lose sound
+    if (netAmount > 0) audio.winSound();
+    else audio.loseSound();
+
     setWinLoss(prev => prev + netAmount);
     setHistory((prev) => [winningNumber, ...prev.slice(0, 19)]);
     setSplashData({ resultNumber: winningNumber, netAmount });
     setSpinning(false);
     setBets([]);
-  }, [bets, user, spinning, refreshProfile]);
+  }, [bets, user, spinning, refreshProfile, audio]);
 
   const rebet = () => {
     if (spinning || lastBets.length === 0) return;
