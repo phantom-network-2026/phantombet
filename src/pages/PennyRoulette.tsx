@@ -483,6 +483,10 @@ export default function PennyRoulette() {
           ${winLoss.toFixed(2)}
         </span>
       </div>
+      <button onClick={() => { const on = audio.toggle(); setSoundOn(on); }}
+        className="flex items-center justify-center text-white hover:text-[#d4af37] transition-colors w-7 h-7">
+        {soundOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4 text-gray-500" />}
+      </button>
       <button onClick={() => navigate("/games")} className="flex items-center gap-1 text-white text-xs hover:text-red-400 transition-colors">
         Exit <X className="w-4 h-4" />
       </button>
