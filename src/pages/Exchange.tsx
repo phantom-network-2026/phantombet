@@ -203,16 +203,12 @@ export default function Exchange() {
                         </div>
                       ))
                     : filtered.map((crypto, i) => (
-                        <motion.button
+                        <motion.div
                           key={crypto.id}
                           initial={{ opacity: 0, y: 8 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: i * 0.03 }}
-                          onClick={() => {
-                            setSelected(crypto);
-                            setAmount("");
-                          }}
-                          className="w-full rounded-xl bg-card border border-border hover:border-[hsl(var(--casino-gold))/0.4] p-4 flex items-center gap-3 transition-all duration-200 group"
+                          className="w-full rounded-xl bg-card border border-border p-4 flex items-center gap-3 opacity-60 cursor-not-allowed"
                         >
                           <div className="h-10 w-10 rounded-full bg-gradient-to-br from-secondary to-secondary/60 flex items-center justify-center text-lg font-bold text-foreground shrink-0 group-hover:from-[hsl(var(--casino-gold))/0.2] group-hover:to-[hsl(var(--casino-gold))/0.05] transition-all">
                             {crypto.icon}
