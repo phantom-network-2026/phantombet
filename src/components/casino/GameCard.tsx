@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { gameImages } from "@/assets/games";
 
 interface GameCardProps {
   id: string;
@@ -27,6 +28,8 @@ export function GameCard({ id, name, image_url, category }: GameCardProps) {
     navigate(`/game/${id}`);
   };
 
+  const thumbnail = gameImages[name] || image_url || "/placeholder.svg";
+
   return (
     <button
       onClick={handleClick}
@@ -34,7 +37,7 @@ export function GameCard({ id, name, image_url, category }: GameCardProps) {
     >
       <div className="aspect-square overflow-hidden">
         <img
-          src={image_url || "/placeholder.svg"}
+          src={thumbnail}
           alt={name}
           loading="lazy"
           className="h-full w-full object-cover transition-transform group-hover:scale-110"
