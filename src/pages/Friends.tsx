@@ -53,7 +53,7 @@ export default function Friends() {
 
       if (userIds.size > 0) {
         const { data: profs } = await supabase
-          .from("profiles")
+          .from("profiles_public" as any)
           .select("user_id, username")
           .in("user_id", Array.from(userIds));
         if (profs) {
@@ -68,7 +68,7 @@ export default function Friends() {
   const handleSearch = async () => {
     if (!searchQuery.trim() || !user) return;
     const { data } = await supabase
-      .from("profiles")
+      .from("profiles_public" as any)
       .select("user_id, username")
       .ilike("username", `%${searchQuery}%`)
       .neq("user_id", user.id)
