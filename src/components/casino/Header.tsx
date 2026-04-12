@@ -22,9 +22,11 @@ export function Header() {
           <div className="overflow-hidden shrink-0" style={{ height: 48, width: 68, marginTop: -18, marginBottom: -10 }}>
             <img src={logo} alt="PhantomBet" className="block w-full h-auto max-w-none" />
           </div>
-          <div className="overflow-hidden shrink-0" style={{ height: 18, width: 120 }}>
-            <img src={logo} alt="PhantomBet" className="block w-full h-auto max-w-none" style={{ transform: 'translateY(-70%)' }} />
-          </div>
+          {!user && (
+            <div className="overflow-hidden shrink-0" style={{ height: 18, width: 120 }}>
+              <img src={logo} alt="PhantomBet" className="block w-full h-auto max-w-none" style={{ transform: 'translateY(-70%)' }} />
+            </div>
+          )}
         </Link>
 
         {/* Desktop nav */}
