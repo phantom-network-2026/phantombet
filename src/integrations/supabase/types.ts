@@ -83,6 +83,33 @@ export type Database = {
         }
         Relationships: []
       }
+      deposit_addresses: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          private_key_encrypted: string
+          tron_address: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          private_key_encrypted: string
+          tron_address: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          private_key_encrypted?: string
+          tron_address?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       deposits: {
         Row: {
           amount_usd: number
@@ -289,6 +316,7 @@ export type Database = {
           updated_at: string
           user_id: string
           username: string | null
+          withdrawal_address: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -306,6 +334,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           username?: string | null
+          withdrawal_address?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -323,6 +352,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           username?: string | null
+          withdrawal_address?: string | null
         }
         Relationships: []
       }
@@ -448,6 +478,42 @@ export type Database = {
         Update: {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      withdrawals: {
+        Row: {
+          amount: number
+          created_at: string
+          destination_address: string
+          error_message: string | null
+          id: string
+          status: string
+          tx_hash: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          destination_address: string
+          error_message?: string | null
+          id?: string
+          status?: string
+          tx_hash?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          destination_address?: string
+          error_message?: string | null
+          id?: string
+          status?: string
+          tx_hash?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
