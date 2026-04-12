@@ -1,4 +1,5 @@
 import heroBanner from "@/assets/hero-banner.jpg";
+import logo from "@/assets/phantombet-logo.png";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,6 +12,7 @@ export function HeroBanner() {
     <div className="relative overflow-hidden rounded-2xl mx-4 mt-4">
       <img src={heroBanner} alt="PhantomBet Casino - Win Big!" className="w-full h-44 md:h-56 object-cover" />
       <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/60 to-transparent flex flex-col justify-center p-5">
+        <img src={logo} alt="PhantomBet" className="h-10 md:h-14 w-auto mb-1 drop-shadow-lg" />
         <h2 className="font-display text-xl md:text-4xl font-black text-gold leading-tight">
           WIN BIG<br />AT PHANTOMBET
         </h2>
