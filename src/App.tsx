@@ -29,6 +29,7 @@ import GamesPage from "./pages/Games.tsx";
 import PrizeReel from "./pages/PrizeReel.tsx";
 import CPanel from "./pages/CPanel.tsx";
 import PennyRoulette from "./pages/PennyRoulette.tsx";
+import Help from "./pages/Help.tsx";
 
 // New HTML5 games
 import ChickenCross from "./pages/games/ChickenCross.tsx";
