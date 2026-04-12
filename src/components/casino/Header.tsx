@@ -18,12 +18,12 @@ export function Header() {
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <FakeWinsTicker />
       <div className="container flex h-14 items-center justify-between">
-        <Link to="/" className="flex items-center gap-1 shrink-0">
+        <Link to="/" className="flex items-center gap-1.5 shrink-0">
           <div className="overflow-hidden h-10 w-10 -my-1 shrink-0">
-            <img src={logo} alt="PhantomBet" className="w-full" style={{ clipPath: 'inset(0 0 28% 0)' }} />
+            <img src={logo} alt="PhantomBet ghost" className="w-full" style={{ clipPath: 'inset(0 0 28% 0)' }} />
           </div>
-          <div className="overflow-hidden h-5 shrink-0">
-            <img src={logo} alt="PhantomBet" className="h-auto" style={{ width: '7.5rem', clipPath: 'inset(72% 0 0 0)', marginTop: '-1.1rem' }} />
+          <div className="overflow-hidden shrink-0 flex items-center" style={{ height: '1rem' }}>
+            <img src={logo} alt="PhantomBet" style={{ width: '8rem', clipPath: 'inset(75% 0 5% 0)' }} />
           </div>
         </Link>
 
