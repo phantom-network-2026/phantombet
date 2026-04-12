@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { LogOut, Shield, Menu, X, ArrowDownToLine, User, Gamepad2, Settings, ChevronDown } from "lucide-react";
 import { FakeWinsTicker } from "./FakeWinsTicker";
-import { BalanceDisplay, ExchangeRateBadge } from "./BalanceDisplay";
+import { BalanceDisplay } from "./BalanceDisplay";
 import logo from "@/assets/phantombet-logo.png";
 
 export function Header() {
@@ -18,13 +18,10 @@ export function Header() {
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <FakeWinsTicker />
       <div className="container flex h-14 items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Link to="/" className="flex items-center gap-2">
-            <img src={logo} alt="PhantomBet" className="h-10 w-10" />
-            <span className="font-display text-xl font-bold text-gold hidden sm:inline">PhantomBet</span>
-          </Link>
-          <ExchangeRateBadge />
-        </div>
+        <Link to="/" className="flex items-center gap-2">
+          <img src={logo} alt="PhantomBet" className="h-10 w-10" />
+          <span className="font-display text-xl font-bold text-gold">PhantomBet</span>
+        </Link>
 
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-3">
