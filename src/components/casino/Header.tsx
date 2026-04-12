@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { LogOut, Shield, Menu, X, ArrowDownToLine, User, Gamepad2, Settings, ChevronDown } from "lucide-react";
+import { LogOut, Shield, Menu, X, ArrowDownToLine, User, Gamepad2, Settings, ChevronDown, Wallet } from "lucide-react";
 import { FakeWinsTicker } from "./FakeWinsTicker";
 import { BalanceDisplay } from "./BalanceDisplay";
 import logo from "@/assets/phantombet-logo.png";
@@ -39,6 +39,9 @@ export function Header() {
                   <Shield className="h-4 w-4 mr-1" /> Admin
                 </Button>
               )}
+              <Button variant="ghost" size="sm" onClick={() => navigate("/wallet")} className="text-casino-gold p-1">
+                <Wallet className="h-5 w-5" />
+              </Button>
               <Button variant="ghost" size="sm" onClick={() => navigate("/profile")} className="text-casino-gold p-1">
                 <Avatar className="h-7 w-7">
                   {profile?.avatar_url && <AvatarImage src={profile.avatar_url} />}
@@ -66,6 +69,9 @@ export function Header() {
           {user && (
             <>
               <BalanceDisplay size="sm" />
+              <button onClick={() => navigate("/wallet")} className="text-casino-gold">
+                <Wallet className="h-5 w-5" />
+              </button>
               <button onClick={() => navigate("/profile")}>
                 <Avatar className="h-7 w-7">
                   {profile?.avatar_url && <AvatarImage src={profile.avatar_url} />}
