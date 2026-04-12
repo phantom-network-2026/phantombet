@@ -56,6 +56,7 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
         "TRON-PRO-API-KEY": TRONGRID_API_KEY,
       },
+      body: JSON.stringify({}),
     });
 
     if (!generateRes.ok) {
