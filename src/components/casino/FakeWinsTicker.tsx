@@ -46,16 +46,14 @@ export const DEFAULT_CONFIG: FakeWinsConfig = {
   ],
 };
 
-// Fetch config from DB, fallback to defaults
+// Fetch config via public settings endpoint, fallback to defaults
 export async function fetchFakeWinsConfig(): Promise<FakeWinsConfig> {
   try {
-    const { data } = await supabase
-      .from("site_settings")
-      .select("value")
-      .eq("key", SETTINGS_KEY)
-      .maybeSingle();
-    if (data?.value) {
-      return { ...DEFAULT_CONFIG, ...(data.value as unknown as Partial<FakeWinsConfig>) };
+    const { data } = await supabase.functions.invoke("get-public-settings", {
+      body: { keys: [SETTINGS_KEY] },
+    });
+    if (data?.settings?.[SETTINGS_KEY]) {
+      return { ...DEFAULT_CONFIG, ...(data.settings[SETTINGS_KEY] as Partial<FakeWinsConfig>) };
     }
   } catch {}
   return DEFAULT_CONFIG;

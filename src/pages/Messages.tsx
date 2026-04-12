@@ -28,9 +28,9 @@ export default function Messages() {
   useEffect(() => {
     if (!user || !friendId) { navigate("/friends"); return; }
 
-    // Fetch friend name
-    supabase.from("profiles").select("username").eq("user_id", friendId).single()
-      .then(({ data }) => { if (data) setFriendName(data.username || "Unknown"); });
+    // Use public view for other-user lookups
+    supabase.from("profiles_public" as any).select("username").eq("user_id", friendId).single()
+      .then(({ data }: any) => { if (data) setFriendName(data.username || "Unknown"); });
 
     // Fetch messages
     fetchMessages();

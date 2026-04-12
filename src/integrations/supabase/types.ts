@@ -520,7 +520,48 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      profiles_public: {
+        Row: {
+          avatar_url: string | null
+          biggest_win: number | null
+          biggest_win_game: string | null
+          bio: string | null
+          border_style: string | null
+          created_at: string | null
+          has_animated_avatar: boolean | null
+          has_animated_border: boolean | null
+          social_links: Json | null
+          user_id: string | null
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          biggest_win?: number | null
+          biggest_win_game?: string | null
+          bio?: string | null
+          border_style?: string | null
+          created_at?: string | null
+          has_animated_avatar?: boolean | null
+          has_animated_border?: boolean | null
+          social_links?: Json | null
+          user_id?: string | null
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          biggest_win?: number | null
+          biggest_win_game?: string | null
+          bio?: string | null
+          border_style?: string | null
+          created_at?: string | null
+          has_animated_avatar?: boolean | null
+          has_animated_border?: boolean | null
+          social_links?: Json | null
+          user_id?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       claim_random_scratch_card: {
@@ -538,6 +579,17 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      perform_daily_spin: {
+        Args: { p_user_id: string }
+        Returns: {
+          is_loyalty: boolean
+          prize_detail: string
+          prize_type: string
+          prize_value: number
+          spin_id: string
+          streak: number
+        }[]
       }
     }
     Enums: {
