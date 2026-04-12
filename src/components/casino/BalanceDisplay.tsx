@@ -24,15 +24,21 @@ export function BalanceDisplay({ size = "md", className = "", showIcon = true }:
     lg: "h-4 w-4",
   };
 
+  const realBalance = profile?.real_balance ?? 0;
+  const bonusBalance = profile?.balance ?? 0;
+
   return (
     <div className={`flex items-center rounded-full bg-secondary/80 border border-border/50 font-display font-bold shrink-0 ${sizeClasses[size]} ${className}`}>
       {showIcon && <Wallet className={`${iconSize[size]} text-casino-gold`} />}
       <span className="text-casino-gold whitespace-nowrap">
-        ${balance.toFixed(2)}
+        ${realBalance.toFixed(2)}
       </span>
-      <span className="text-muted-foreground font-normal text-[0.7em] whitespace-nowrap">
-        {isMockMode ? "MOCK" : "USDT"}
+      <span className="text-muted-foreground font-normal text-[0.7em] whitespace-nowrap">USDT</span>
+      <span className="text-muted-foreground text-[0.7em] mx-0.5">|</span>
+      <span className="text-emerald-400 whitespace-nowrap">
+        ${bonusBalance.toFixed(2)}
       </span>
+      <span className="text-muted-foreground font-normal text-[0.7em] whitespace-nowrap">Bonus</span>
     </div>
   );
 }
