@@ -1972,12 +1972,15 @@ function GhostUsersPanel({ onBack }: { onBack: () => void }) {
               </div>
               {usernames.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto">
-                  {usernames.map((name, i) => (
-                    <span key={i} className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-xs">
-                      {name}
-                      <button onClick={() => removeUsername(i)} className="text-muted-foreground hover:text-destructive">×</button>
-                    </span>
-                  ))}
+                  {usernames.map((name, i) => {
+                    const isReal = realUsernames.has(name.toLowerCase());
+                    return (
+                      <span key={i} className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs ${isReal ? "bg-destructive/20 text-destructive ring-1 ring-destructive/40" : "bg-secondary"}`}>
+                        {isReal && "⚠ "}{name}
+                        <button onClick={() => removeUsername(i)} className="text-muted-foreground hover:text-destructive">×</button>
+                      </span>
+                    );
+                  })}
                 </div>
               )}
             </div>
