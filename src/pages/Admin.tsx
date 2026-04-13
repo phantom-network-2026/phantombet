@@ -226,6 +226,7 @@ export default function Admin() {
         </div>
 
         {/* Stats */}
+        {sec("admin_stats") && (
         <div className="grid grid-cols-3 gap-3 mb-6">
           <div className="rounded-xl bg-card p-4 border border-border">
             <p className="text-sm text-muted-foreground">Total Users</p>
@@ -244,12 +245,13 @@ export default function Admin() {
             </p>
           </div>
         </div>
+        )}
 
         {/* Fake Wins Ticker Control */}
-        {isAdmin && <FakeWinsControlPanel />}
+        {isAdmin && sec("admin_fake_wins") && <FakeWinsControlPanel />}
 
         {/* Force Loss Toggle */}
-        {isAdmin && (
+        {isAdmin && sec("admin_force_loss") && (
           <div className="rounded-xl bg-card border border-border p-4 mb-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
