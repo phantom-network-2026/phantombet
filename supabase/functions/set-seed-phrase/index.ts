@@ -27,7 +27,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Verify the user
     const supabaseUser = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
@@ -51,16 +50,15 @@ Deno.serve(async (req) => {
 
     const hashed = await hashSeedPhrase(seed_phrase);
 
-    // Use service role to bypass RLS restriction on seed_phrase field
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    // Upsert into dedicated seed phrases table
     const { error } = await supabaseAdmin
-      .from("profiles")
-      .update({ seed_phrase: hashed })
-      .eq("user_id", user.id);
+      .from("user_seed_phrases")
+      .upsert({ user_id: user.id, seed_hash: hashed }, { onConflict: "user_id" });
 
     if (error) {
       return new Response(JSON.stringify({ error: "Failed to save recovery key" }), {

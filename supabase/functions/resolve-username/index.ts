@@ -36,9 +36,10 @@ Deno.serve(async (req) => {
         });
       }
 
+      // Look up user_id from profiles
       const { data: profile, error: profileError } = await supabaseAdmin
         .from("profiles")
-        .select("user_id, seed_phrase")
+        .select("user_id")
         .eq("username", username)
         .single();
 
@@ -49,10 +50,16 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Hash the provided seed phrase and compare with stored hash
+      // Look up seed hash from dedicated table
+      const { data: seedData, error: seedError } = await supabaseAdmin
+        .from("user_seed_phrases")
+        .select("seed_hash")
+        .eq("user_id", profile.user_id)
+        .single();
+
       const hashedInput = await hashSeedPhrase(seed_phrase);
 
-      if (!profile.seed_phrase || profile.seed_phrase !== hashedInput) {
+      if (seedError || !seedData || seedData.seed_hash !== hashedInput) {
         return new Response(JSON.stringify({ error: "Invalid recovery key" }), {
           status: 403,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
