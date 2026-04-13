@@ -71,6 +71,8 @@ export default function Friends() {
 
   const fetchOnlineUsers = async () => {
     if (!user) return;
+
+    // Fetch real online users
     const { data: presenceData } = await supabase
       .from("user_presence" as any)
       .select("user_id")
@@ -78,14 +80,53 @@ export default function Friends() {
       .neq("user_id", user.id)
       .limit(50) as { data: any[] | null };
 
+    let realOnline: UserResult[] = [];
     if (presenceData && presenceData.length > 0) {
       const userIds = presenceData.map((p: any) => p.user_id);
       const { data: profs } = await supabase
         .from("profiles_public" as any)
         .select("user_id, username, avatar_url, border_style, has_animated_border, has_animated_avatar")
         .in("user_id", userIds) as { data: any[] | null };
-      setOnlineUsers((profs || []) as UserResult[]);
+      realOnline = (profs || []) as UserResult[];
     }
+
+    // Fetch ghost users config
+    try {
+      const { data } = await supabase.functions.invoke("get-public-settings", {
+        body: { keys: ["ghost_users"] },
+      });
+      const ghostConfig = data?.settings?.ghost_users;
+      if (ghostConfig?.enabled && ghostConfig?.show_in_presence && ghostConfig?.usernames?.length > 0) {
+        // Filter out any names that match real usernames
+        const realNames = new Set(realOnline.map(u => u.username?.toLowerCase()));
+        const availableGhosts = ghostConfig.usernames.filter(
+          (name: string) => !realNames.has(name.toLowerCase())
+        );
+        // Determine how many ghosts to show
+        const minOnline = ghostConfig.min_online || 5;
+        const peakOnline = ghostConfig.peak_online || 20;
+        const hour = new Date().getHours();
+        const isPeak = hour >= 18 && hour <= 23;
+        const ghostCount = Math.min(
+          availableGhosts.length,
+          isPeak ? peakOnline : minOnline
+        );
+        // Shuffle and pick
+        const shuffled = [...availableGhosts].sort(() => Math.random() - 0.5);
+        const ghostUsers: UserResult[] = shuffled.slice(0, ghostCount).map((name: string) => ({
+          user_id: `ghost_${name}`,
+          username: name,
+          avatar_url: null,
+          border_style: null,
+          has_animated_border: false,
+          has_animated_avatar: false,
+        }));
+        setOnlineUsers([...realOnline, ...ghostUsers]);
+        return;
+      }
+    } catch {}
+
+    setOnlineUsers(realOnline);
   };
 
   const handleSearch = async () => {
@@ -225,12 +266,13 @@ export default function Friends() {
               <p className="text-center text-muted-foreground py-8">No users online right now.</p>
             ) : (
               onlineUsers.map((u) => {
-                const existing = friendships.find(
+                const isGhost = u.user_id.startsWith("ghost_");
+                const existing = isGhost ? null : friendships.find(
                   (f) => f.requester_id === u.user_id || f.addressee_id === u.user_id
                 );
                 return (
                   <div key={u.user_id} className="flex items-center justify-between rounded-xl bg-card border border-border p-4">
-                    <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate(`/user/${u.user_id}`)}>
+                    <div className={`flex items-center gap-3 ${isGhost ? "" : "cursor-pointer"}`} onClick={() => !isGhost && navigate(`/user/${u.user_id}`)}>
                       <div className="relative">
                         <ProfileAvatar
                           avatarUrl={u.avatar_url}
@@ -247,7 +289,11 @@ export default function Friends() {
                         <p className="text-xs text-green-400">Online</p>
                       </div>
                     </div>
-                    {existing ? (
+                    {isGhost ? (
+                      <Button variant="gold" size="icon" className="h-8 w-8 rounded-full" onClick={() => toast.info("This user is not accepting requests right now")}>
+                        <UserPlus className="h-4 w-4" />
+                      </Button>
+                    ) : existing ? (
                       <span className="text-xs text-muted-foreground capitalize px-3 py-1 bg-secondary rounded-full">{existing.status}</span>
                     ) : (
                       <Button variant="gold" size="icon" className="h-8 w-8 rounded-full" onClick={() => sendRequest(u.user_id)}>
