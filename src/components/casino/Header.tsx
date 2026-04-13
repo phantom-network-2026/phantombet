@@ -261,7 +261,6 @@ export function Header() {
                   </div>
                 )}
               </div>
-              </Button>
             </>
           )}
         </div>
