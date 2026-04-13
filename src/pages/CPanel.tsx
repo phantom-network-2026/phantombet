@@ -2183,6 +2183,7 @@ export default function CPanel() {
           {activePanel === "deposits-withdrawals" && <DepositsWithdrawalsPanel onBack={back} />}
           {activePanel === "welcome-config" && <WelcomeConfigPanel onBack={back} />}
           {activePanel === "ghost-users" && <GhostUsersPanel onBack={back} />}
+          {activePanel === "broadcasts" && <BroadcastPanel onBack={back} />}
         </div>
       </div>
     );
@@ -2283,7 +2284,7 @@ export default function CPanel() {
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1">
                 <ToolCard icon={<Gift className="h-6 w-6" />} label="Promotions" onClick={() => setActivePanel("promotions")} />
                 <ToolCard icon={<Megaphone className="h-6 w-6" />} label="Announcements" onClick={() => setActivePanel("maintenance")} />
-                <ToolCard icon={<Bell className="h-6 w-6" />} label="Notifications" onClick={() => setActivePanel("maintenance")} />
+                <ToolCard icon={<Bell className="h-6 w-6" />} label="Broadcasts" onClick={() => setActivePanel("broadcasts")} />
               </div>
             </CpanelSection>
             )}
