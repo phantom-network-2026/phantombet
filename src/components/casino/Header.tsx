@@ -41,7 +41,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <FakeWinsTicker />
-      <div className="container flex h-14 items-center justify-between">
+      <div className="container flex h-14 items-center justify-between overflow-hidden">
         <Link to="/" className="flex items-center gap-1.5 shrink-0">
           <div className="overflow-hidden shrink-0" style={{ height: 48, width: 68, marginTop: -18, marginBottom: -10 }}>
             <img src={logo} alt="PhantomBet" className="block w-full h-auto max-w-none" />
