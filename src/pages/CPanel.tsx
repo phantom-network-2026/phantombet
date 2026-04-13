@@ -2022,15 +2022,18 @@ export default function CPanel() {
     }
   }, [tabParam]);
 
+  const [sectionToggles, setSectionToggles] = useState<Record<string, boolean>>({});
+
   useEffect(() => {
     if (!loading && !isAdmin) { navigate("/"); return; }
-    if (isAdmin && !isOwner) {
-      supabase.from("site_settings").select("value").eq("key", "panel_visibility").maybeSingle().then(({ data }) => {
-        const vis = (data?.value as Record<string, boolean>) || {};
-        if (vis.cpanel_access === false) navigate("/");
-      });
-    }
+    supabase.from("site_settings").select("value").eq("key", "panel_visibility").maybeSingle().then(({ data }) => {
+      const vis = (data?.value as Record<string, boolean>) || {};
+      if (isAdmin && !isOwner && vis.cpanel_access === false) navigate("/");
+      setSectionToggles(vis);
+    });
   }, [isAdmin, loading]);
+
+  const sec = (key: string) => isOwner || sectionToggles[key] !== false;
 
   if (loading) return <div className="min-h-screen gradient-casino-bg flex items-center justify-center"><p>Loading...</p></div>;
 
