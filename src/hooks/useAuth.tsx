@@ -72,7 +72,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [hasStaffAccess, setHasStaffAccess] = useState(false);
   const [isMockMode, setIsMockMode] = useState(true);
 
-  // Fetch wallet mode once on mount
   useEffect(() => {
     (async () => {
       try {
@@ -86,43 +85,58 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })();
   }, []);
 
-  const fetchProfile = async (userId: string) => {
-    const { data } = await supabase
-      .from("profiles")
-      .select("username, balance, real_balance, avatar_url, crypto_address, withdrawal_address, bio, biggest_win, biggest_win_game, social_links, has_animated_avatar, has_animated_border, border_style, xp, purchased_borders")
-      .eq("user_id", userId)
-      .single();
-    if (data) {
-      const mockBal = Number(data.balance);
-      const realBal = Number((data as any).real_balance) || 0;
-      setProfile({
-        username: data.username || "",
-        balance: isMockMode ? mockBal : realBal,
-        mock_balance: mockBal,
-        real_balance: realBal,
-        avatar_url: data.avatar_url,
-        crypto_address: data.crypto_address,
-        withdrawal_address: data.withdrawal_address,
-        bio: (data as any).bio || "",
-        biggest_win: Number((data as any).biggest_win) || 0,
-        biggest_win_game: (data as any).biggest_win_game || "",
-        social_links: (data as any).social_links || {},
-        has_animated_avatar: (data as any).has_animated_avatar || false,
-        has_animated_border: (data as any).has_animated_border || false,
-        border_style: (data as any).border_style || "none",
-        xp: Number((data as any).xp) || 0,
-        purchased_borders: (data as any).purchased_borders || [],
-      });
-    }
+  const clearProfileState = () => {
+    setProfile(null);
+    setIsAdmin(false);
+    setIsOwner(false);
+    setHasStaffAccess(false);
+  };
 
-    const { data: roles } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId);
-    const userRoles = roles?.map((r) => r.role) ?? [];
-    setIsOwner(userRoles.includes("owner"));
-    setIsAdmin(userRoles.includes("admin") || userRoles.includes("owner"));
-    setHasStaffAccess(userRoles.some((r) => ["admin", "moderator", "staff", "owner"].includes(r)));
+  const fetchProfile = async (userId: string) => {
+    try {
+      const { data } = await supabase
+        .from("profiles")
+        .select("username, balance, real_balance, avatar_url, crypto_address, withdrawal_address, bio, biggest_win, biggest_win_game, social_links, has_animated_avatar, has_animated_border, border_style, xp, purchased_borders")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (data) {
+        const mockBal = Number(data.balance) || 0;
+        const realBal = Number((data as any).real_balance) || 0;
+        setProfile({
+          username: data.username || "",
+          balance: isMockMode ? mockBal : realBal,
+          mock_balance: mockBal,
+          real_balance: realBal,
+          avatar_url: data.avatar_url,
+          crypto_address: data.crypto_address,
+          withdrawal_address: data.withdrawal_address,
+          bio: (data as any).bio || "",
+          biggest_win: Number((data as any).biggest_win) || 0,
+          biggest_win_game: (data as any).biggest_win_game || "",
+          social_links: (data as any).social_links || {},
+          has_animated_avatar: (data as any).has_animated_avatar || false,
+          has_animated_border: (data as any).has_animated_border || false,
+          border_style: (data as any).border_style || "none",
+          xp: Number((data as any).xp) || 0,
+          purchased_borders: (data as any).purchased_borders || [],
+        });
+      } else {
+        setProfile(null);
+      }
+
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
+
+      const userRoles = roles?.map((r) => r.role) ?? [];
+      setIsOwner(userRoles.includes("owner"));
+      setIsAdmin(userRoles.includes("admin") || userRoles.includes("owner"));
+      setHasStaffAccess(userRoles.some((r) => ["admin", "moderator", "staff", "owner"].includes(r)));
+    } catch {
+      clearProfileState();
+    }
   };
 
   const refreshProfile = async () => {
@@ -130,29 +144,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        setTimeout(() => fetchProfile(session.user.id), 0);
-      } else {
-        setProfile(null);
-        setIsAdmin(false);
-        setIsOwner(false);
-        setHasStaffAccess(false);
+    let mounted = true;
+
+    const applySession = (nextSession: Session | null, fetchUserProfile: boolean) => {
+      if (!mounted) return;
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
+
+      if (nextSession?.user && fetchUserProfile) {
+        window.setTimeout(() => {
+          if (mounted) fetchProfile(nextSession.user.id);
+        }, 0);
       }
-      setLoading(false);
+
+      if (!nextSession?.user) {
+        clearProfileState();
+      }
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      applySession(nextSession, event !== "INITIAL_SESSION");
+      if (event !== "INITIAL_SESSION") {
+        setLoading(false);
+      }
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) fetchProfile(session.user.id);
-      setLoading(false);
+      applySession(session, !!session?.user);
+      if (mounted) setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [isMockMode]);
 
   const signUp = async (email: string, password: string, username: string) => {
     const { error } = await supabase.auth.signUp({
