@@ -93,11 +93,10 @@ export default function Signup() {
       return;
     }
 
-    // Save seed phrase to profile
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      await supabase.from("profiles").update({ seed_phrase: seedPhrase } as any).eq("user_id", user.id);
-    }
+    // Save seed phrase (hashed server-side) via edge function
+    await supabase.functions.invoke("set-seed-phrase", {
+      body: { seed_phrase: seedPhrase },
+    });
 
     setLoading(false);
     navigate("/");
