@@ -111,7 +111,8 @@ export default function OwnerPanel() {
     const { data } = await supabase.from("site_settings").select("value").eq("key", "panel_visibility").maybeSingle();
     const saved = (data?.value as Record<string, boolean>) || {};
     const merged: Record<string, boolean> = {};
-    PANEL_TOGGLES.forEach(t => { merged[t.key] = saved[t.key] ?? t.default; });
+    const allToggles = [...PANEL_TOGGLES, ...ADMIN_SECTION_TOGGLES, ...CPANEL_SECTION_TOGGLES, ...SLOT_SECTION_TOGGLES];
+    allToggles.forEach(t => { merged[t.key] = saved[t.key] ?? t.default; });
     setPanelToggles(merged);
     setTogglesLoading(false);
   };
