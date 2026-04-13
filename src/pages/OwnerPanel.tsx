@@ -100,6 +100,8 @@ export default function OwnerPanel() {
   const [forceLossLoading, setForceLossLoading] = useState(false);
   const [panelToggles, setPanelToggles] = useState<Record<string, boolean>>({});
   const [togglesLoading, setTogglesLoading] = useState(true);
+  const [welcomeBonus, setWelcomeBonus] = useState({ enabled: true, amount: 100 });
+  const [welcomeBonusLoading, setWelcomeBonusLoading] = useState(false);
 
   useEffect(() => {
     if (!loading && !isOwner) { navigate("/"); return; }
@@ -107,6 +109,7 @@ export default function OwnerPanel() {
       fetchUsers();
       fetchForceLoss();
       fetchPanelToggles();
+      fetchWelcomeBonus();
     }
   }, [isOwner, loading]);
 
@@ -160,6 +163,24 @@ export default function OwnerPanel() {
     setForceLoss(checked);
     setForceLossLoading(false);
     toast.success(checked ? "Force Loss ON" : "Force Loss OFF");
+  };
+  const fetchWelcomeBonus = async () => {
+    const { data } = await supabase.from("site_settings").select("value").eq("key", "welcome_bonus").maybeSingle();
+    if (data?.value) setWelcomeBonus(data.value as any);
+  };
+
+  const saveWelcomeBonus = async (updates: Partial<typeof welcomeBonus>) => {
+    setWelcomeBonusLoading(true);
+    const newConfig = { ...welcomeBonus, ...updates };
+    setWelcomeBonus(newConfig);
+    const { data: existing } = await supabase.from("site_settings").select("id").eq("key", "welcome_bonus").maybeSingle();
+    if (existing) {
+      await supabase.from("site_settings").update({ value: newConfig as any }).eq("key", "welcome_bonus");
+    } else {
+      await supabase.from("site_settings").insert({ key: "welcome_bonus", value: newConfig as any });
+    }
+    setWelcomeBonusLoading(false);
+    toast.success(newConfig.enabled ? `Welcome bonus set to $${newConfig.amount}` : "Welcome bonus disabled");
   };
 
   const fetchUsers = async () => {
@@ -404,7 +425,41 @@ export default function OwnerPanel() {
           {forceLoss && <p className="text-xs text-destructive mt-2 font-medium">⚠️ ACTIVE</p>}
         </div>
 
-        {/* Restock Scratch Cards */}
+        {/* Welcome Bonus Toggle */}
+        <div className="rounded-xl bg-card border border-border p-4 mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <DollarSign className="h-5 w-5 text-green-400" />
+              <div>
+                <p className="font-display font-bold text-sm">Auto Welcome Bonus</p>
+                <p className="text-xs text-muted-foreground">Credit new users with bonus balance on signup</p>
+              </div>
+            </div>
+            <Switch
+              checked={welcomeBonus.enabled}
+              onCheckedChange={(checked) => saveWelcomeBonus({ enabled: checked })}
+              disabled={welcomeBonusLoading}
+            />
+          </div>
+          {welcomeBonus.enabled && (
+            <div className="flex items-center gap-2 mt-2">
+              <Label className="text-xs text-muted-foreground whitespace-nowrap">Amount: $</Label>
+              <Input
+                type="number"
+                className="h-8 w-24 text-sm"
+                value={welcomeBonus.amount}
+                onChange={(e) => setWelcomeBonus(prev => ({ ...prev, amount: Number(e.target.value) }))}
+                onBlur={() => saveWelcomeBonus({ amount: welcomeBonus.amount })}
+                min={0}
+                max={10000}
+              />
+            </div>
+          )}
+          {welcomeBonus.enabled && (
+            <p className="text-xs text-green-400 mt-2 font-medium">✅ New users receive ${welcomeBonus.amount} bonus on signup</p>
+          )}
+        </div>
+
         <div className="rounded-xl bg-card border border-primary/30 p-4 mb-6">
           <h3 className="font-display font-bold text-sm mb-3 flex items-center gap-2 text-primary">
             <Gamepad2 className="h-4 w-4" /> Restock Scratch Cards
