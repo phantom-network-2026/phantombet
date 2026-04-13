@@ -1,0 +1,1 @@
+DROP VIEW IF EXISTS public.deposit_addresses_safe;
