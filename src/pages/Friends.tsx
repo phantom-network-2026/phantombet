@@ -266,12 +266,13 @@ export default function Friends() {
               <p className="text-center text-muted-foreground py-8">No users online right now.</p>
             ) : (
               onlineUsers.map((u) => {
-                const existing = friendships.find(
+                const isGhost = u.user_id.startsWith("ghost_");
+                const existing = isGhost ? null : friendships.find(
                   (f) => f.requester_id === u.user_id || f.addressee_id === u.user_id
                 );
                 return (
                   <div key={u.user_id} className="flex items-center justify-between rounded-xl bg-card border border-border p-4">
-                    <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate(`/user/${u.user_id}`)}>
+                    <div className={`flex items-center gap-3 ${isGhost ? "" : "cursor-pointer"}`} onClick={() => !isGhost && navigate(`/user/${u.user_id}`)}>
                       <div className="relative">
                         <ProfileAvatar
                           avatarUrl={u.avatar_url}
@@ -288,7 +289,11 @@ export default function Friends() {
                         <p className="text-xs text-green-400">Online</p>
                       </div>
                     </div>
-                    {existing ? (
+                    {isGhost ? (
+                      <Button variant="gold" size="icon" className="h-8 w-8 rounded-full" onClick={() => toast.info("This user is not accepting requests right now")}>
+                        <UserPlus className="h-4 w-4" />
+                      </Button>
+                    ) : existing ? (
                       <span className="text-xs text-muted-foreground capitalize px-3 py-1 bg-secondary rounded-full">{existing.status}</span>
                     ) : (
                       <Button variant="gold" size="icon" className="h-8 w-8 rounded-full" onClick={() => sendRequest(u.user_id)}>
