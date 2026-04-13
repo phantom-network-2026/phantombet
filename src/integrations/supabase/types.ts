@@ -597,6 +597,30 @@ export type Database = {
       }
     }
     Views: {
+      deposit_addresses_safe: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          is_active: boolean | null
+          tron_address: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          tron_address?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          tron_address?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles_public: {
         Row: {
           avatar_url: string | null
