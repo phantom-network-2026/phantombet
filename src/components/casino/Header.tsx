@@ -104,6 +104,7 @@ export function Header() {
           {user ? (
             <>
               <BalanceDisplay size="sm" />
+              <NotificationBell />
               <button onClick={() => navigate("/wallet")} className="text-casino-gold">
                 <Wallet className="h-5 w-5" />
               </button>
