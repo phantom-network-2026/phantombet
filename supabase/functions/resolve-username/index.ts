@@ -5,6 +5,14 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+async function hashSeedPhrase(seed: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(seed.trim().toLowerCase());
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -41,7 +49,10 @@ Deno.serve(async (req) => {
         });
       }
 
-      if (!profile.seed_phrase || profile.seed_phrase !== seed_phrase) {
+      // Hash the provided seed phrase and compare with stored hash
+      const hashedInput = await hashSeedPhrase(seed_phrase);
+
+      if (!profile.seed_phrase || profile.seed_phrase !== hashedInput) {
         return new Response(JSON.stringify({ error: "Invalid recovery key" }), {
           status: 403,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -65,7 +76,7 @@ Deno.serve(async (req) => {
 
       const { error } = await supabaseAdmin.auth.admin.updateUserById(user_id, { password: new_password });
       if (error) {
-        return new Response(JSON.stringify({ error: error.message }), {
+        return new Response(JSON.stringify({ error: "Failed to update password" }), {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -110,7 +121,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
+    return new Response(JSON.stringify({ error: "Internal error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
