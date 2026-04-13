@@ -164,8 +164,26 @@ export default function OwnerPanel() {
     setForceLossLoading(false);
     toast.success(checked ? "Force Loss ON" : "Force Loss OFF");
   };
+  const fetchWelcomeBonus = async () => {
+    const { data } = await supabase.from("site_settings").select("value").eq("key", "welcome_bonus").maybeSingle();
+    if (data?.value) setWelcomeBonus(data.value as any);
+  };
 
-  const fetchUsers = async () => {
+  const saveWelcomeBonus = async (updates: Partial<typeof welcomeBonus>) => {
+    setWelcomeBonusLoading(true);
+    const newConfig = { ...welcomeBonus, ...updates };
+    setWelcomeBonus(newConfig);
+    const { data: existing } = await supabase.from("site_settings").select("id").eq("key", "welcome_bonus").maybeSingle();
+    if (existing) {
+      await supabase.from("site_settings").update({ value: newConfig as any }).eq("key", "welcome_bonus");
+    } else {
+      await supabase.from("site_settings").insert({ key: "welcome_bonus", value: newConfig as any });
+    }
+    setWelcomeBonusLoading(false);
+    toast.success(newConfig.enabled ? `Welcome bonus set to $${newConfig.amount}` : "Welcome bonus disabled");
+  };
+
+
     setLoadingUsers(true);
     const { data: profiles } = await supabase.from("profiles").select("*");
     const { data: roles } = await supabase.from("user_roles").select("*");
