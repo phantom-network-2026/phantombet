@@ -324,20 +324,22 @@ export default function Admin() {
                 </div>
 
                 <div className="flex gap-2 flex-wrap">
-                  {isAdmin && (
+                  {isAdmin && sec("admin_balance") && (
                     <Button variant="outline" size="sm" onClick={() => setAdjustUserId(adjustUserId === user.user_id ? null : user.user_id)}>
                       <DollarSign className="h-3 w-3 mr-1" /> Balance
                     </Button>
                   )}
+                  {sec("admin_edit") && (
                   <Button variant="outline" size="sm" onClick={() => handleEditUser(user.user_id)}>
                     <Edit className="h-3 w-3 mr-1" /> Edit
                   </Button>
-                  {isAdmin && (
+                  )}
+                  {isAdmin && sec("admin_roles") && (
                     <Button variant="outline" size="sm" onClick={() => setRolesUserId(rolesUserId === user.user_id ? null : user.user_id)}>
                       <Shield className="h-3 w-3 mr-1" /> Roles
                     </Button>
                   )}
-                  {isAdmin && (
+                  {isAdmin && sec("admin_delete") && (
                     <Button variant="destructive" size="sm" onClick={() => setDeleteConfirmId(deleteConfirmId === user.user_id ? null : user.user_id)}>
                       <Trash2 className="h-3 w-3 mr-1" /> Delete
                     </Button>
