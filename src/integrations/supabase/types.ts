@@ -686,6 +686,13 @@ export type Database = {
           symbols: string[]
         }[]
       }
+      deposit_address_for_user: {
+        Args: { p_user_id: string }
+        Returns: {
+          is_active: boolean
+          tron_address: string
+        }[]
+      }
       grant_xp: {
         Args: { p_amount: number; p_user_id: string }
         Returns: {
