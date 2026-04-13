@@ -72,12 +72,14 @@ export default function Friends() {
   const fetchOnlineUsers = async () => {
     if (!user) return;
 
-    // Fetch real online users
+    // Fetch real online users — only those seen in the last 2 minutes
+    const twoMinAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
     const { data: presenceData } = await supabase
       .from("user_presence" as any)
       .select("user_id")
       .eq("is_online", true)
       .neq("user_id", user.id)
+      .gte("last_seen", twoMinAgo)
       .limit(50) as { data: any[] | null };
 
     let realOnline: UserResult[] = [];
