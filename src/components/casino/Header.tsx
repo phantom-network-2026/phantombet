@@ -7,6 +7,7 @@ import { LogOut, Shield, Menu, X, ArrowDownToLine, User, Gamepad2, Settings, Che
 import { FakeWinsTicker } from "./FakeWinsTicker";
 import { BalanceDisplay } from "./BalanceDisplay";
 import { ProfileAvatar } from "./ProfileAvatar";
+import { NotificationBell } from "./NotificationBell";
 import logo from "@/assets/phantombet-logo.png";
 
 export function Header() {
