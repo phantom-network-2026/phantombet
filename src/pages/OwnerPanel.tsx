@@ -432,7 +432,7 @@ export default function OwnerPanel() {
               <DollarSign className="h-5 w-5 text-green-400" />
               <div>
                 <p className="font-display font-bold text-sm">Auto Welcome Bonus</p>
-                <p className="text-xs text-muted-foreground">Credit new users with bonus balance on signup</p>
+                <p className="text-xs text-muted-foreground">Credit new users with mock bonus balance on signup (mock mode only)</p>
               </div>
             </div>
             <Switch
