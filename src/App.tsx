@@ -94,6 +94,7 @@ const App = () => (
               <Route path="/slot-cowboy" element={<SlotCowboy />} />
               <Route path="/roulette" element={<Roulette />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/user/:userId" element={<UserProfile />} />
               <Route path="/prize-reel" element={<PrizeReel />} />
               <Route path="/cpanel" element={<CPanel />} />
               <Route path="/owner-panel" element={<OwnerPanel />} />
