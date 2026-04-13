@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Header } from "@/components/casino/Header";
 import { FakeWinsControlPanel } from "@/components/casino/FakeWinsControlPanel";
 import { StaffUsername, type StaffRole } from "@/components/casino/StaffUsername";
-import { ArrowLeft, Users, DollarSign, Plus, Minus, Edit, Save, Shield, Trash2, Circle, ShieldAlert, Eye, EyeOff, Crown, Lock } from "lucide-react";
+import { ArrowLeft, Users, DollarSign, Plus, Minus, Edit, Save, Shield, Trash2, Circle, ShieldAlert, Eye, EyeOff, Crown, Lock, Settings, Gamepad2 } from "lucide-react";
 import { getStatusColor, getStatusLabel } from "@/hooks/usePresence";
 import { toast } from "sonner";
 
