@@ -404,6 +404,30 @@ export default function OwnerPanel() {
           {forceLoss && <p className="text-xs text-destructive mt-2 font-medium">⚠️ ACTIVE</p>}
         </div>
 
+        {/* Restock Scratch Cards */}
+        <div className="rounded-xl bg-card border border-primary/30 p-4 mb-6">
+          <h3 className="font-display font-bold text-sm mb-3 flex items-center gap-2 text-primary">
+            <Gamepad2 className="h-4 w-4" /> Restock Scratch Cards
+          </h3>
+          <p className="text-xs text-muted-foreground mb-3">Delete all existing cards and regenerate a full pool (2,000 cards × 7 tiers = 14,000 cards).</p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              if (!confirm("This will delete ALL existing scratch cards (including unclaimed ones) and generate a fresh full pool. Continue?")) return;
+              toast.loading("Restocking scratch cards...", { id: "restock" });
+              const { data, error } = await supabase.functions.invoke("restock-scratch-cards");
+              if (error || data?.error) {
+                toast.error(data?.error || "Failed to restock", { id: "restock" });
+                return;
+              }
+              toast.success(`Restocked ${data.total_cards?.toLocaleString()} scratch cards across ${data.tiers} tiers`, { id: "restock" });
+            }}
+          >
+            🎰 Restock All Cards
+          </Button>
+        </div>
+
         {/* Reset Balances */}
         <div className="rounded-xl bg-card border border-destructive/30 p-4 mb-6">
           <h3 className="font-display font-bold text-sm mb-3 flex items-center gap-2 text-destructive">
