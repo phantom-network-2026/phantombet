@@ -10,7 +10,13 @@ import WelcomeBanner from "@/components/casino/WelcomeBanner";
 import SignupPrivacyBanner from "@/components/casino/SignupPrivacyBanner";
 import logo from "@/assets/phantombet-logo.png";
 import { Copy, Shield, AlertTriangle } from "lucide-react";
+import { LanguagePicker } from "@/components/casino/LanguagePicker";
 import { toast } from "sonner";
+  return (
+    <div className="min-h-screen gradient-casino-bg flex items-center justify-center p-4">
+      <div className="absolute top-4 right-4">
+        <LanguagePicker />
+      </div>
 
 const WORD_LIST = [
   "alpha","bravo","charlie","delta","echo","foxtrot","golf","hotel","india","juliet",

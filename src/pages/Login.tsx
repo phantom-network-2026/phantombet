@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import WelcomeBanner from "@/components/casino/WelcomeBanner";
 import logo from "@/assets/phantombet-logo.png";
+import { LanguagePicker } from "@/components/casino/LanguagePicker";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -27,6 +28,9 @@ export default function Login() {
 
   return (
     <div className="min-h-screen gradient-casino-bg flex items-center justify-center p-4">
+      <div className="absolute top-4 right-4">
+        <LanguagePicker />
+      </div>
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
           <img src={logo} alt="PhantomBet" className="h-48 w-48 mx-auto mb-3" />
