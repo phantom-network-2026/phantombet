@@ -425,7 +425,41 @@ export default function OwnerPanel() {
           {forceLoss && <p className="text-xs text-destructive mt-2 font-medium">⚠️ ACTIVE</p>}
         </div>
 
-        {/* Restock Scratch Cards */}
+        {/* Welcome Bonus Toggle */}
+        <div className="rounded-xl bg-card border border-border p-4 mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <DollarSign className="h-5 w-5 text-green-400" />
+              <div>
+                <p className="font-display font-bold text-sm">Auto Welcome Bonus</p>
+                <p className="text-xs text-muted-foreground">Credit new users with bonus balance on signup</p>
+              </div>
+            </div>
+            <Switch
+              checked={welcomeBonus.enabled}
+              onCheckedChange={(checked) => saveWelcomeBonus({ enabled: checked })}
+              disabled={welcomeBonusLoading}
+            />
+          </div>
+          {welcomeBonus.enabled && (
+            <div className="flex items-center gap-2 mt-2">
+              <Label className="text-xs text-muted-foreground whitespace-nowrap">Amount: $</Label>
+              <Input
+                type="number"
+                className="h-8 w-24 text-sm"
+                value={welcomeBonus.amount}
+                onChange={(e) => setWelcomeBonus(prev => ({ ...prev, amount: Number(e.target.value) }))}
+                onBlur={() => saveWelcomeBonus({ amount: welcomeBonus.amount })}
+                min={0}
+                max={10000}
+              />
+            </div>
+          )}
+          {welcomeBonus.enabled && (
+            <p className="text-xs text-green-400 mt-2 font-medium">✅ New users receive ${welcomeBonus.amount} bonus on signup</p>
+          )}
+        </div>
+
         <div className="rounded-xl bg-card border border-primary/30 p-4 mb-6">
           <h3 className="font-display font-bold text-sm mb-3 flex items-center gap-2 text-primary">
             <Gamepad2 className="h-4 w-4" /> Restock Scratch Cards
