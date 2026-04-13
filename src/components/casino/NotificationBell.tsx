@@ -24,7 +24,6 @@ export function NotificationBell() {
     const { data: reads } = await supabase.from("broadcast_reads" as any).select("broadcast_id").eq("user_id", user.id) as { data: any[] | null };
     setBroadcasts((msgs || []) as Broadcast[]);
     setReadIds(new Set((reads || []).map((r: any) => r.broadcast_id)));
-    setReadIds(new Set((reads as any[] || []).map((r: any) => r.broadcast_id)));
   };
 
   useEffect(() => {
