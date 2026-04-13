@@ -44,6 +44,39 @@ const PANEL_TOGGLES = [
   { key: "slot_panel_access", label: "Slot Panel accessible", default: true },
 ];
 
+// Granular section toggles within each panel
+const ADMIN_SECTION_TOGGLES = [
+  { key: "admin_stats", label: "User Statistics", default: true },
+  { key: "admin_fake_wins", label: "Fake Wins Control", default: true },
+  { key: "admin_force_loss", label: "Force Loss Toggle", default: true },
+  { key: "admin_balance", label: "Balance Adjustment", default: true },
+  { key: "admin_roles", label: "Role Management", default: true },
+  { key: "admin_edit", label: "Edit Users", default: true },
+  { key: "admin_delete", label: "Delete Users", default: true },
+];
+
+const CPANEL_SECTION_TOGGLES = [
+  { key: "cpanel_statistics", label: "Statistics", default: true },
+  { key: "cpanel_deposits", label: "Deposits & Withdrawals", default: true },
+  { key: "cpanel_users", label: "User Management", default: true },
+  { key: "cpanel_games", label: "Games & Finance", default: true },
+  { key: "cpanel_promotions", label: "Promotions & Marketing", default: true },
+  { key: "cpanel_files", label: "Files", default: true },
+  { key: "cpanel_databases", label: "Databases", default: true },
+  { key: "cpanel_security", label: "Security", default: true },
+  { key: "cpanel_config", label: "Site Configuration", default: true },
+];
+
+const SLOT_SECTION_TOGGLES = [
+  { key: "slot_house_edge", label: "House Edge", default: true },
+  { key: "slot_probability", label: "Win Probability", default: true },
+  { key: "slot_game_manager", label: "Game Manager", default: true },
+  { key: "slot_transactions", label: "Transactions", default: true },
+  { key: "slot_prizes", label: "Prize Spins", default: true },
+  { key: "slot_scratch", label: "Scratch Cards", default: true },
+  { key: "slot_wallet", label: "Wallet Mode", default: true },
+];
+
 export default function OwnerPanel() {
   const { isOwner, loading } = useAuth();
   const navigate = useNavigate();
