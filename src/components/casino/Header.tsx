@@ -103,7 +103,7 @@ export function Header() {
         <div className="flex md:hidden items-center gap-1 min-w-0 overflow-hidden">
           {user ? (
             <>
-              <BalanceDisplay size="sm" />
+              <div className="min-w-0 overflow-hidden"><BalanceDisplay size="sm" /></div>
               <NotificationBell />
               <button onClick={() => navigate("/wallet")} className="text-casino-gold shrink-0 p-0.5">
                 <Wallet className="h-4 w-4" />
