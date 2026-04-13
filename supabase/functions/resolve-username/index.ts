@@ -11,7 +11,72 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { username } = await req.json();
+    const body = await req.json();
+    const { username, seed_phrase, action } = body;
+
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    // Action: recover by seed phrase
+    if (action === "recover_by_seed") {
+      if (!seed_phrase || !username) {
+        return new Response(JSON.stringify({ error: "Username and seed phrase required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { data: profile, error: profileError } = await supabaseAdmin
+        .from("profiles")
+        .select("user_id, seed_phrase")
+        .eq("username", username)
+        .single();
+
+      if (profileError || !profile) {
+        return new Response(JSON.stringify({ error: "Username not found" }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (!profile.seed_phrase || profile.seed_phrase !== seed_phrase) {
+        return new Response(JSON.stringify({ error: "Invalid recovery key" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(JSON.stringify({ verified: true, user_id: profile.user_id }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Action: reset password after seed verification
+    if (action === "reset_password") {
+      const { user_id, new_password } = body;
+      if (!user_id || !new_password) {
+        return new Response(JSON.stringify({ error: "user_id and new_password required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { error } = await supabaseAdmin.auth.admin.updateUserById(user_id, { password: new_password });
+      if (error) {
+        return new Response(JSON.stringify({ error: error.message }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Default: resolve username to email
     if (!username) {
       return new Response(JSON.stringify({ error: "Username required" }), {
         status: 400,
@@ -19,12 +84,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
-
-    // Look up user_id from profiles
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
       .select("user_id")
@@ -38,7 +97,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Get email from auth.users using admin API
     const { data: { user }, error: userError } = await supabaseAdmin.auth.admin.getUserById(profile.user_id);
 
     if (userError || !user) {
