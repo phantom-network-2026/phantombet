@@ -69,6 +69,7 @@ export function Header() {
                   <Shield className="h-4 w-4 mr-1" /> Admin
                 </Button>
               )}
+              <NotificationBell />
               <Button variant="ghost" size="sm" onClick={() => navigate("/wallet")} className="text-casino-gold p-1">
                 <Wallet className="h-5 w-5" />
               </Button>
