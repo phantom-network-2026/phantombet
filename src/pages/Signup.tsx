@@ -12,11 +12,6 @@ import logo from "@/assets/phantombet-logo.png";
 import { Copy, Shield, AlertTriangle } from "lucide-react";
 import { LanguagePicker } from "@/components/casino/LanguagePicker";
 import { toast } from "sonner";
-  return (
-    <div className="min-h-screen gradient-casino-bg flex items-center justify-center p-4">
-      <div className="absolute top-4 right-4">
-        <LanguagePicker />
-      </div>
 
 const WORD_LIST = [
   "alpha","bravo","charlie","delta","echo","foxtrot","golf","hotel","india","juliet",
@@ -110,7 +105,10 @@ export default function Signup() {
 
   if (step === "verify") {
     return (
-      <div className="min-h-screen gradient-casino-bg flex items-center justify-center p-4">
+      <div className="relative min-h-screen gradient-casino-bg flex items-center justify-center p-4">
+        <div className="absolute top-4 right-4 z-10">
+          <LanguagePicker />
+        </div>
         <div className="w-full max-w-sm space-y-5">
           <div className="text-center">
             <img src={logo} alt="PhantomBet" className="h-16 w-16 mx-auto mb-3" />
@@ -146,7 +144,10 @@ export default function Signup() {
 
   if (step === "seed") {
     return (
-      <div className="min-h-screen gradient-casino-bg flex items-center justify-center p-4">
+      <div className="relative min-h-screen gradient-casino-bg flex items-center justify-center p-4">
+        <div className="absolute top-4 right-4 z-10">
+          <LanguagePicker />
+        </div>
         <div className="w-full max-w-sm space-y-5">
           <div className="text-center">
             <img src={logo} alt="PhantomBet" className="h-16 w-16 mx-auto mb-3" />
@@ -199,7 +200,10 @@ export default function Signup() {
   }
 
   return (
-    <div className="min-h-screen gradient-casino-bg flex items-center justify-center p-4">
+    <div className="relative min-h-screen gradient-casino-bg flex items-center justify-center p-4">
+      <div className="absolute top-4 right-4 z-10">
+        <LanguagePicker />
+      </div>
       <div className="w-full max-w-sm space-y-5">
         <div className="text-center">
           <img src={logo} alt="PhantomBet" className="h-16 w-16 mx-auto mb-3" />
