@@ -1,23 +1,25 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { Home, Dice5, Trophy, Users, HelpCircle, ArrowLeftRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage, type LanguageCode } from "@/hooks/useLanguage";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 const navItems = [
-  { icon: Home, label: "Home", path: "/", requiresAuth: false },
-  { icon: Dice5, label: "Games", path: "/games", requiresAuth: false },
-  { icon: Users, label: "Friends", path: "/friends", requiresAuth: true },
-  { icon: Trophy, label: "Promos", path: "/promotions", requiresAuth: true },
-  { icon: ArrowLeftRight, label: "Exchange", path: "/exchange", requiresAuth: true },
-  { icon: HelpCircle, label: "Help", path: "/help", requiresAuth: false },
+  { icon: Home, labelKey: "home" as const, path: "/", requiresAuth: false },
+  { icon: Dice5, labelKey: "games" as const, path: "/games", requiresAuth: false },
+  { icon: Users, labelKey: "friends" as const, path: "/friends", requiresAuth: true },
+  { icon: Trophy, labelKey: "promos" as const, path: "/promotions", requiresAuth: true },
+  { icon: ArrowLeftRight, labelKey: "exchange" as const, path: "/exchange", requiresAuth: true },
+  { icon: HelpCircle, labelKey: "help" as const, path: "/help", requiresAuth: false },
 ];
 
 export function BottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [socialBadge, setSocialBadge] = useState(0);
 
   useEffect(() => {
@@ -76,7 +78,7 @@ export function BottomNav() {
                   </span>
                 )}
               </div>
-              <span className="text-[10px] font-medium">{item.label}</span>
+              <span className="text-[10px] font-medium">{t(item.labelKey)}</span>
             </button>
           );
         })}
