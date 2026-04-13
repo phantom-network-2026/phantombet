@@ -182,7 +182,7 @@ export default function UserProfile() {
               role={staffRole}
               hasHighRoller={profile.has_high_roller || false}
               nameColor={profile.name_color}
-              size="lg"
+                size="md"
             />
             <p className="text-xs text-muted-foreground mt-1">
               {isOnline ? <span className="text-green-400">● Online</span> : "● Offline"}

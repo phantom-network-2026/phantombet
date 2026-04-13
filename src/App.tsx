@@ -33,6 +33,7 @@ import PennyRoulette from "./pages/PennyRoulette.tsx";
 import Help from "./pages/Help.tsx";
 import Exchange from "./pages/Exchange.tsx";
 import Wallet from "./pages/Wallet.tsx";
+import UserProfile from "./pages/UserProfile.tsx";
 
 // New HTML5 games
 import ChickenCross from "./pages/games/ChickenCross.tsx";
