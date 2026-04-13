@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Header } from "@/components/casino/Header";
 import { FakeWinsControlPanel } from "@/components/casino/FakeWinsControlPanel";
 import { StaffUsername, type StaffRole } from "@/components/casino/StaffUsername";
-import { ArrowLeft, Users, DollarSign, Plus, Minus, Edit, Save, Shield, Trash2, Circle, ShieldAlert, Eye, EyeOff, Crown, Lock } from "lucide-react";
+import { ArrowLeft, Users, DollarSign, Plus, Minus, Edit, Save, Shield, Trash2, Circle, ShieldAlert, Eye, EyeOff, Crown, Lock, Settings, Gamepad2 } from "lucide-react";
 import { getStatusColor, getStatusLabel } from "@/hooks/usePresence";
 import { toast } from "sonner";
 
@@ -42,6 +42,39 @@ const PANEL_TOGGLES = [
   { key: "cpanel_access", label: "cPanel accessible", default: true },
   { key: "slot_panel_visible", label: "Slot Panel visible in menu", default: true },
   { key: "slot_panel_access", label: "Slot Panel accessible", default: true },
+];
+
+// Granular section toggles within each panel
+const ADMIN_SECTION_TOGGLES = [
+  { key: "admin_stats", label: "User Statistics", default: true },
+  { key: "admin_fake_wins", label: "Fake Wins Control", default: true },
+  { key: "admin_force_loss", label: "Force Loss Toggle", default: true },
+  { key: "admin_balance", label: "Balance Adjustment", default: true },
+  { key: "admin_roles", label: "Role Management", default: true },
+  { key: "admin_edit", label: "Edit Users", default: true },
+  { key: "admin_delete", label: "Delete Users", default: true },
+];
+
+const CPANEL_SECTION_TOGGLES = [
+  { key: "cpanel_statistics", label: "Statistics", default: true },
+  { key: "cpanel_deposits", label: "Deposits & Withdrawals", default: true },
+  { key: "cpanel_users", label: "User Management", default: true },
+  { key: "cpanel_games", label: "Games & Finance", default: true },
+  { key: "cpanel_promotions", label: "Promotions & Marketing", default: true },
+  { key: "cpanel_files", label: "Files", default: true },
+  { key: "cpanel_databases", label: "Databases", default: true },
+  { key: "cpanel_security", label: "Security", default: true },
+  { key: "cpanel_config", label: "Site Configuration", default: true },
+];
+
+const SLOT_SECTION_TOGGLES = [
+  { key: "slot_house_edge", label: "House Edge", default: true },
+  { key: "slot_probability", label: "Win Probability", default: true },
+  { key: "slot_game_manager", label: "Game Manager", default: true },
+  { key: "slot_transactions", label: "Transactions", default: true },
+  { key: "slot_prizes", label: "Prize Spins", default: true },
+  { key: "slot_scratch", label: "Scratch Cards", default: true },
+  { key: "slot_wallet", label: "Wallet Mode", default: true },
 ];
 
 export default function OwnerPanel() {
@@ -78,7 +111,8 @@ export default function OwnerPanel() {
     const { data } = await supabase.from("site_settings").select("value").eq("key", "panel_visibility").maybeSingle();
     const saved = (data?.value as Record<string, boolean>) || {};
     const merged: Record<string, boolean> = {};
-    PANEL_TOGGLES.forEach(t => { merged[t.key] = saved[t.key] ?? t.default; });
+    const allToggles = [...PANEL_TOGGLES, ...ADMIN_SECTION_TOGGLES, ...CPANEL_SECTION_TOGGLES, ...SLOT_SECTION_TOGGLES];
+    allToggles.forEach(t => { merged[t.key] = saved[t.key] ?? t.default; });
     setPanelToggles(merged);
     setTogglesLoading(false);
   };
@@ -263,7 +297,60 @@ export default function OwnerPanel() {
           )}
         </div>
 
-        {/* Stats */}
+        {/* Granular Section Toggles */}
+        {!togglesLoading && (
+          <div className="space-y-4 mb-6">
+            {/* Admin Panel Sections */}
+            <div className="rounded-xl bg-card border border-border p-4">
+              <h3 className="font-display font-bold text-sm mb-3 flex items-center gap-2 text-casino-gold">
+                <Shield className="h-4 w-4" /> Admin Panel — Feature Toggles
+              </h3>
+              <p className="text-xs text-muted-foreground mb-3">Toggle individual features visible to admins/staff</p>
+              <div className="space-y-2">
+                {ADMIN_SECTION_TOGGLES.map(t => (
+                  <div key={t.key} className="flex items-center justify-between">
+                    <span className="text-sm">{t.label}</span>
+                    <Switch checked={panelToggles[t.key] ?? true} onCheckedChange={(c) => handlePanelToggle(t.key, c)} />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* cPanel Sections */}
+            <div className="rounded-xl bg-card border border-border p-4">
+              <h3 className="font-display font-bold text-sm mb-3 flex items-center gap-2 text-casino-gold">
+                <Settings className="h-4 w-4" /> cPanel — Category Toggles
+              </h3>
+              <p className="text-xs text-muted-foreground mb-3">Toggle entire sections visible in cPanel</p>
+              <div className="space-y-2">
+                {CPANEL_SECTION_TOGGLES.map(t => (
+                  <div key={t.key} className="flex items-center justify-between">
+                    <span className="text-sm">{t.label}</span>
+                    <Switch checked={panelToggles[t.key] ?? true} onCheckedChange={(c) => handlePanelToggle(t.key, c)} />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Slot Panel Sections */}
+            <div className="rounded-xl bg-card border border-border p-4">
+              <h3 className="font-display font-bold text-sm mb-3 flex items-center gap-2 text-casino-gold">
+                <Gamepad2 className="h-4 w-4" /> Slot Panel — Feature Toggles
+              </h3>
+              <p className="text-xs text-muted-foreground mb-3">Toggle individual tools in the Games & Finance section</p>
+              <div className="space-y-2">
+                {SLOT_SECTION_TOGGLES.map(t => (
+                  <div key={t.key} className="flex items-center justify-between">
+                    <span className="text-sm">{t.label}</span>
+                    <Switch checked={panelToggles[t.key] ?? true} onCheckedChange={(c) => handlePanelToggle(t.key, c)} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+
         <div className="grid grid-cols-3 gap-3 mb-6">
           <div className="rounded-xl bg-card p-4 border border-border">
             <p className="text-sm text-muted-foreground">Total Users</p>

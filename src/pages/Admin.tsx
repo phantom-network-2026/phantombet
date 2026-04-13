@@ -52,20 +52,24 @@ export default function Admin() {
   const [forceLoss, setForceLoss] = useState(false);
   const [forceLossLoading, setForceLossLoading] = useState(false);
   const [accessAllowed, setAccessAllowed] = useState(true);
+  const [sectionToggles, setSectionToggles] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (!loading && !hasStaffAccess) { navigate("/"); return; }
-    if (hasStaffAccess && !isOwner) {
-      // Check if admin panel access is enabled
+    if (hasStaffAccess) {
+      // Fetch panel visibility / section toggles
       supabase.from("site_settings").select("value").eq("key", "panel_visibility").maybeSingle().then(({ data }) => {
         const vis = (data?.value as Record<string, boolean>) || {};
-        if (vis.admin_panel_access === false) { navigate("/"); return; }
+        if (!isOwner && vis.admin_panel_access === false) { navigate("/"); return; }
+        setSectionToggles(vis);
         setAccessAllowed(true);
       });
+      fetchUsers();
     }
-    if (hasStaffAccess) fetchUsers();
     if (isAdmin) fetchForceLoss();
   }, [hasStaffAccess, loading]);
+
+  const sec = (key: string) => isOwner || sectionToggles[key] !== false;
 
   const fetchForceLoss = async () => {
     const { data } = await supabase.from("site_settings").select("value").eq("key", "force_loss").maybeSingle();
@@ -222,6 +226,7 @@ export default function Admin() {
         </div>
 
         {/* Stats */}
+        {sec("admin_stats") && (
         <div className="grid grid-cols-3 gap-3 mb-6">
           <div className="rounded-xl bg-card p-4 border border-border">
             <p className="text-sm text-muted-foreground">Total Users</p>
@@ -240,12 +245,13 @@ export default function Admin() {
             </p>
           </div>
         </div>
+        )}
 
         {/* Fake Wins Ticker Control */}
-        {isAdmin && <FakeWinsControlPanel />}
+        {isAdmin && sec("admin_fake_wins") && <FakeWinsControlPanel />}
 
         {/* Force Loss Toggle */}
-        {isAdmin && (
+        {isAdmin && sec("admin_force_loss") && (
           <div className="rounded-xl bg-card border border-border p-4 mb-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -318,20 +324,22 @@ export default function Admin() {
                 </div>
 
                 <div className="flex gap-2 flex-wrap">
-                  {isAdmin && (
+                  {isAdmin && sec("admin_balance") && (
                     <Button variant="outline" size="sm" onClick={() => setAdjustUserId(adjustUserId === user.user_id ? null : user.user_id)}>
                       <DollarSign className="h-3 w-3 mr-1" /> Balance
                     </Button>
                   )}
+                  {sec("admin_edit") && (
                   <Button variant="outline" size="sm" onClick={() => handleEditUser(user.user_id)}>
                     <Edit className="h-3 w-3 mr-1" /> Edit
                   </Button>
-                  {isAdmin && (
+                  )}
+                  {isAdmin && sec("admin_roles") && (
                     <Button variant="outline" size="sm" onClick={() => setRolesUserId(rolesUserId === user.user_id ? null : user.user_id)}>
                       <Shield className="h-3 w-3 mr-1" /> Roles
                     </Button>
                   )}
-                  {isAdmin && (
+                  {isAdmin && sec("admin_delete") && (
                     <Button variant="destructive" size="sm" onClick={() => setDeleteConfirmId(deleteConfirmId === user.user_id ? null : user.user_id)}>
                       <Trash2 className="h-3 w-3 mr-1" /> Delete
                     </Button>
