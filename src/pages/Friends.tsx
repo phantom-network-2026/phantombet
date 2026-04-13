@@ -71,6 +71,8 @@ export default function Friends() {
 
   const fetchOnlineUsers = async () => {
     if (!user) return;
+
+    // Fetch real online users
     const { data: presenceData } = await supabase
       .from("user_presence" as any)
       .select("user_id")
@@ -78,14 +80,53 @@ export default function Friends() {
       .neq("user_id", user.id)
       .limit(50) as { data: any[] | null };
 
+    let realOnline: UserResult[] = [];
     if (presenceData && presenceData.length > 0) {
       const userIds = presenceData.map((p: any) => p.user_id);
       const { data: profs } = await supabase
         .from("profiles_public" as any)
         .select("user_id, username, avatar_url, border_style, has_animated_border, has_animated_avatar")
         .in("user_id", userIds) as { data: any[] | null };
-      setOnlineUsers((profs || []) as UserResult[]);
+      realOnline = (profs || []) as UserResult[];
     }
+
+    // Fetch ghost users config
+    try {
+      const { data } = await supabase.functions.invoke("get-public-settings", {
+        body: { keys: ["ghost_users"] },
+      });
+      const ghostConfig = data?.settings?.ghost_users;
+      if (ghostConfig?.enabled && ghostConfig?.show_in_presence && ghostConfig?.usernames?.length > 0) {
+        // Filter out any names that match real usernames
+        const realNames = new Set(realOnline.map(u => u.username?.toLowerCase()));
+        const availableGhosts = ghostConfig.usernames.filter(
+          (name: string) => !realNames.has(name.toLowerCase())
+        );
+        // Determine how many ghosts to show
+        const minOnline = ghostConfig.min_online || 5;
+        const peakOnline = ghostConfig.peak_online || 20;
+        const hour = new Date().getHours();
+        const isPeak = hour >= 18 && hour <= 23;
+        const ghostCount = Math.min(
+          availableGhosts.length,
+          isPeak ? peakOnline : minOnline
+        );
+        // Shuffle and pick
+        const shuffled = [...availableGhosts].sort(() => Math.random() - 0.5);
+        const ghostUsers: UserResult[] = shuffled.slice(0, ghostCount).map((name: string) => ({
+          user_id: `ghost_${name}`,
+          username: name,
+          avatar_url: null,
+          border_style: null,
+          has_animated_border: false,
+          has_animated_avatar: false,
+        }));
+        setOnlineUsers([...realOnline, ...ghostUsers]);
+        return;
+      }
+    } catch {}
+
+    setOnlineUsers(realOnline);
   };
 
   const handleSearch = async () => {
