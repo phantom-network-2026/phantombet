@@ -17,6 +17,7 @@ export function NotificationBell() {
   const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
   const [open, setOpen] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const channelName = useMemo(
     () => `broadcasts-${Math.random().toString(36).slice(2, 10)}`,
     []
@@ -114,22 +115,26 @@ export function NotificationBell() {
         {broadcasts.length === 0 ? (
           <p className="p-4 text-center text-sm text-muted-foreground">No notifications yet</p>
         ) : (
-          <div className="divide-y divide-border">
+              <div className="divide-y divide-border">
             {broadcasts.map((b) => {
               const isRead = readIds.has(b.id);
+              const isExpanded = expandedId === b.id;
 
               return (
                 <button
                   key={b.id}
                   type="button"
-                  onClick={() => markAsRead(b.id)}
+                  onClick={() => {
+                    setExpandedId(isExpanded ? null : b.id);
+                    if (!isRead) markAsRead(b.id);
+                  }}
                   className={`w-full p-3 text-left transition-colors hover:bg-muted/50 ${!isRead ? "bg-primary/5" : ""}`}
                 >
                   <div className="flex items-start gap-2">
                     <span className="shrink-0 text-sm">{typeIcon(b.type)}</span>
                     <div className="min-w-0 flex-1">
                       <p className={`text-sm font-medium ${!isRead ? "text-foreground" : "text-muted-foreground"}`}>{b.title}</p>
-                      <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{b.content}</p>
+                      <p className={`mt-0.5 text-xs text-muted-foreground whitespace-pre-line ${isExpanded ? "" : "line-clamp-2"}`}>{b.content}</p>
                       <p className="mt-1 text-[10px] text-muted-foreground/60">
                         {new Date(b.created_at).toLocaleDateString()} · {new Date(b.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                       </p>
