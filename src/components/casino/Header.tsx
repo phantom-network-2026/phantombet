@@ -7,6 +7,7 @@ import { LogOut, Shield, Menu, X, ArrowDownToLine, User, Gamepad2, Settings, Che
 import { FakeWinsTicker } from "./FakeWinsTicker";
 import { BalanceDisplay } from "./BalanceDisplay";
 import { ProfileAvatar } from "./ProfileAvatar";
+import { NotificationBell } from "./NotificationBell";
 import logo from "@/assets/phantombet-logo.png";
 
 export function Header() {
@@ -68,6 +69,7 @@ export function Header() {
                   <Shield className="h-4 w-4 mr-1" /> Admin
                 </Button>
               )}
+              <NotificationBell />
               <Button variant="ghost" size="sm" onClick={() => navigate("/wallet")} className="text-casino-gold p-1">
                 <Wallet className="h-5 w-5" />
               </Button>
@@ -102,6 +104,7 @@ export function Header() {
           {user ? (
             <>
               <BalanceDisplay size="sm" />
+              <NotificationBell />
               <button onClick={() => navigate("/wallet")} className="text-casino-gold">
                 <Wallet className="h-5 w-5" />
               </button>

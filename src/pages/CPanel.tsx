@@ -15,7 +15,7 @@ import { GameProbabilityPanel } from "@/components/casino/GameProbabilityPanel";
 import { PromotionsManager } from "@/components/casino/PromotionsManager";
 import {
   ArrowLeft, FolderOpen, Database, Settings, Upload, Trash2, Download,
-  RefreshCw, Search, Table, FileText, Eye, ChevronRight, ChevronDown, ChevronUp,
+  RefreshCw, Search, Table, FileText, Eye, EyeOff, ChevronRight, ChevronDown, ChevronUp,
   File, Image, Music, Video, Archive, Code, Globe, Shield,
   AlertTriangle, Activity, Lock, Megaphone, HardDrive, Clock,
   Ban, Users, BarChart3, Wrench, Power, Bell, Percent, Trophy,
@@ -2003,8 +2003,134 @@ function GhostUsersPanel({ onBack }: { onBack: () => void }) {
   );
 }
 
+// ── Broadcast Notifications Panel ────────────────────────────────
+function BroadcastPanel({ onBack }: { onBack: () => void }) {
+  const { user } = useAuth();
+  const [broadcasts, setBroadcasts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [type, setType] = useState("info");
+
+  const fetchBroadcasts = async () => {
+    setLoading(true);
+    const { data } = await supabase.from("broadcast_messages" as any).select("*").order("created_at", { ascending: false }).limit(50);
+    setBroadcasts((data as any[]) || []);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchBroadcasts(); }, []);
+
+  const handleSend = async () => {
+    if (!title.trim() || !content.trim()) { toast.error("Title and content are required"); return; }
+    if (!user) return;
+    setSending(true);
+    const { error } = await supabase.from("broadcast_messages" as any).insert({
+      title: title.trim(),
+      content: content.trim(),
+      type,
+      sent_by: user.id,
+    });
+    if (error) { toast.error("Failed to send broadcast"); setSending(false); return; }
+    toast.success("Broadcast sent to all users!");
+    setTitle(""); setContent(""); setType("info");
+    setSending(false);
+    fetchBroadcasts();
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Delete this broadcast?")) return;
+    await supabase.from("broadcast_messages" as any).delete().eq("id", id);
+    toast.success("Broadcast deleted");
+    fetchBroadcasts();
+  };
+
+  const handleToggle = async (id: string, isActive: boolean) => {
+    await supabase.from("broadcast_messages" as any).update({ is_active: !isActive }).eq("id", id);
+    toast.success(isActive ? "Broadcast hidden" : "Broadcast activated");
+    fetchBroadcasts();
+  };
+
+  const typeOptions = [
+    { value: "info", label: "ℹ️ Info", color: "text-blue-400" },
+    { value: "update", label: "🔄 Update", color: "text-green-400" },
+    { value: "warning", label: "⚠️ Warning", color: "text-yellow-400" },
+    { value: "promo", label: "🎁 Promo", color: "text-purple-400" },
+  ];
+
+  return (
+    <PanelView title="Broadcast Notifications" onBack={onBack}>
+      {/* Compose */}
+      <div className="rounded-lg bg-card border border-border p-4 space-y-3 mb-6">
+        <h3 className="font-display font-bold text-sm flex items-center gap-2"><Bell className="h-4 w-4 text-casino-gold" /> Send Broadcast</h3>
+        <div>
+          <Label className="text-xs">Type</Label>
+          <div className="flex gap-2 mt-1">
+            {typeOptions.map(opt => (
+              <button
+                key={opt.value}
+                className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${type === opt.value ? "bg-primary/20 border-primary text-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
+                onClick={() => setType(opt.value)}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <Label className="text-xs">Title</Label>
+          <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. New Feature Released!" className="mt-1" />
+        </div>
+        <div>
+          <Label className="text-xs">Message</Label>
+          <Textarea value={content} onChange={e => setContent(e.target.value)} placeholder="Write your message to all users..." className="mt-1" rows={3} />
+        </div>
+        <Button onClick={handleSend} disabled={sending || !title.trim() || !content.trim()} className="w-full">
+          {sending ? "Sending..." : "📢 Send to All Users"}
+        </Button>
+      </div>
+
+      {/* History */}
+      <div className="space-y-3">
+        <h3 className="font-display font-bold text-sm">Broadcast History</h3>
+        {loading ? (
+          <p className="text-muted-foreground text-sm">Loading...</p>
+        ) : broadcasts.length === 0 ? (
+          <p className="text-muted-foreground text-sm">No broadcasts sent yet.</p>
+        ) : (
+          broadcasts.map((b: any) => {
+            const typeIcon = b.type === "warning" ? "⚠️" : b.type === "update" ? "🔄" : b.type === "promo" ? "🎁" : "ℹ️";
+            return (
+              <div key={b.id} className={`rounded-lg border p-3 ${b.is_active ? "bg-card border-border" : "bg-muted/30 border-muted opacity-60"}`}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-sm">{typeIcon} {b.title}</p>
+                    <p className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap">{b.content}</p>
+                    <p className="text-[10px] text-muted-foreground mt-2">
+                      {new Date(b.created_at).toLocaleString()} · {b.is_active ? "🟢 Active" : "⚫ Hidden"}
+                    </p>
+                  </div>
+                  <div className="flex gap-1 shrink-0">
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleToggle(b.id, b.is_active)}>
+                      {b.is_active ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete(b.id)}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </PanelView>
+  );
+}
+
 // ── Main cPanel Page ────────────────────────────────────────────
-type ActivePanel = null | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "promotions" | "wallet-mode" | "deposits-withdrawals" | "welcome-config" | "ghost-users";
+type ActivePanel = null | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "promotions" | "wallet-mode" | "deposits-withdrawals" | "welcome-config" | "ghost-users" | "broadcasts";
 
 export default function CPanel() {
   const { isAdmin, isOwner, loading, profile } = useAuth();
@@ -2057,6 +2183,7 @@ export default function CPanel() {
           {activePanel === "deposits-withdrawals" && <DepositsWithdrawalsPanel onBack={back} />}
           {activePanel === "welcome-config" && <WelcomeConfigPanel onBack={back} />}
           {activePanel === "ghost-users" && <GhostUsersPanel onBack={back} />}
+          {activePanel === "broadcasts" && <BroadcastPanel onBack={back} />}
         </div>
       </div>
     );
@@ -2157,7 +2284,7 @@ export default function CPanel() {
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1">
                 <ToolCard icon={<Gift className="h-6 w-6" />} label="Promotions" onClick={() => setActivePanel("promotions")} />
                 <ToolCard icon={<Megaphone className="h-6 w-6" />} label="Announcements" onClick={() => setActivePanel("maintenance")} />
-                <ToolCard icon={<Bell className="h-6 w-6" />} label="Notifications" onClick={() => setActivePanel("maintenance")} />
+                <ToolCard icon={<Bell className="h-6 w-6" />} label="Broadcasts" onClick={() => setActivePanel("broadcasts")} />
               </div>
             </CpanelSection>
             )}

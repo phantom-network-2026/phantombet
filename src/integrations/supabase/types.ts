@@ -14,6 +14,65 @@ export type Database = {
   }
   public: {
     Tables: {
+      broadcast_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_active: boolean
+          sent_by: string
+          title: string
+          type: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          sent_by: string
+          title: string
+          type?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          sent_by?: string
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
+      broadcast_reads: {
+        Row: {
+          broadcast_id: string
+          id: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          broadcast_id: string
+          id?: string
+          read_at?: string
+          user_id: string
+        }
+        Update: {
+          broadcast_id?: string
+          id?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "broadcast_reads_broadcast_id_fkey"
+            columns: ["broadcast_id"]
+            isOneToOne: false
+            referencedRelation: "broadcast_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_bans: {
         Row: {
           banned_by: string
