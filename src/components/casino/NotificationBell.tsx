@@ -20,11 +20,10 @@ export function NotificationBell() {
 
   const fetchBroadcasts = async () => {
     if (!user) return;
-    const [{ data: msgs }, { data: reads }] = await Promise.all([
-      supabase.from("broadcast_messages" as any).select("id, title, content, type, created_at").eq("is_active", true).order("created_at", { ascending: false }).limit(20),
-      supabase.from("broadcast_reads" as any).select("broadcast_id").eq("user_id", user.id),
-    ]);
-    setBroadcasts((msgs as Broadcast[]) || []);
+    const { data: msgs } = await supabase.from("broadcast_messages" as any).select("id, title, content, type, created_at").eq("is_active", true).order("created_at", { ascending: false }).limit(20) as { data: any[] | null };
+    const { data: reads } = await supabase.from("broadcast_reads" as any).select("broadcast_id").eq("user_id", user.id) as { data: any[] | null };
+    setBroadcasts((msgs || []) as Broadcast[]);
+    setReadIds(new Set((reads || []).map((r: any) => r.broadcast_id)));
     setReadIds(new Set((reads as any[] || []).map((r: any) => r.broadcast_id)));
   };
 
