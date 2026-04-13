@@ -375,7 +375,6 @@ export type Database = {
           name_color: string | null
           purchased_borders: string[]
           real_balance: number
-          seed_phrase: string | null
           social_links: Json | null
           updated_at: string
           user_id: string
@@ -399,7 +398,6 @@ export type Database = {
           name_color?: string | null
           purchased_borders?: string[]
           real_balance?: number
-          seed_phrase?: string | null
           social_links?: Json | null
           updated_at?: string
           user_id: string
@@ -423,7 +421,6 @@ export type Database = {
           name_color?: string | null
           purchased_borders?: string[]
           real_balance?: number
-          seed_phrase?: string | null
           social_links?: Json | null
           updated_at?: string
           user_id?: string
