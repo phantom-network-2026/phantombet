@@ -33,6 +33,7 @@ import PennyRoulette from "./pages/PennyRoulette.tsx";
 import Help from "./pages/Help.tsx";
 import Exchange from "./pages/Exchange.tsx";
 import Wallet from "./pages/Wallet.tsx";
+import UserProfile from "./pages/UserProfile.tsx";
 
 // New HTML5 games
 import ChickenCross from "./pages/games/ChickenCross.tsx";
@@ -93,6 +94,7 @@ const App = () => (
               <Route path="/slot-cowboy" element={<SlotCowboy />} />
               <Route path="/roulette" element={<Roulette />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/user/:userId" element={<UserProfile />} />
               <Route path="/prize-reel" element={<PrizeReel />} />
               <Route path="/cpanel" element={<CPanel />} />
               <Route path="/owner-panel" element={<OwnerPanel />} />
