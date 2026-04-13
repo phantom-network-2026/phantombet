@@ -548,9 +548,13 @@ export type Database = {
           created_at: string | null
           has_animated_avatar: boolean | null
           has_animated_border: boolean | null
+          has_high_roller: boolean | null
+          name_color: string | null
+          purchased_borders: string[] | null
           social_links: Json | null
           user_id: string | null
           username: string | null
+          xp: number | null
         }
         Insert: {
           avatar_url?: string | null
@@ -561,9 +565,13 @@ export type Database = {
           created_at?: string | null
           has_animated_avatar?: boolean | null
           has_animated_border?: boolean | null
+          has_high_roller?: boolean | null
+          name_color?: string | null
+          purchased_borders?: string[] | null
           social_links?: Json | null
           user_id?: string | null
           username?: string | null
+          xp?: number | null
         }
         Update: {
           avatar_url?: string | null
@@ -574,9 +582,13 @@ export type Database = {
           created_at?: string | null
           has_animated_avatar?: boolean | null
           has_animated_border?: boolean | null
+          has_high_roller?: boolean | null
+          name_color?: string | null
+          purchased_borders?: string[] | null
           social_links?: Json | null
           user_id?: string | null
           username?: string | null
+          xp?: number | null
         }
         Relationships: []
       }
