@@ -100,6 +100,8 @@ export default function OwnerPanel() {
   const [forceLossLoading, setForceLossLoading] = useState(false);
   const [panelToggles, setPanelToggles] = useState<Record<string, boolean>>({});
   const [togglesLoading, setTogglesLoading] = useState(true);
+  const [welcomeBonus, setWelcomeBonus] = useState({ enabled: true, amount: 100 });
+  const [welcomeBonusLoading, setWelcomeBonusLoading] = useState(false);
 
   useEffect(() => {
     if (!loading && !isOwner) { navigate("/"); return; }
@@ -107,6 +109,7 @@ export default function OwnerPanel() {
       fetchUsers();
       fetchForceLoss();
       fetchPanelToggles();
+      fetchWelcomeBonus();
     }
   }, [isOwner, loading]);
 
