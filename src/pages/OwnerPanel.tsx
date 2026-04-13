@@ -183,7 +183,7 @@ export default function OwnerPanel() {
     toast.success(newConfig.enabled ? `Welcome bonus set to $${newConfig.amount}` : "Welcome bonus disabled");
   };
 
-
+  const fetchUsers = async () => {
     setLoadingUsers(true);
     const { data: profiles } = await supabase.from("profiles").select("*");
     const { data: roles } = await supabase.from("user_roles").select("*");
