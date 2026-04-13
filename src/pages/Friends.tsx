@@ -189,7 +189,7 @@ export default function Friends() {
                 const prof = getProfile(friendId);
                 return (
                   <div key={f.id} className="flex items-center justify-between rounded-xl bg-card border border-border p-4">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate(`/user/${friendId}`)}>
                       <ProfileAvatar
                         avatarUrl={prof.avatar_url}
                         username={prof.username}
@@ -199,7 +199,7 @@ export default function Friends() {
                         size="md"
                       />
                       <div>
-                        <p className="font-display font-bold">{prof.username || "Unknown"}</p>
+                        <p className="font-display font-bold hover:text-casino-gold transition">{prof.username || "Unknown"}</p>
                         <p className="text-xs text-muted-foreground">Friend</p>
                       </div>
                     </div>
@@ -230,7 +230,7 @@ export default function Friends() {
                 );
                 return (
                   <div key={u.user_id} className="flex items-center justify-between rounded-xl bg-card border border-border p-4">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate(`/user/${u.user_id}`)}>
                       <div className="relative">
                         <ProfileAvatar
                           avatarUrl={u.avatar_url}
@@ -243,7 +243,7 @@ export default function Friends() {
                         <Circle className="absolute -bottom-0.5 -right-0.5 h-3 w-3 fill-green-400 text-green-400" />
                       </div>
                       <div>
-                        <p className="font-display font-bold">{u.username || "Unknown"}</p>
+                        <p className="font-display font-bold hover:text-casino-gold transition">{u.username || "Unknown"}</p>
                         <p className="text-xs text-green-400">Online</p>
                       </div>
                     </div>
