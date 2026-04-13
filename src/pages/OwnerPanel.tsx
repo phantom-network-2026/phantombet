@@ -404,6 +404,43 @@ export default function OwnerPanel() {
           {forceLoss && <p className="text-xs text-destructive mt-2 font-medium">⚠️ ACTIVE</p>}
         </div>
 
+        {/* Reset Balances */}
+        <div className="rounded-xl bg-card border border-destructive/30 p-4 mb-6">
+          <h3 className="font-display font-bold text-sm mb-3 flex items-center gap-2 text-destructive">
+            <Wallet className="h-4 w-4" /> Reset All Balances (Testing)
+          </h3>
+          <p className="text-xs text-muted-foreground mb-3">Reset every user's balance back to 0. This cannot be undone.</p>
+          <div className="flex gap-3">
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={async () => {
+                if (!confirm("Are you sure you want to reset ALL mock balances to $0?")) return;
+                const { data, error } = await supabase.functions.invoke("reset-balances", { body: { type: "mock" } });
+                if (error || data?.error) { toast.error(data?.error || "Failed"); return; }
+                toast.success("All mock balances reset to $0");
+                fetchUsers();
+              }}
+            >
+              Reset All Mock Balances
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={async () => {
+                if (!confirm("⚠️ DANGER: Reset ALL real balances to $0? This affects real money!")) return;
+                if (!confirm("FINAL WARNING: This will set every user's real balance to $0. Continue?")) return;
+                const { data, error } = await supabase.functions.invoke("reset-balances", { body: { type: "real" } });
+                if (error || data?.error) { toast.error(data?.error || "Failed"); return; }
+                toast.success("All real balances reset to $0");
+                fetchUsers();
+              }}
+            >
+              Reset All Real Balances
+            </Button>
+          </div>
+        </div>
+
         {/* User List */}
         <div className="space-y-3">
           <h2 className="font-display text-lg font-bold">User Management (Full Access)</h2>
