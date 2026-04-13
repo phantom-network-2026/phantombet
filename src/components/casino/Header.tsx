@@ -100,15 +100,15 @@ export function Header() {
         </div>
 
         {/* Mobile: guest auth buttons or user controls + menu toggle */}
-        <div className="flex md:hidden items-center gap-2">
+        <div className="flex md:hidden items-center gap-1.5 min-w-0">
           {user ? (
             <>
               <BalanceDisplay size="sm" />
               <NotificationBell />
-              <button onClick={() => navigate("/wallet")} className="text-casino-gold">
-                <Wallet className="h-5 w-5" />
+              <button onClick={() => navigate("/wallet")} className="text-casino-gold shrink-0 p-0.5">
+                <Wallet className="h-4 w-4" />
               </button>
-              <button onClick={() => navigate("/profile")}>
+              <button onClick={() => navigate("/profile")} className="shrink-0">
                 <ProfileAvatar
                   avatarUrl={profile?.avatar_url}
                   username={profile?.username}
@@ -129,8 +129,8 @@ export function Header() {
               </Button>
             </>
           )}
-          <button className="text-foreground shrink-0" onClick={() => setMenuOpen(!menuOpen)}>
-            {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          <button className="text-foreground shrink-0 p-1" onClick={() => setMenuOpen(!menuOpen)}>
+            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
       </div>
