@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Bell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/hooks/useLanguage";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface Broadcast {
@@ -18,6 +19,7 @@ export function NotificationBell() {
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
   const [open, setOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const { t } = useLanguage();
   const channelName = useMemo(
     () => `broadcasts-${Math.random().toString(36).slice(2, 10)}`,
     []
@@ -100,20 +102,20 @@ export function NotificationBell() {
         className="w-[min(20rem,calc(100vw-1rem))] max-h-96 overflow-y-auto rounded-xl border border-border bg-card p-0 shadow-xl"
       >
         <div className="sticky top-0 flex items-center justify-between border-b border-border bg-card p-3">
-          <h3 className="font-display text-sm font-bold">Notifications</h3>
+          <h3 className="font-display text-sm font-bold">{t("notifications")}</h3>
           {unreadCount > 0 && (
             <button
               type="button"
               onClick={markAllRead}
               className="text-[10px] text-primary hover:underline"
             >
-              Mark all read
+              {t("markAllRead")}
             </button>
           )}
         </div>
 
         {broadcasts.length === 0 ? (
-          <p className="p-4 text-center text-sm text-muted-foreground">No notifications yet</p>
+          <p className="p-4 text-center text-sm text-muted-foreground">{t("noNotifications")}</p>
         ) : (
               <div className="divide-y divide-border">
             {broadcasts.map((b) => {
