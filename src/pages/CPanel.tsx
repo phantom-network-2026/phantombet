@@ -2087,6 +2087,7 @@ export default function CPanel() {
           {/* Main content area */}
           <div className="flex-1 space-y-5">
             {/* ── Statistics ─────────────────────────── */}
+            {sec("cpanel_statistics") && (
             <CpanelSection title="Statistics" icon={<BarChart3 className="h-5 w-5" />}>
               {analyticsLoading ? (
                 <p className="text-muted-foreground text-sm">Loading stats...</p>
@@ -2105,8 +2106,10 @@ export default function CPanel() {
                 </div>
               )}
             </CpanelSection>
+            )}
 
             {/* ── Deposits & Withdrawals ─────────────── */}
+            {sec("cpanel_deposits") && (
             <CpanelSection title="Deposits & Withdrawals" icon={<CreditCard className="h-5 w-5" />}>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1">
                 <ToolCard icon={<CreditCard className="h-6 w-6" />} label="Payment Hub" onClick={() => setActivePanel("deposits-withdrawals")} />
@@ -2116,8 +2119,10 @@ export default function CPanel() {
                 <ToolCard icon={<Activity className="h-6 w-6" />} label="Transaction Log" onClick={() => setActivePanel("deposits-withdrawals")} />
               </div>
             </CpanelSection>
+            )}
 
             {/* ── User Management ────────────────────── */}
+            {sec("cpanel_users") && (
             <CpanelSection title="User Management" icon={<Users className="h-5 w-5" />}>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1">
                 <ToolCard icon={<Users className="h-6 w-6" />} label="Manage Users" onClick={() => navigate("/admin")} />
@@ -2129,21 +2134,25 @@ export default function CPanel() {
                 <ToolCard icon={<Users className="h-6 w-6" />} label="Ghost Users" onClick={() => setActivePanel("ghost-users")} active={activePanel === "ghost-users"} />
               </div>
             </CpanelSection>
+            )}
 
             {/* ── Games & Finance ────────────────────── */}
+            {sec("cpanel_games") && (
             <CpanelSection title="Games & Finance" icon={<Gamepad2 className="h-5 w-5" />}>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1">
-                <ToolCard icon={<Percent className="h-6 w-6" />} label="House Edge" onClick={() => setActivePanel("house-edge")} />
-                <ToolCard icon={<LayoutGrid className="h-6 w-6" />} label="Win Probability" onClick={() => setActivePanel("game-probability")} />
-                <ToolCard icon={<Gamepad2 className="h-6 w-6" />} label="Game Manager" onClick={() => setActivePanel("database")} />
-                <ToolCard icon={<CreditCard className="h-6 w-6" />} label="Transactions" onClick={() => setActivePanel("logs")} />
-                <ToolCard icon={<Trophy className="h-6 w-6" />} label="Prize Spins" onClick={() => setActivePanel("database")} />
-                <ToolCard icon={<Hash className="h-6 w-6" />} label="Scratch Cards" onClick={() => setActivePanel("database")} />
-                <ToolCard icon={<Wallet className="h-6 w-6" />} label="Wallet Mode" onClick={() => setActivePanel("wallet-mode")} />
+                {sec("slot_house_edge") && <ToolCard icon={<Percent className="h-6 w-6" />} label="House Edge" onClick={() => setActivePanel("house-edge")} />}
+                {sec("slot_probability") && <ToolCard icon={<LayoutGrid className="h-6 w-6" />} label="Win Probability" onClick={() => setActivePanel("game-probability")} />}
+                {sec("slot_game_manager") && <ToolCard icon={<Gamepad2 className="h-6 w-6" />} label="Game Manager" onClick={() => setActivePanel("database")} />}
+                {sec("slot_transactions") && <ToolCard icon={<CreditCard className="h-6 w-6" />} label="Transactions" onClick={() => setActivePanel("logs")} />}
+                {sec("slot_prizes") && <ToolCard icon={<Trophy className="h-6 w-6" />} label="Prize Spins" onClick={() => setActivePanel("database")} />}
+                {sec("slot_scratch") && <ToolCard icon={<Hash className="h-6 w-6" />} label="Scratch Cards" onClick={() => setActivePanel("database")} />}
+                {sec("slot_wallet") && <ToolCard icon={<Wallet className="h-6 w-6" />} label="Wallet Mode" onClick={() => setActivePanel("wallet-mode")} />}
               </div>
             </CpanelSection>
+            )}
 
             {/* ── Promotions ─────────────────────────── */}
+            {sec("cpanel_promotions") && (
             <CpanelSection title="Promotions & Marketing" icon={<Gift className="h-5 w-5" />}>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1">
                 <ToolCard icon={<Gift className="h-6 w-6" />} label="Promotions" onClick={() => setActivePanel("promotions")} />
@@ -2151,8 +2160,10 @@ export default function CPanel() {
                 <ToolCard icon={<Bell className="h-6 w-6" />} label="Notifications" onClick={() => setActivePanel("maintenance")} />
               </div>
             </CpanelSection>
+            )}
 
             {/* ── Files ──────────────────────────────── */}
+            {sec("cpanel_files") && (
             <CpanelSection title="Files" icon={<FolderOpen className="h-5 w-5" />}>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1">
                 <ToolCard icon={<FolderOpen className="h-6 w-6" />} label="File Manager" onClick={() => setActivePanel("files")} />
@@ -2161,8 +2172,10 @@ export default function CPanel() {
                 <ToolCard icon={<Download className="h-6 w-6" />} label="Backup" onClick={() => setActivePanel("database")} />
               </div>
             </CpanelSection>
+            )}
 
             {/* ── Databases ─────────────────────────── */}
+            {sec("cpanel_databases") && (
             <CpanelSection title="Databases" icon={<Database className="h-5 w-5" />}>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1">
                 <ToolCard icon={<Database className="h-6 w-6" />} label="Database Browser" onClick={() => setActivePanel("database")} />
@@ -2171,8 +2184,10 @@ export default function CPanel() {
                 <ToolCard icon={<Table className="h-6 w-6" />} label="View Tables" onClick={() => setActivePanel("database")} />
               </div>
             </CpanelSection>
+            )}
 
             {/* ── Security ──────────────────────────── */}
+            {sec("cpanel_security") && (
             <CpanelSection title="Security" icon={<Lock className="h-5 w-5" />}>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1">
                 <ToolCard icon={<Lock className="h-6 w-6" />} label="Security Center" onClick={() => setActivePanel("security")} />
@@ -2181,8 +2196,10 @@ export default function CPanel() {
                 <ToolCard icon={<AlertTriangle className="h-6 w-6" />} label="Activity Logs" onClick={() => setActivePanel("logs")} />
               </div>
             </CpanelSection>
+            )}
 
             {/* ── Site Configuration ─────────────────── */}
+            {sec("cpanel_config") && (
             <CpanelSection title="Site Configuration" icon={<Settings className="h-5 w-5" />}>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1">
                 <ToolCard icon={<Settings className="h-6 w-6" />} label="Site Settings" onClick={() => setActivePanel("config")} />
@@ -2191,6 +2208,7 @@ export default function CPanel() {
                 <ToolCard icon={<Power className="h-6 w-6" />} label="Toggles" onClick={() => setActivePanel("config")} />
               </div>
             </CpanelSection>
+            )}
           </div>
 
           {/* ── Sidebar (General Information) ─────── */}
