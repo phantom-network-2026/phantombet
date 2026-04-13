@@ -98,7 +98,7 @@ export default function Friends() {
         body: { keys: ["ghost_users"] },
       });
       const ghostConfig = data?.settings?.ghost_users;
-      if (ghostConfig?.enabled && ghostConfig?.show_in_presence && ghostConfig?.usernames?.length > 0) {
+      if (ghostConfig?.enabled && ghostConfig?.show_in_presence !== false && ghostConfig?.usernames?.length > 0) {
         // Filter out any names that match real usernames
         const realNames = new Set(realOnline.map(u => u.username?.toLowerCase()));
         const availableGhosts = ghostConfig.usernames.filter(
