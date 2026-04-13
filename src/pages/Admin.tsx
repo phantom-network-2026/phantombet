@@ -52,20 +52,24 @@ export default function Admin() {
   const [forceLoss, setForceLoss] = useState(false);
   const [forceLossLoading, setForceLossLoading] = useState(false);
   const [accessAllowed, setAccessAllowed] = useState(true);
+  const [sectionToggles, setSectionToggles] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (!loading && !hasStaffAccess) { navigate("/"); return; }
-    if (hasStaffAccess && !isOwner) {
-      // Check if admin panel access is enabled
+    if (hasStaffAccess) {
+      // Fetch panel visibility / section toggles
       supabase.from("site_settings").select("value").eq("key", "panel_visibility").maybeSingle().then(({ data }) => {
         const vis = (data?.value as Record<string, boolean>) || {};
-        if (vis.admin_panel_access === false) { navigate("/"); return; }
+        if (!isOwner && vis.admin_panel_access === false) { navigate("/"); return; }
+        setSectionToggles(vis);
         setAccessAllowed(true);
       });
+      fetchUsers();
     }
-    if (hasStaffAccess) fetchUsers();
     if (isAdmin) fetchForceLoss();
   }, [hasStaffAccess, loading]);
+
+  const sec = (key: string) => isOwner || sectionToggles[key] !== false;
 
   const fetchForceLoss = async () => {
     const { data } = await supabase.from("site_settings").select("value").eq("key", "force_loss").maybeSingle();
