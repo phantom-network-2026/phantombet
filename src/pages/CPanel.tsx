@@ -15,7 +15,7 @@ import { GameProbabilityPanel } from "@/components/casino/GameProbabilityPanel";
 import { PromotionsManager } from "@/components/casino/PromotionsManager";
 import {
   ArrowLeft, FolderOpen, Database, Settings, Upload, Trash2, Download,
-  RefreshCw, Search, Table, FileText, Eye, ChevronRight, ChevronDown, ChevronUp,
+  RefreshCw, Search, Table, FileText, Eye, EyeOff, ChevronRight, ChevronDown, ChevronUp,
   File, Image, Music, Video, Archive, Code, Globe, Shield,
   AlertTriangle, Activity, Lock, Megaphone, HardDrive, Clock,
   Ban, Users, BarChart3, Wrench, Power, Bell, Percent, Trophy,
