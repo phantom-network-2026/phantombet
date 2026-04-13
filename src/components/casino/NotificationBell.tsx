@@ -1,8 +1,8 @@
-import { useState, useEffect, useMemo } from "react";
-import { Bell, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Bell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface Broadcast {
   id: string;
@@ -77,69 +77,71 @@ export function NotificationBell() {
   };
 
   return (
-    <div className="relative">
-      <button
-        onClick={() => { setOpen(!open); }}
-        className="relative p-1.5 rounded-lg hover:bg-muted transition-colors"
-      >
-        <Bell className="h-5 w-5 text-muted-foreground" />
-        {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-white px-1">
-            {unreadCount > 9 ? "9+" : unreadCount}
-          </span>
-        )}
-      </button>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="relative shrink-0 rounded-lg p-1.5 transition-colors hover:bg-muted"
+          aria-label={unreadCount > 0 ? `${unreadCount} unread notifications` : "Notifications"}
+        >
+          <Bell className="h-5 w-5 text-muted-foreground" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-white">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
+        </button>
+      </PopoverTrigger>
 
-      {open && (
-        <>
-          {/* Backdrop */}
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          {/* Dropdown */}
-          <div className="absolute right-0 top-full mt-2 w-80 max-h-96 overflow-y-auto rounded-xl border border-border bg-card shadow-xl z-50">
-            <div className="sticky top-0 bg-card border-b border-border p-3 flex items-center justify-between">
-              <h3 className="font-display font-bold text-sm">Notifications</h3>
-              <div className="flex gap-2">
-                {unreadCount > 0 && (
-                  <button onClick={markAllRead} className="text-[10px] text-primary hover:underline">
-                    Mark all read
-                  </button>
-                )}
-                <button onClick={() => setOpen(false)}>
-                  <X className="h-4 w-4 text-muted-foreground" />
+      <PopoverContent
+        align="end"
+        sideOffset={8}
+        className="w-[min(20rem,calc(100vw-1rem))] max-h-96 overflow-y-auto rounded-xl border border-border bg-card p-0 shadow-xl"
+      >
+        <div className="sticky top-0 flex items-center justify-between border-b border-border bg-card p-3">
+          <h3 className="font-display text-sm font-bold">Notifications</h3>
+          {unreadCount > 0 && (
+            <button
+              type="button"
+              onClick={markAllRead}
+              className="text-[10px] text-primary hover:underline"
+            >
+              Mark all read
+            </button>
+          )}
+        </div>
+
+        {broadcasts.length === 0 ? (
+          <p className="p-4 text-center text-sm text-muted-foreground">No notifications yet</p>
+        ) : (
+          <div className="divide-y divide-border">
+            {broadcasts.map((b) => {
+              const isRead = readIds.has(b.id);
+
+              return (
+                <button
+                  key={b.id}
+                  type="button"
+                  onClick={() => markAsRead(b.id)}
+                  className={`w-full p-3 text-left transition-colors hover:bg-muted/50 ${!isRead ? "bg-primary/5" : ""}`}
+                >
+                  <div className="flex items-start gap-2">
+                    <span className="shrink-0 text-sm">{typeIcon(b.type)}</span>
+                    <div className="min-w-0 flex-1">
+                      <p className={`text-sm font-medium ${!isRead ? "text-foreground" : "text-muted-foreground"}`}>{b.title}</p>
+                      <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{b.content}</p>
+                      <p className="mt-1 text-[10px] text-muted-foreground/60">
+                        {new Date(b.created_at).toLocaleDateString()} · {new Date(b.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </p>
+                    </div>
+                    {!isRead && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />}
+                  </div>
                 </button>
-              </div>
-            </div>
-            {broadcasts.length === 0 ? (
-              <p className="text-sm text-muted-foreground p-4 text-center">No notifications yet</p>
-            ) : (
-              <div className="divide-y divide-border">
-                {broadcasts.map(b => {
-                  const isRead = readIds.has(b.id);
-                  return (
-                    <button
-                      key={b.id}
-                      onClick={() => markAsRead(b.id)}
-                      className={`w-full text-left p-3 hover:bg-muted/50 transition-colors ${!isRead ? "bg-primary/5" : ""}`}
-                    >
-                      <div className="flex items-start gap-2">
-                        <span className="text-sm shrink-0">{typeIcon(b.type)}</span>
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-sm font-medium ${!isRead ? "text-foreground" : "text-muted-foreground"}`}>{b.title}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{b.content}</p>
-                          <p className="text-[10px] text-muted-foreground/60 mt-1">
-                            {new Date(b.created_at).toLocaleDateString()} · {new Date(b.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                          </p>
-                        </div>
-                        {!isRead && <span className="h-2 w-2 rounded-full bg-primary shrink-0 mt-1.5" />}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+              );
+            })}
           </div>
-        </>
-      )}
-    </div>
+        )}
+      </PopoverContent>
+    </Popover>
   );
 }
