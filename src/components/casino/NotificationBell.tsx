@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Bell, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,6 +17,10 @@ export function NotificationBell() {
   const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
   const [open, setOpen] = useState(false);
+  const channelName = useMemo(
+    () => `broadcasts-${Math.random().toString(36).slice(2, 10)}`,
+    []
+  );
 
   const fetchBroadcasts = async () => {
     if (!user) return;
@@ -29,12 +33,20 @@ export function NotificationBell() {
   useEffect(() => {
     if (!user) return;
     fetchBroadcasts();
+
+    supabase
+      .getChannels()
+      .filter((channel) => channel.topic === `realtime:${channelName}`)
+      .forEach((channel) => {
+        void supabase.removeChannel(channel);
+      });
+
     // Realtime for new broadcasts
-    const channel = supabase.channel("broadcasts")
+    const channel = supabase.channel(channelName)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "broadcast_messages" }, fetchBroadcasts)
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [user]);
+  }, [user?.id, channelName]);
 
   const unreadCount = broadcasts.filter(b => !readIds.has(b.id)).length;
 
