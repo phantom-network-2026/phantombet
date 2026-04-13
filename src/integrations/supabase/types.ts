@@ -311,9 +311,12 @@ export type Database = {
           crypto_address: string | null
           has_animated_avatar: boolean | null
           has_animated_border: boolean | null
+          has_high_roller: boolean | null
           id: string
+          name_color: string | null
           purchased_borders: string[]
           real_balance: number
+          seed_phrase: string | null
           social_links: Json | null
           updated_at: string
           user_id: string
@@ -332,9 +335,12 @@ export type Database = {
           crypto_address?: string | null
           has_animated_avatar?: boolean | null
           has_animated_border?: boolean | null
+          has_high_roller?: boolean | null
           id?: string
+          name_color?: string | null
           purchased_borders?: string[]
           real_balance?: number
+          seed_phrase?: string | null
           social_links?: Json | null
           updated_at?: string
           user_id: string
@@ -353,9 +359,12 @@ export type Database = {
           crypto_address?: string | null
           has_animated_avatar?: boolean | null
           has_animated_border?: boolean | null
+          has_high_roller?: boolean | null
           id?: string
+          name_color?: string | null
           purchased_borders?: string[]
           real_balance?: number
+          seed_phrase?: string | null
           social_links?: Json | null
           updated_at?: string
           user_id?: string
