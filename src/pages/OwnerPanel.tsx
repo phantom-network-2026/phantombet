@@ -297,7 +297,60 @@ export default function OwnerPanel() {
           )}
         </div>
 
-        {/* Stats */}
+        {/* Granular Section Toggles */}
+        {!togglesLoading && (
+          <div className="space-y-4 mb-6">
+            {/* Admin Panel Sections */}
+            <div className="rounded-xl bg-card border border-border p-4">
+              <h3 className="font-display font-bold text-sm mb-3 flex items-center gap-2 text-casino-gold">
+                <Shield className="h-4 w-4" /> Admin Panel — Feature Toggles
+              </h3>
+              <p className="text-xs text-muted-foreground mb-3">Toggle individual features visible to admins/staff</p>
+              <div className="space-y-2">
+                {ADMIN_SECTION_TOGGLES.map(t => (
+                  <div key={t.key} className="flex items-center justify-between">
+                    <span className="text-sm">{t.label}</span>
+                    <Switch checked={panelToggles[t.key] ?? true} onCheckedChange={(c) => handlePanelToggle(t.key, c)} />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* cPanel Sections */}
+            <div className="rounded-xl bg-card border border-border p-4">
+              <h3 className="font-display font-bold text-sm mb-3 flex items-center gap-2 text-casino-gold">
+                <Settings className="h-4 w-4" /> cPanel — Category Toggles
+              </h3>
+              <p className="text-xs text-muted-foreground mb-3">Toggle entire sections visible in cPanel</p>
+              <div className="space-y-2">
+                {CPANEL_SECTION_TOGGLES.map(t => (
+                  <div key={t.key} className="flex items-center justify-between">
+                    <span className="text-sm">{t.label}</span>
+                    <Switch checked={panelToggles[t.key] ?? true} onCheckedChange={(c) => handlePanelToggle(t.key, c)} />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Slot Panel Sections */}
+            <div className="rounded-xl bg-card border border-border p-4">
+              <h3 className="font-display font-bold text-sm mb-3 flex items-center gap-2 text-casino-gold">
+                <Gamepad2 className="h-4 w-4" /> Slot Panel — Feature Toggles
+              </h3>
+              <p className="text-xs text-muted-foreground mb-3">Toggle individual tools in the Games & Finance section</p>
+              <div className="space-y-2">
+                {SLOT_SECTION_TOGGLES.map(t => (
+                  <div key={t.key} className="flex items-center justify-between">
+                    <span className="text-sm">{t.label}</span>
+                    <Switch checked={panelToggles[t.key] ?? true} onCheckedChange={(c) => handlePanelToggle(t.key, c)} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+
         <div className="grid grid-cols-3 gap-3 mb-6">
           <div className="rounded-xl bg-card p-4 border border-border">
             <p className="text-sm text-muted-foreground">Total Users</p>
