@@ -336,9 +336,9 @@ export default function Friends() {
                 );
                 return (
                   <div key={u.user_id} className="flex items-center justify-between rounded-xl bg-card border border-border p-4">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate(`/user/${u.user_id}`)}>
                       <ProfileAvatar avatarUrl={u.avatar_url} username={u.username} borderStyle={u.border_style} hasAnimatedBorder={u.has_animated_border} size="md" />
-                      <p className="font-display font-bold">{u.username || "Unknown"}</p>
+                      <p className="font-display font-bold hover:text-casino-gold transition">{u.username || "Unknown"}</p>
                     </div>
                     {existing ? (
                       <span className="text-xs text-muted-foreground capitalize">{existing.status}</span>
