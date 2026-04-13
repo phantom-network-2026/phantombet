@@ -100,7 +100,7 @@ export function Header() {
         </div>
 
         {/* Mobile: guest auth buttons or user controls + menu toggle */}
-        <div className="flex md:hidden items-center gap-1.5 min-w-0">
+        <div className="flex md:hidden items-center gap-1 min-w-0 overflow-hidden">
           {user ? (
             <>
               <BalanceDisplay size="sm" />
