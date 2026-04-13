@@ -44,8 +44,6 @@ export default function Admin() {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [adjustAmount, setAdjustAmount] = useState("");
   const [adjustDescription, setAdjustDescription] = useState("");
-  const [editEmail, setEditEmail] = useState("");
-  const [editPassword, setEditPassword] = useState("");
   const [editUsername, setEditUsername] = useState("");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -57,7 +55,6 @@ export default function Admin() {
   useEffect(() => {
     if (!loading && !hasStaffAccess) { navigate("/"); return; }
     if (hasStaffAccess) {
-      // Fetch panel visibility / section toggles
       supabase.from("site_settings").select("value").eq("key", "panel_visibility").maybeSingle().then(({ data }) => {
         const vis = (data?.value as Record<string, boolean>) || {};
         if (!isOwner && vis.admin_panel_access === false) { navigate("/"); return; }
@@ -111,7 +108,6 @@ export default function Admin() {
           last_seen: userPresence?.last_seen || null,
         };
       });
-      // Sort: online first, then by username
       usersWithRoles.sort((a, b) => {
         if (a.is_online !== b.is_online) return a.is_online ? -1 : 1;
         return (a.username || "").localeCompare(b.username || "");
@@ -121,24 +117,24 @@ export default function Admin() {
     setLoadingUsers(false);
   };
 
-  // Refresh presence every 15s
   useEffect(() => {
     if (!hasStaffAccess) return;
     const interval = setInterval(fetchUsers, 15000);
     return () => clearInterval(interval);
   }, [hasStaffAccess]);
 
+  // Admins can only adjust bonus balance (mock balance), not real balance
   const handleAdjustBalance = async (userId: string, amount: number) => {
     const { error: txError } = await supabase.from("transactions").insert({
       user_id: userId, amount, type: "adjustment",
-      description: adjustDescription || `Admin balance adjustment: ${amount > 0 ? "+" : ""}${amount}`,
+      description: adjustDescription || `Admin bonus adjustment: ${amount > 0 ? "+" : ""}${amount}`,
     });
     if (txError) { toast.error("Failed to create transaction"); return; }
     const user = users.find((u) => u.user_id === userId);
     if (!user) return;
     const { error } = await supabase.from("profiles").update({ balance: user.balance + amount }).eq("user_id", userId);
     if (error) { toast.error("Failed to update balance"); return; }
-    toast.success(`Balance ${amount > 0 ? "added" : "deducted"}: $${Math.abs(amount).toFixed(2)}`);
+    toast.success(`Bonus balance ${amount > 0 ? "added" : "deducted"}: $${Math.abs(amount).toFixed(2)}`);
     setAdjustUserId(null); setAdjustAmount(""); setAdjustDescription("");
     fetchUsers();
   };
@@ -157,31 +153,19 @@ export default function Admin() {
   const handleEditUser = (userId: string) => {
     if (editUserId === userId) { setEditUserId(null); return; }
     setEditUserId(userId);
-    setEditEmail("");
-    setEditPassword("");
     const u = users.find((u) => u.user_id === userId);
     setEditUsername(u?.username || "");
   };
 
+  // Admins can only change username, not email/password
   const handleSaveUserDetails = async (userId: string) => {
     setSaving(true);
     if (editUsername.trim()) {
       const { error } = await supabase.from("profiles").update({ username: editUsername.trim() }).eq("user_id", userId);
       if (error) { toast.error("Failed to update username"); setSaving(false); return; }
     }
-    if (editEmail.trim() || editPassword.trim()) {
-      const { data, error } = await supabase.functions.invoke("admin-update-user", {
-        body: {
-          target_user_id: userId,
-          ...(editEmail.trim() && { email: editEmail.trim() }),
-          ...(editPassword.trim() && { password: editPassword.trim() }),
-        },
-      });
-      if (error) { toast.error("Failed to update login details"); setSaving(false); return; }
-      if (data?.error) { toast.error(data.error); setSaving(false); return; }
-    }
-    toast.success("User details updated!");
-    setEditUserId(null); setEditEmail(""); setEditPassword(""); setEditUsername("");
+    toast.success("Username updated!");
+    setEditUserId(null); setEditUsername("");
     setSaving(false);
     fetchUsers();
   };
@@ -326,7 +310,7 @@ export default function Admin() {
                 <div className="flex gap-2 flex-wrap">
                   {isAdmin && sec("admin_balance") && (
                     <Button variant="outline" size="sm" onClick={() => setAdjustUserId(adjustUserId === user.user_id ? null : user.user_id)}>
-                      <DollarSign className="h-3 w-3 mr-1" /> Balance
+                      <DollarSign className="h-3 w-3 mr-1" /> Bonus Balance
                     </Button>
                   )}
                   {sec("admin_edit") && (
@@ -385,30 +369,24 @@ export default function Admin() {
                   </div>
                 )}
 
-                {/* Edit User Details */}
+                {/* Edit User Details - Admins can only change username */}
                 {editUserId === user.user_id && (
                   <div className="mt-3 p-3 rounded-lg bg-secondary space-y-2 animate-slide-up">
                     <div>
                       <Label className="text-xs">Username</Label>
                       <Input value={editUsername} onChange={(e) => setEditUsername(e.target.value)} placeholder="New username" className="bg-background border-border" />
                     </div>
-                    <div>
-                      <Label className="text-xs">Email</Label>
-                      <Input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} placeholder="New email (leave empty to keep)" className="bg-background border-border" />
-                    </div>
-                    <div>
-                      <Label className="text-xs">Password</Label>
-                      <Input type="password" value={editPassword} onChange={(e) => setEditPassword(e.target.value)} placeholder="New password (leave empty to keep)" className="bg-background border-border" />
-                    </div>
+                    <p className="text-[10px] text-muted-foreground">📧 Email and password changes require Owner Panel access.</p>
                     <Button variant="gold" size="sm" onClick={() => handleSaveUserDetails(user.user_id)} disabled={saving}>
                       <Save className="h-3 w-3 mr-1" /> {saving ? "Saving..." : "Save Changes"}
                     </Button>
                   </div>
                 )}
 
-                {/* Adjust Balance Form */}
+                {/* Adjust Bonus Balance Form */}
                 {adjustUserId === user.user_id && (
                   <div className="mt-3 p-3 rounded-lg bg-secondary space-y-2 animate-slide-up">
+                    <p className="text-[10px] text-casino-gold font-bold">BONUS BALANCE ONLY</p>
                     <div className="flex gap-2">
                       <div className="flex-1">
                         <Label className="text-xs">Amount ($)</Label>

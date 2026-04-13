@@ -1,4 +1,4 @@
-import { Shield, ShieldCheck, Crown } from "lucide-react";
+import { Shield, ShieldCheck, Crown, Trophy } from "lucide-react";
 
 export type StaffRole = "admin" | "moderator" | "staff" | null;
 
@@ -28,21 +28,45 @@ interface StaffUsernameProps {
   role?: StaffRole;
   className?: string;
   size?: "xs" | "sm" | "md";
+  hasHighRoller?: boolean;
 }
 
-export function StaffUsername({ username, role, className = "", size = "sm" }: StaffUsernameProps) {
+export function StaffUsername({ username, role, className = "", size = "sm", hasHighRoller }: StaffUsernameProps) {
   const config = role ? ROLE_CONFIG[role] : null;
 
-  if (!config) {
-    return <span className={className}>{username}</span>;
-  }
-
-  const Icon = config.icon;
   const sizeClasses = {
     xs: { icon: "h-2.5 w-2.5", prefix: "text-[8px]", name: "text-[10px]" },
     sm: { icon: "h-3 w-3", prefix: "text-[9px]", name: "text-xs" },
     md: { icon: "h-4 w-4", prefix: "text-[10px]", name: "text-sm" },
   }[size];
+
+  // HIGH ROLLER with no staff role
+  if (!config && hasHighRoller) {
+    return (
+      <span className={`inline-flex items-center gap-1 ${className}`}>
+        <Trophy className={`${sizeClasses.icon} text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.9)] animate-pulse`} />
+        <span className={`${sizeClasses.name} font-black bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]`} style={{ animationDuration: "2s" }}>
+          {username}
+        </span>
+      </span>
+    );
+  }
+
+  if (!config) {
+    if (hasHighRoller) {
+      return (
+        <span className={`inline-flex items-center gap-1 ${className}`}>
+          <Trophy className={`${sizeClasses.icon} text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.9)]`} />
+          <span className={`${sizeClasses.name} font-black bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent`}>
+            {username}
+          </span>
+        </span>
+      );
+    }
+    return <span className={className}>{username}</span>;
+  }
+
+  const Icon = config.icon;
 
   return (
     <span className={`inline-flex items-center gap-1 ${className}`}>
@@ -50,9 +74,15 @@ export function StaffUsername({ username, role, className = "", size = "sm" }: S
       <span className={`${sizeClasses.prefix} font-black uppercase tracking-wider ${config.colorClass} ${config.glowClass}`}>
         {config.prefix}
       </span>
-      <span className={`${sizeClasses.name} font-bold ${config.colorClass} ${config.glowClass}`}>
-        {username}
-      </span>
+      {hasHighRoller ? (
+        <span className={`${sizeClasses.name} font-black bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]`}>
+          {username}
+        </span>
+      ) : (
+        <span className={`${sizeClasses.name} font-bold ${config.colorClass} ${config.glowClass}`}>
+          {username}
+        </span>
+      )}
     </span>
   );
 }

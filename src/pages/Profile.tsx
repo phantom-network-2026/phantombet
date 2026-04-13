@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   ArrowLeft, Trophy, Save, User, Link as LinkIcon,
-  Twitter, Instagram, MessageCircle, Globe, Sparkles, Crown, Camera, Circle, Star, Zap,
+  Twitter, Instagram, MessageCircle, Globe, Sparkles, Crown, Camera, Circle, Star, Zap, Edit, DollarSign,
 } from "lucide-react";
 import { toast } from "sonner";
 import { usePresence, getStatusColor, getStatusLabel, type AppearanceStatus } from "@/hooks/usePresence";
@@ -28,6 +28,8 @@ const BORDER_STYLES = [
 ];
 
 const ANIMATED_AVATAR_PRICE = 10;
+const USERNAME_CHANGE_PRICE = 5;
+const HIGH_ROLLER_PRICE = 50;
 
 export default function Profile() {
   const { user, profile, refreshProfile } = useAuth();
@@ -41,6 +43,9 @@ export default function Profile() {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [staffRole, setStaffRole] = useState<StaffRole>(null);
+  const [editingUsername, setEditingUsername] = useState(false);
+  const [newUsername, setNewUsername] = useState("");
+  const [hasHighRoller, setHasHighRoller] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -53,6 +58,10 @@ export default function Profile() {
           setStaffRole(best.role as StaffRole);
         }
       });
+    // Check high roller status
+    supabase.from("profiles").select("has_high_roller").eq("user_id", user.id).single().then(({ data }) => {
+      setHasHighRoller(!!(data as any)?.has_high_roller);
+    });
   }, [user]);
 
   useEffect(() => {
@@ -124,7 +133,6 @@ export default function Profile() {
       toast.info("You already have an animated avatar!");
       return;
     }
-    // Deduct balance via game-settle
     const { error } = await supabase.functions.invoke("game-settle", {
       body: {
         userId: user.id,
@@ -134,7 +142,6 @@ export default function Profile() {
       },
     });
     if (error) { toast.error("Purchase failed"); return; }
-    // Enable animated avatar
     await supabase.from("profiles").update({ has_animated_avatar: true } as any).eq("user_id", user.id);
     toast.success("🎉 Animated avatar unlocked!");
     await refreshProfile();
@@ -154,7 +161,6 @@ export default function Profile() {
     }
     const alreadyOwned = profile.purchased_borders?.includes(style.id);
     if (alreadyOwned) {
-      // Already purchased — just equip it for free
       await supabase.from("profiles").update({ border_style: style.id, has_animated_border: true } as any).eq("user_id", user.id);
       toast.success(`${style.label} border equipped!`);
       await refreshProfile();
@@ -176,6 +182,41 @@ export default function Profile() {
     const newOwned = [...(profile.purchased_borders || []), style.id];
     await supabase.from("profiles").update({ border_style: style.id, has_animated_border: true, purchased_borders: newOwned } as any).eq("user_id", user.id);
     toast.success(`🎉 ${style.label} border unlocked!`);
+    await refreshProfile();
+  };
+
+  const handleChangeUsername = async () => {
+    if (!user || !profile) return;
+    if (!newUsername.trim()) { toast.error("Username cannot be empty"); return; }
+    if (newUsername.trim() === profile.username) { setEditingUsername(false); return; }
+    if (profile.balance < USERNAME_CHANGE_PRICE) {
+      toast.error(`Not enough balance! Username change costs $${USERNAME_CHANGE_PRICE}.`);
+      return;
+    }
+    const { error } = await supabase.functions.invoke("game-settle", {
+      body: { userId: user.id, amount: -USERNAME_CHANGE_PRICE, gameType: "username-change", outcome: "purchase" },
+    });
+    if (error) { toast.error("Purchase failed"); return; }
+    await supabase.from("profiles").update({ username: newUsername.trim() } as any).eq("user_id", user.id);
+    toast.success(`🎉 Username changed! -$${USERNAME_CHANGE_PRICE}`);
+    setEditingUsername(false);
+    await refreshProfile();
+  };
+
+  const handlePurchaseHighRoller = async () => {
+    if (!user || !profile) return;
+    if (hasHighRoller) { toast.info("You already own HIGH ROLLER!"); return; }
+    if (profile.balance < HIGH_ROLLER_PRICE) {
+      toast.error(`Not enough balance! HIGH ROLLER costs $${HIGH_ROLLER_PRICE}.`);
+      return;
+    }
+    const { error } = await supabase.functions.invoke("game-settle", {
+      body: { userId: user.id, amount: -HIGH_ROLLER_PRICE, gameType: "high-roller", outcome: "purchase" },
+    });
+    if (error) { toast.error("Purchase failed"); return; }
+    await supabase.from("profiles").update({ has_high_roller: true, name_color: "high-roller" } as any).eq("user_id", user.id);
+    toast.success("🏆🔥 HIGH ROLLER UNLOCKED! Your name now glows!");
+    setHasHighRoller(true);
     await refreshProfile();
   };
 
@@ -219,11 +260,30 @@ export default function Profile() {
           <div className="flex items-center justify-center gap-2">
             <Circle className={`h-3 w-3 ${getStatusColor(appearanceStatus)}`} />
             {staffRole ? (
-              <StaffUsername username={profile.username || ""} role={staffRole} size="md" />
+              <StaffUsername username={profile.username || ""} role={staffRole} size="md" hasHighRoller={hasHighRoller} />
+            ) : hasHighRoller ? (
+              <span className="font-display text-xl font-black bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent animate-pulse flex items-center gap-1">
+                <Trophy className="h-5 w-5 text-yellow-400" />
+                {profile.username}
+              </span>
             ) : (
               <h2 className="font-display text-xl font-bold">{profile.username}</h2>
             )}
+            <button onClick={() => { setNewUsername(profile.username || ""); setEditingUsername(!editingUsername); }}>
+              <Edit className="h-3.5 w-3.5 text-muted-foreground hover:text-casino-gold transition-colors" />
+            </button>
           </div>
+
+          {/* Username Change */}
+          {editingUsername && (
+            <div className="flex items-center gap-2 justify-center">
+              <Input value={newUsername} onChange={(e) => setNewUsername(e.target.value)} className="max-w-[180px] bg-secondary border-border text-sm h-8" placeholder="New username" />
+              <Button variant="gold" size="sm" onClick={handleChangeUsername} className="h-8 text-xs">
+                <DollarSign className="h-3 w-3 mr-0.5" />${USERNAME_CHANGE_PRICE} Change
+              </Button>
+            </div>
+          )}
+
           {profile.bio && <p className="text-sm text-muted-foreground">{profile.bio}</p>}
 
           {/* Online Status Selector */}
@@ -320,6 +380,48 @@ export default function Profile() {
                 </a>
               )}
             </div>
+          )}
+        </div>
+
+        {/* HIGH ROLLER Purchase */}
+        <div className="rounded-xl bg-gradient-to-br from-yellow-900/30 via-orange-900/20 to-red-900/30 border-2 border-yellow-500/50 p-5 space-y-3 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-yellow-400/20 to-transparent rounded-bl-full" />
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
+              <Trophy className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h3 className="font-display font-black text-lg bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 bg-clip-text text-transparent">
+                🏆 HIGH ROLLER
+              </h3>
+              <p className="text-[10px] text-yellow-400/80 font-bold uppercase tracking-wider">Ultimate Status Symbol</p>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm text-yellow-100/90">
+              Your name glows with animated neon colors across the entire platform. Everyone sees your legendary status.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <span className="text-[10px] px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">🔥 Animated Name</span>
+              <span className="text-[10px] px-2 py-1 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30">🏆 Trophy Icon</span>
+              <span className="text-[10px] px-2 py-1 rounded-full bg-red-500/20 text-red-400 border border-red-500/30">✨ Neon Glow</span>
+            </div>
+            <p className="text-[10px] text-muted-foreground italic">
+              💰 All proceeds go directly to game licenses & community upgrades
+            </p>
+          </div>
+          {hasHighRoller ? (
+            <div className="flex items-center gap-2 bg-green-500/20 rounded-lg p-3 border border-green-500/30">
+              <Trophy className="h-5 w-5 text-green-400" />
+              <p className="text-sm text-green-400 font-black">✅ YOU ARE A HIGH ROLLER</p>
+            </div>
+          ) : (
+            <Button 
+              onClick={handlePurchaseHighRoller} 
+              className="w-full bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 hover:from-yellow-400 hover:via-orange-400 hover:to-red-400 text-white font-black text-base shadow-lg shadow-orange-500/30 border-0"
+            >
+              <Trophy className="h-5 w-5 mr-2" /> BUY HIGH ROLLER — ${HIGH_ROLLER_PRICE}
+            </Button>
           )}
         </div>
 
