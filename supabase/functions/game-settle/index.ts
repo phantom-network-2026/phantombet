@@ -63,6 +63,16 @@ Deno.serve(async (req) => {
 
     const admin = createClient(supabaseUrl, serviceKey);
 
+    // Determine wallet mode - which balance field to use
+    const { data: walletModeSetting } = await admin
+      .from("site_settings")
+      .select("value")
+      .eq("key", "wallet_mode")
+      .maybeSingle();
+
+    const isRealMode = walletModeSetting?.value?.mock === false;
+    const balanceField = isRealMode ? "real_balance" : "balance";
+
     // Check force_loss setting
     if (amount > 0) {
       const { data: forceLossSetting } = await admin
@@ -72,7 +82,14 @@ Deno.serve(async (req) => {
         .maybeSingle();
       const forceActive = forceLossSetting?.value?.enabled === true;
       if (forceActive) {
-        return new Response(JSON.stringify({ success: true, balance: null, forced_loss: true }), {
+        // Return the current actual balance so the game stays in sync
+        const { data: currentProfile } = await admin
+          .from("profiles")
+          .select(`${balanceField}`)
+          .eq("user_id", userId)
+          .single();
+        const currentBal = Number(currentProfile?.[balanceField]) || 0;
+        return new Response(JSON.stringify({ success: true, balance: currentBal, forced_loss: true }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
@@ -90,7 +107,6 @@ Deno.serve(async (req) => {
         const cfg = probSetting.value as any;
         let winProbability: number | null = null;
 
-        // Check per-game override first
         const perGame = (cfg.perGame || []) as any[];
         const gameOverride = perGame.find(
           (g: any) => g.enabled && g.gameName?.toLowerCase() === (gameType || "").toLowerCase()
@@ -101,12 +117,16 @@ Deno.serve(async (req) => {
           winProbability = cfg.globalProbability;
         }
 
-        // Apply probability: roll a random number 0-100, if above threshold, convert win to loss
         if (winProbability !== null && winProbability < 100) {
           const roll = Math.random() * 100;
           if (roll >= winProbability) {
-            // Block this win - return as if nothing happened (no payout)
-            return new Response(JSON.stringify({ success: true, balance: null, forced_loss: true }), {
+            const { data: currentProfile } = await admin
+              .from("profiles")
+              .select(`${balanceField}`)
+              .eq("user_id", userId)
+              .single();
+            const currentBal = Number(currentProfile?.[balanceField]) || 0;
+            return new Response(JSON.stringify({ success: true, balance: currentBal, forced_loss: true }), {
               headers: { ...corsHeaders, "Content-Type": "application/json" },
             });
           }
@@ -128,7 +148,6 @@ Deno.serve(async (req) => {
         if (cfg.globalEnabled) {
           let edgePercent = cfg.globalEdge ?? 0;
 
-          // Check for per-game override
           const perGame = (cfg.perGame || []) as any[];
           const gameOverride = perGame.find(
             (g: any) => g.enabled && g.name?.toLowerCase() === (gameType || "").toLowerCase()
@@ -137,7 +156,6 @@ Deno.serve(async (req) => {
             edgePercent = gameOverride.edge;
           }
 
-          // Apply edge: positive edge = house takes %, negative = player gets bonus
           if (edgePercent !== 0) {
             const multiplier = 1 - edgePercent / 100;
             adjustedAmount = Math.max(0.01, Math.round(amount * multiplier * 100) / 100);
@@ -146,10 +164,10 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Get current balance
+    // Get current balance using the correct field
     const { data: profile } = await admin
       .from("profiles")
-      .select("balance")
+      .select(`${balanceField}, biggest_win`)
       .eq("user_id", userId)
       .single();
 
@@ -160,7 +178,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    const newBalance = Number(profile.balance) + adjustedAmount;
+    const currentBalance = Number(profile[balanceField]) || 0;
+    const newBalance = currentBalance + adjustedAmount;
     if (newBalance < 0) {
       return new Response(JSON.stringify({ error: "Insufficient balance" }), {
         status: 400,
@@ -168,16 +187,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    const updateData: Record<string, any> = { balance: newBalance };
+    const updateData: Record<string, any> = { [balanceField]: newBalance };
 
     // Track biggest win
     if (adjustedAmount > 0) {
-      const { data: currentProfile } = await admin
-        .from("profiles")
-        .select("biggest_win")
-        .eq("user_id", userId)
-        .single();
-      const currentBiggest = Number(currentProfile?.biggest_win) || 0;
+      const currentBiggest = Number(profile.biggest_win) || 0;
       if (adjustedAmount > currentBiggest) {
         updateData.biggest_win = adjustedAmount;
         updateData.biggest_win_game = gameType || "Unknown";
@@ -194,7 +208,7 @@ Deno.serve(async (req) => {
       await admin.rpc("grant_xp", { p_user_id: userId, p_amount: Math.round(adjustedAmount * 10) });
     }
 
-    // Record transaction with adjusted amount
+    // Record transaction
     await admin.from("transactions").insert({
       user_id: userId,
       amount: adjustedAmount,
@@ -206,6 +220,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
+    console.error("game-settle error:", err);
     return new Response(JSON.stringify({ error: "Internal error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
