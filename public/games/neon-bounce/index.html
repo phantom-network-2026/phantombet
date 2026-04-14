@@ -139,16 +139,15 @@
                     <span>Max: 5000</span>
                 </div>
                 
-                <div class="flex gap-4 mb-6">
-                    <button onclick="game.setBet(0.1)" class="flex-1 bg-slate-800/50 border border-slate-700 hover:border-[#00f3ff] text-slate-300 py-3 text-sm font-mono">MIN</button>
-                    <button onclick="game.doubleBet()" class="flex-1 bg-slate-800/50 border border-slate-700 hover:border-[#00f3ff] text-slate-300 py-3 text-sm font-mono">2X</button>
-                    <button onclick="game.maxBet()" class="flex-1 bg-slate-800/50 border border-slate-700 hover:border-[#00f3ff] text-slate-300 py-3 text-sm font-mono">MAX</button>
+                <div class="grid grid-cols-3 gap-2 mb-4">
+                    <button onclick="game.setBet(0.1)" class="bg-slate-800/50 border border-slate-700 hover:border-[#00f3ff] text-slate-300 py-2 text-sm font-mono">$0.10</button>
+                    <button onclick="game.setBet(0.2)" class="bg-slate-800/50 border border-slate-700 hover:border-[#00f3ff] text-slate-300 py-2 text-sm font-mono">$0.20</button>
+                    <button onclick="game.setBet(0.5)" class="bg-slate-800/50 border border-slate-700 hover:border-[#00f3ff] text-slate-300 py-2 text-sm font-mono">$0.50</button>
+                    <button onclick="game.setBet(1)" class="bg-slate-800/50 border border-slate-700 hover:border-[#00f3ff] text-slate-300 py-2 text-sm font-mono">$1</button>
+                    <button onclick="game.setBet(2)" class="bg-slate-800/50 border border-slate-700 hover:border-[#00f3ff] text-slate-300 py-2 text-sm font-mono">$2</button>
+                    <button onclick="game.setBet(5)" class="bg-slate-800/50 border border-slate-700 hover:border-[#00f3ff] text-slate-300 py-2 text-sm font-mono">$5</button>
                 </div>
-
-                <div class="relative mb-6">
-                    <input type="number" id="bet-input" value="1" min="0.1" max="5" step="0.1" class="w-full bg-black/50 border-2 border-slate-700 focus:border-[#00f3ff] text-white font-cyber text-3xl text-center py-4 outline-none transition-colors">
-                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-xl">$</div>
-                </div>
+                <input type="hidden" id="bet-input" value="1">
 
                 <button id="start-btn" class="w-full cyber-btn cyber-btn-primary py-5 text-2xl font-black tracking-widest relative overflow-hidden group">
                     <span class="relative z-10">INITIATE ROUND</span>
