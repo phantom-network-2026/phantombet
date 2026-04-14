@@ -156,7 +156,7 @@
                             <button onclick="Game.addChip(10)" class="chip-btn bg-purple-600 rounded-full w-full aspect-square flex items-center justify-center font-bold text-xs shadow-lg shadow-purple-900/50 border-2 border-purple-400">$10</button>
                         </div>
                         
-                        <input type="number" id="custom-bet-input" placeholder="Custom Amount" class="w-full mt-3 bg-slate-900 border border-slate-600 rounded px-2 py-1 text-white text-sm focus:border-blue-500 outline-none">
+                        <div class="grid grid-cols-3 gap-1 mt-3"><button onclick="document.getElementById('custom-bet-input').value=0.10" class="bg-slate-900 border border-slate-600 rounded px-2 py-1 text-white text-xs">$0.10</button><button onclick="document.getElementById('custom-bet-input').value=0.20" class="bg-slate-900 border border-slate-600 rounded px-2 py-1 text-white text-xs">$0.20</button><button onclick="document.getElementById('custom-bet-input').value=0.50" class="bg-slate-900 border border-slate-600 rounded px-2 py-1 text-white text-xs">$0.50</button><button onclick="document.getElementById('custom-bet-input').value=1" class="bg-slate-900 border border-slate-600 rounded px-2 py-1 text-white text-xs">$1</button><button onclick="document.getElementById('custom-bet-input').value=2" class="bg-slate-900 border border-slate-600 rounded px-2 py-1 text-white text-xs">$2</button><button onclick="document.getElementById('custom-bet-input').value=5" class="bg-slate-900 border border-slate-600 rounded px-2 py-1 text-white text-xs">$5</button></div><input type="hidden" id="custom-bet-input" value="1">
                     </div>
 
                     <!-- Potential Payout -->

@@ -22,16 +22,18 @@ const SKINS = [
     { id: 'emoji_soccer', name: 'Soccer', type: 'text', content: '⚽', unlock: 'ad' }
 ];
 
+// Standard bet tiers
+const STANDARD_BETS = [0.10, 0.20, 0.50, 1, 2, 5];
+
 // --- 1. CONFIGURATION ---
 const GAME_CONFIG = {
     gravity: 0.25,
     friction: 0.99,
     restitution: 0.6,
     pegRadius: 4,
-    ballRadius: 10, // Default ball size
+    ballRadius: 7,
     slotHeight: 32,
     startBalance: 0,
-    // Colors are now handled by CSS variables for themes, these are fallbacks or specific elements
     colors: {
         ball: '#ef4444'
     },
@@ -77,7 +79,7 @@ class SoundManager {
     }
 
     playPegHit() { this.playTone(800 + Math.random() * 200, 'sine', 0.1, 0.05); }
-    playSplit() { this.playTone(1200, 'square', 0.1, 0.1); } // New Split Sound
+    playSplit() { this.playTone(1200, 'square', 0.1, 0.1); }
     playSlotHit(mul) {
         if (mul < 1) this.playTone(300, 'triangle', 0.3, 0.1);
         else if (mul < 10) { this.playTone(600, 'sine', 0.4, 0.1); setTimeout(() => this.playTone(900, 'sine', 0.4, 0.05), 100); }
@@ -103,7 +105,7 @@ class Ball {
         const randomVals = new Uint32Array(1);
         crypto.getRandomValues(randomVals);
         const rand = (randomVals[0] / 4294967295) - 0.5;
-        this.vel = new Vector(rand * 2, 0); 
+        this.vel = new Vector(rand * 2, 0);
         this.radius = GAME_CONFIG.ballRadius;
         this.active = true;
         this.betValue = betValue;
@@ -112,17 +114,10 @@ class Ball {
         this.rotSpeed = (Math.random() - 0.5) * 0.2;
     }
 
-    // Simplified update method: removed windX and timeScale parameters
     update() {
-        // Gravity
         this.vel.y += GAME_CONFIG.gravity;
-        
-        // Friction
         this.vel = this.vel.mult(GAME_CONFIG.friction);
-        
-        // Move
         this.pos = this.pos.add(this.vel);
-        
         this.rotation += this.rotSpeed;
 
         if(frameCount % 5 === 0) {
@@ -138,10 +133,8 @@ class Ball {
     }
 
     draw(ctx) {
-        // NOTE: Uses GAME_CONFIG.ballRadius for size, which is updated via the UI.
         const r = GAME_CONFIG.ballRadius;
 
-        // Trail
         if(!ui.ghostMode) {
             for(let i=0; i<this.history.length; i++) {
                 const p = this.history[i];
@@ -168,12 +161,10 @@ class Ball {
             ctx.arc(0, 0, r, 0, Math.PI * 2);
             ctx.fillStyle = grad;
             ctx.fill();
-            // Shine
             ctx.beginPath();
             ctx.arc(-r/3, -r/3, r/4, 0, Math.PI * 2);
             ctx.fillStyle = "rgba(255,255,255,0.3)";
             ctx.fill();
-
         } else if (skin.type === 'glow') {
             ctx.shadowBlur = 10;
             ctx.shadowColor = skin.colors[1];
@@ -182,9 +173,7 @@ class Ball {
             ctx.fillStyle = skin.colors[0];
             ctx.fill();
             ctx.shadowBlur = 0;
-
         } else if (skin.type === 'text') {
-            // Background for text
             if(skin.bg) {
                 ctx.fillStyle = skin.bg;
                 ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.fill();
@@ -193,8 +182,7 @@ class Ball {
             ctx.fillStyle = skin.color || '#fff';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(skin.content, 0, 1); // +1 y offset
-
+            ctx.fillText(skin.content, 0, 1);
         } else if (skin.type === '8ball') {
             ctx.fillStyle = 'black';
             ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI * 2); ctx.fill();
@@ -204,7 +192,6 @@ class Ball {
             ctx.font = 'bold 8px sans-serif';
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
             ctx.fillText('8', 0, 0.5);
-
         } else if (skin.type === 'anim_hue') {
             const hue = (frameCount * 2) % 360;
             ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
@@ -218,39 +205,28 @@ class Ball {
     }
 }
 
-// New Class: Floating Text for Payouts
 class FloatingText {
     constructor(x, y, text, color) {
-        this.x = x;
-        this.y = y;
-        this.text = text;
-        this.color = color;
-        this.alpha = 1;
-        this.velocity = -1; // Moves up
+        this.x = x; this.y = y; this.text = text; this.color = color;
+        this.alpha = 1; this.velocity = -1;
     }
-    update() {
-        this.y += this.velocity;
-        this.alpha -= 0.015;
-    }
+    update() { this.y += this.velocity; this.alpha -= 0.015; }
     draw(ctx) {
         ctx.save();
         ctx.globalAlpha = Math.max(0, this.alpha);
         ctx.fillStyle = this.color;
         ctx.font = "bold 14px monospace";
         ctx.textAlign = "center";
-        ctx.shadowColor = "black";
-        ctx.shadowBlur = 3;
+        ctx.shadowColor = "black"; ctx.shadowBlur = 3;
         ctx.fillText(this.text, this.x, this.y);
         ctx.restore();
     }
 }
 
-// New Class: Confetti for Big Wins
 class Confetti {
     constructor(x, y) {
-        this.x = x;
-        this.y = y;
-        this.size = (Math.random() * 0.5 + 0.5) * 5; // Random size
+        this.x = x; this.y = y;
+        this.size = (Math.random() * 0.5 + 0.5) * 5;
         this.color = `hsl(${Math.random() * 360}, 100%, 50%)`;
         this.velocity = new Vector((Math.random() - 0.5) * 5, (Math.random() - 1) * 5);
         this.rotation = Math.random() * Math.PI * 2;
@@ -258,17 +234,13 @@ class Confetti {
         this.alpha = 1;
     }
     update() {
-        this.x += this.velocity.x;
-        this.y += this.velocity.y;
-        this.velocity.y += 0.1; // Gravity
-        this.rotation += this.rotSpeed;
-        this.alpha -= 0.01;
+        this.x += this.velocity.x; this.y += this.velocity.y;
+        this.velocity.y += 0.1; this.rotation += this.rotSpeed; this.alpha -= 0.01;
     }
     draw(ctx) {
         ctx.save();
         ctx.globalAlpha = Math.max(0, this.alpha);
-        ctx.translate(this.x, this.y);
-        ctx.rotate(this.rotation);
+        ctx.translate(this.x, this.y); ctx.rotate(this.rotation);
         ctx.fillStyle = this.color;
         ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
         ctx.restore();
@@ -279,8 +251,7 @@ class Particle {
     constructor(x, y, color) {
         this.pos = new Vector(x, y);
         this.vel = new Vector((Math.random()-0.5)*4, (Math.random()-0.5)*4);
-        this.alpha = 1;
-        this.color = color;
+        this.alpha = 1; this.color = color;
     }
     update() { this.pos = this.pos.add(this.vel); this.alpha -= 0.03; }
     draw(ctx) {
@@ -304,10 +275,8 @@ class PlinkoGame {
         this.risk = 'medium';
         this.width = 0;
         this.height = 0;
-        
-        // Physics Controls defaulted to inactive
-        this.windX = 0; 
-        this.timeScale = 1.0; 
+        this.windX = 0;
+        this.timeScale = 1.0;
 
         this.sound = new SoundManager();
         this.resizeObserver = new ResizeObserver(() => this.resize());
@@ -320,7 +289,7 @@ class PlinkoGame {
     resize() {
         const wrapper = this.canvas.parentElement;
         this.width = wrapper.clientWidth;
-        const gap = this.width / (this.rowCount + 3); 
+        const gap = this.width / (this.rowCount + 3);
         this.height = (gap * (this.rowCount + 2)) + 40;
         const dpr = window.devicePixelRatio || 1;
         this.canvas.width = this.width * dpr;
@@ -341,24 +310,15 @@ class PlinkoGame {
             for (let col = 0; col <= row + 2; col++) {
                 const x = (this.width / 2) - ((row + 2) * gap / 2) + (col * gap);
                 const y = startY + (row * gap);
-                
-                // SPLITTER PEG LOGIC: 5% chance to be a splitter
-                const isSplitter = Math.random() < 0.05; 
-                
+                const isSplitter = Math.random() < 0.05;
                 if (x > 0 && x < this.width) {
-                   this.pegs.push({ 
-                       x, y, 
-                       r: GAME_CONFIG.pegRadius, 
-                       hitTimer: 0,
-                       isSplitter: isSplitter 
-                   });
+                   this.pegs.push({ x, y, r: GAME_CONFIG.pegRadius, hitTimer: 0, isSplitter });
                 }
             }
         }
 
         const slotY = startY + ((this.rowCount - 1) * gap) + gap;
         const multipliers = GAME_CONFIG.multipliers[this.rowCount][this.risk];
-        
         for(let i=0; i<multipliers.length; i++) {
              const x = (this.width / 2) - ((multipliers.length) * gap / 2) + (i * gap) + (gap/2);
              this.slots.push({ x, y: slotY, w: gap - 4, h: GAME_CONFIG.slotHeight, val: multipliers[i], active: 0 });
@@ -366,7 +326,6 @@ class PlinkoGame {
     }
 
     dropBall(amount, isGhost = false) {
-        // Ghost balls are always normal/single
         const ball = new Ball(this.width / 2, 0, amount);
         if (isGhost) {
             this.simulateGhost(ball);
@@ -375,20 +334,13 @@ class PlinkoGame {
         }
     }
 
-    // Split a ball into two
     splitBall(originalBall) {
-        // Create new ball at same position
-        const newBall = new Ball(originalBall.pos.x, originalBall.pos.y, originalBall.betValue); // Free bet
-        
-        // Give slight divergent velocities
+        const newBall = new Ball(originalBall.pos.x, originalBall.pos.y, originalBall.betValue);
         originalBall.vel.x -= 2;
         newBall.vel.x += 2;
         newBall.vel.y = originalBall.vel.y;
-
         this.balls.push(newBall);
         this.sound.playSplit();
-        
-        // Visual effect for split
         for(let k=0; k<5; k++) this.particles.push(new Particle(originalBall.pos.x, originalBall.pos.y, '#06b6d4'));
     }
 
@@ -397,7 +349,6 @@ class PlinkoGame {
         while(ball.active && loops < 2000) {
             ball.fastUpdate();
             if (ball.pos.x < 0 || ball.pos.x > this.width) ball.vel.x *= -1;
-            
             for (let p of this.pegs) {
                 let dx = ball.pos.x - p.x;
                 let dy = ball.pos.y - p.y;
@@ -413,7 +364,6 @@ class PlinkoGame {
                     ball.pos.y += ny * (ball.radius + p.r - dist);
                 }
             }
-
             if (ball.pos.y > this.height - 40) {
                 this.checkWin(ball);
                 ball.active = false;
@@ -429,7 +379,6 @@ class PlinkoGame {
             let d = Math.abs(b.pos.x - s.x);
             if(d < minDS) { minDS = d; bestSlot = s; }
         });
-
         if (bestSlot && minDS < bestSlot.w) {
             this.handleWin(b, bestSlot);
             return true;
@@ -440,8 +389,6 @@ class PlinkoGame {
     update() {
         for (let i = this.balls.length - 1; i >= 0; i--) {
             let b = this.balls[i];
-            
-            // Call simplified Ball update (no wind or timeScale)
             b.update();
 
             if (b.pos.x < 0) { b.pos.x = 0; b.vel.x *= -1; }
@@ -452,8 +399,7 @@ class PlinkoGame {
                 let dx = b.pos.x - p.x;
                 let dy = b.pos.y - p.y;
                 let dist = Math.sqrt(dx*dx + dy*dy);
-                
-                if (dist < GAME_CONFIG.ballRadius + p.r) { // Check collision using current GAME_CONFIG.ballRadius
+                if (dist < GAME_CONFIG.ballRadius + p.r) {
                     let nx = dx / dist; let ny = dy / dist;
                     let dot = b.vel.x * nx + b.vel.y * ny;
                     b.vel.x -= 2 * dot * nx;
@@ -465,13 +411,10 @@ class PlinkoGame {
                     p.hitTimer = 10;
                     if(!hit) { this.sound.playPegHit(); hit = true; }
 
-                    // SPLITTER LOGIC
                     if(p.isSplitter) {
-                        // Deactivate splitter temporarily to prevent infinite splitting on same peg
-                        p.isSplitter = false; 
-                        p.hitTimer = 30; // Glow longer
+                        p.isSplitter = false;
+                        p.hitTimer = 30;
                         this.splitBall(b);
-                        // Re-enable splitter after a delay (simulated by recreating board or just simpler logic)
                         setTimeout(() => { p.isSplitter = true; }, 1000);
                     }
                 }
@@ -482,7 +425,6 @@ class PlinkoGame {
             }
         }
 
-        // Update effects
         for(let i=this.particles.length-1; i>=0; i--) {
             this.particles[i].update();
             if(this.particles[i].alpha <= 0) this.particles.splice(i, 1);
@@ -495,7 +437,6 @@ class PlinkoGame {
             this.confettiParticles[i].update();
             if(this.confettiParticles[i].alpha <= 0) this.confettiParticles.splice(i, 1);
         }
-
         this.pegs.forEach(p => { if(p.hitTimer > 0) p.hitTimer--; });
         this.slots.forEach(s => { if(s.active > 0) s.active--; });
     }
@@ -504,24 +445,14 @@ class PlinkoGame {
         const payout = ball.betValue * slot.val;
         ui.onWin(payout, slot.val);
         slot.active = 20;
-        
         if(!ui.ghostMode) {
             this.sound.playSlotHit(slot.val);
-            
-            // 1. Floating Text Payout
             const textColor = slot.val >= 1 ? '#22c55e' : '#94a3b8';
-            const textStr = `+$${payout.toFixed(2)}`;
-            this.floatingTexts.push(new FloatingText(slot.x, slot.y - 20, textStr, textColor));
-
-            // 2. Particles
+            this.floatingTexts.push(new FloatingText(slot.x, slot.y - 20, `+$${payout.toFixed(2)}`, textColor));
             const color = slot.val >= 1 ? '#22c55e' : '#94a3b8';
             for(let k=0; k<10; k++) this.particles.push(new Particle(slot.x, slot.y, color));
-
-            // 3. Confetti on Big Win
             if (slot.val >= 10) {
-                for (let k = 0; k < 50; k++) {
-                    this.confettiParticles.push(new Confetti(slot.x, slot.y));
-                }
+                for (let k = 0; k < 50; k++) this.confettiParticles.push(new Confetti(slot.x, slot.y));
             }
         }
         if(navigator.vibrate && slot.val > 2 && !ui.ghostMode) navigator.vibrate(50);
@@ -535,7 +466,6 @@ class PlinkoGame {
         this.ctx.fillStyle = bgGrad;
         this.ctx.fillRect(0, 0, this.width, this.height);
 
-        // Slots
         this.slots.forEach(s => {
             this.ctx.fillStyle = s.active > 0 ? style.getPropertyValue('--peg-active').trim() : 'rgba(51, 65, 85, 0.5)';
             let strokeColor = '#334155';
@@ -560,34 +490,27 @@ class PlinkoGame {
             }
         });
 
-        // Pegs
         const pegColor = style.getPropertyValue('--peg-color').trim();
         this.pegs.forEach(p => {
             const {x, y, r} = p;
             let grd = this.ctx.createRadialGradient(x-1, y-1, 1, x, y, r);
-            
-            // Highlight Logic
             if (p.hitTimer > 0) {
                 grd.addColorStop(0, '#fff');
                 grd.addColorStop(1, '#e2e8f0');
             } else if (p.isSplitter) {
-                // Splitter Pegs are Cyan
                 grd.addColorStop(0, '#22d3ee');
                 grd.addColorStop(1, '#0891b2');
             } else {
                 grd.addColorStop(0, pegColor);
                 grd.addColorStop(1, '#000000');
             }
-            
             this.ctx.beginPath(); this.ctx.arc(x, y, r, 0, Math.PI * 2);
             this.ctx.fillStyle = grd;
-            
             if(p.isSplitter) {
                  this.ctx.shadowBlur = 5; this.ctx.shadowColor = '#06b6d4';
             } else {
                  this.ctx.shadowBlur = 2; this.ctx.shadowColor = 'rgba(0,0,0,0.5)';
             }
-            
             this.ctx.fill(); this.ctx.shadowBlur = 0;
         });
 
@@ -608,24 +531,18 @@ class PlinkoGame {
 // --- 5. UI & STATE CONTROLLER ---
 class UIController {
     constructor() {
-        this.balance = parseFloat(localStorage.getItem('plinko_balance')) || GAME_CONFIG.startBalance;
-        this.bet = 10;
-        this.jackpot = parseFloat(localStorage.getItem('plinko_jackpot')) || 5000.00;
-        this.xp = parseInt(localStorage.getItem('plinko_xp')) || 0;
-        this.level = parseInt(localStorage.getItem('plinko_level')) || 1;
-        
-        // Unlocked Skins
+        this.balance = 0;
+        this.bet = 1;
+        this.jackpot = 0;
+        this.xp = 0;
+        this.level = 1;
         this.unlockedSkins = JSON.parse(localStorage.getItem('plinko_unlocked_skins')) || ['red', 'blue'];
         this.currentSkin = localStorage.getItem('plinko_current_skin') || 'red';
-
-        this.stats = JSON.parse(localStorage.getItem('plinko_stats')) || {
-            drops: 0, wins: 0, wagered: 0, bestWin: 0
-        };
-
+        this.stats = JSON.parse(localStorage.getItem('plinko_stats')) || { drops: 0, wins: 0, wagered: 0, bestWin: 0 };
         this.game = new PlinkoGame('gameCanvas');
         this.autoRunning = false;
         this.ghostMode = false;
-        
+        this.dropping = false;
         this.initUI();
     }
 
@@ -634,14 +551,6 @@ class UIController {
         this.updateXPUI();
         this.updateJackpotUI();
         this.bindEvents();
-        
-        // Initialize Ball Size Slider/Display
-        const ballSizeSlider = document.getElementById('ballSizeSlider');
-        const ballSizeDisplay = document.getElementById('ballSizeDisplay');
-        ballSizeSlider.value = GAME_CONFIG.ballRadius;
-        ballSizeDisplay.innerText = GAME_CONFIG.ballRadius;
-
-
         const savedTheme = localStorage.getItem('plinko_theme') || 'default';
         document.body.className = `theme-${savedTheme}`;
     }
@@ -650,50 +559,19 @@ class UIController {
         document.getElementById('soundToggle').addEventListener('change', (e) => {
             this.game.sound.enabled = e.target.checked;
         });
-        
         document.getElementById('ghostToggle').addEventListener('change', (e) => {
             this.ghostMode = e.target.checked;
             this.game.balls = [];
         });
 
-        const betInput = document.getElementById('betAmount');
-        betInput.addEventListener('change', (e) => {
-            let val = parseFloat(e.target.value);
-            if(val < 1) val = 1;
-            this.bet = val;
-            betInput.value = val;
+        // Standard bet buttons
+        document.querySelectorAll('.std-bet-btn').forEach(btn => {
+            btn.onclick = () => {
+                document.querySelectorAll('.std-bet-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.bet = parseFloat(btn.dataset.bet);
+            };
         });
-        document.getElementById('btnHalf').onclick = () => { this.bet = Math.max(1, Math.floor(this.bet/2)); betInput.value = this.bet; };
-        document.getElementById('btnDouble').onclick = () => { this.bet = this.balance >= this.bet*2 ? this.bet*2 : this.balance; betInput.value = this.bet; };
-
-        // Ball Size Slider Binding
-        const ballSizeSlider = document.getElementById('ballSizeSlider');
-        const ballSizeDisplay = document.getElementById('ballSizeDisplay');
-        
-        const updateBallSize = () => {
-            const val = parseInt(ballSizeSlider.value);
-            GAME_CONFIG.ballRadius = val;
-            ballSizeDisplay.innerText = val;
-            // No toast notification here, only when user finishes dragging/clicks
-        };
-
-        // Real-time update on input event (while dragging)
-        ballSizeSlider.addEventListener('input', updateBallSize);
-
-        // Final update and notification on change event (when drag finishes or value is set)
-        ballSizeSlider.addEventListener('change', () => {
-            const val = parseInt(ballSizeSlider.value);
-            this.showToast(`Ball size set to ${val}px.`, 'info');
-        });
-
-
-        document.getElementById('dailyBonusBtn').onclick = () => {
-             // Simple daily bonus sim
-             // disabled - uses bridge
-             // bonus disabled
-             document.getElementById('dailyBonusBtn').disabled = true;
-             setTimeout(() => { document.getElementById('dailyBonusBtn').disabled = false; }, 60000); // 1 min cooldown for demo
-        };
 
         document.querySelectorAll('.risk-btn').forEach(btn => {
             btn.onclick = () => {
@@ -714,7 +592,6 @@ class UIController {
         });
 
         document.getElementById('dropBtn').onclick = () => this.drop(1);
-        
         document.querySelectorAll('.multi-btn').forEach(btn => {
             btn.onclick = () => this.drop(parseInt(btn.dataset.count));
         });
@@ -741,118 +618,100 @@ class UIController {
         });
     }
 
-    // Modern Toast Notification
     showToast(message, type = 'info') {
         const container = document.getElementById('toastContainer');
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
-        
         let icon = 'ℹ️';
         if (type === 'success') icon = '✅';
         if (type === 'error') icon = '⚠️';
-        
         toast.innerHTML = `<span>${icon}</span> ${message}`;
         container.appendChild(toast);
-        
         setTimeout(() => {
             toast.style.animation = 'fadeOut 0.3s ease-in forwards';
             setTimeout(() => toast.remove(), 300);
         }, 3000);
     }
 
-    drop(count) {
-        if(this.balance < this.bet * count) {
+    async drop(count) {
+        if (this.dropping) return;
+        if(this.balance < this.bet) {
             if(this.autoRunning) document.getElementById('autoBtn').click();
             this.showToast("Insufficient funds!", "error");
             return;
         }
 
+        this.dropping = true;
         const dropDelay = this.ghostMode ? 5 : 100;
-
         let dropped = 0;
-        const interval = setInterval(() => {
-            if(dropped >= count) { clearInterval(interval); return; }
-            if(this.balance < this.bet) { clearInterval(interval); return; }
 
-            this.updateBalance(-this.bet);
+        const dropOne = async () => {
+            if(dropped >= count || this.balance < this.bet) {
+                this.dropping = false;
+                return;
+            }
+
+            // Deduct via bridge FIRST
+            const result = await PhantomBridge.deductBet(this.bet);
+            if (!result.success) {
+                this.showToast(result.error || "Bet failed", "error");
+                this.dropping = false;
+                if(this.autoRunning) document.getElementById('autoBtn').click();
+                return;
+            }
+            this.balance = result.balance;
+            this.updateBalanceUI();
+
             this.stats.drops++;
             this.stats.wagered += this.bet;
-            this.addXP(this.bet);
-            this.updateJackpot(this.bet * 0.01);
-
             this.game.dropBall(this.bet, this.ghostMode);
             dropped++;
-        }, dropDelay);
+
+            if (dropped < count && this.balance >= this.bet) {
+                setTimeout(() => dropOne(), dropDelay);
+            } else {
+                this.dropping = false;
+            }
+        };
+
+        await dropOne();
     }
 
     runAuto() {
         if(!this.autoRunning) return;
-        this.drop(1);
-        // Auto speed remains constant since timeScale is removed
-        this.autoTimer = setTimeout(() => this.runAuto(), this.ghostMode ? 50 : 300);
-    }
-
-    updateBalance(amount) {
-        this.balance += amount;
-        this.balance = parseFloat(this.balance.toFixed(2));
-        document.getElementById('balanceDisplay').innerText = this.balance.toFixed(2);
-        localStorage.setItem('plinko_balance', this.balance);
-        this.saveStats();
+        this.drop(1).then(() => {
+            this.autoTimer = setTimeout(() => this.runAuto(), this.ghostMode ? 50 : 300);
+        });
     }
 
     updateBalanceUI() {
         document.getElementById('balanceDisplay').innerText = this.balance.toFixed(2);
-        document.getElementById('betAmount').value = this.bet;
-    }
-
-    addXP(amount) {
-        this.xp += Math.ceil(amount);
-        const xpNeeded = this.level * 1000;
-        if(this.xp >= xpNeeded) {
-            this.xp -= xpNeeded;
-            this.level++;
-            this.updateBalance(this.level * 10);
-            this.showToast(`Level Up! Level ${this.level} reached! +$${this.level*10}`, "success");
-        }
-        this.updateXPUI();
-        localStorage.setItem('plinko_xp', this.xp);
-        localStorage.setItem('plinko_level', this.level);
     }
 
     updateXPUI() {
         document.getElementById('levelDisplay').innerText = this.level;
-        document.getElementById('xpText').innerText = `${this.xp} / ${this.level * 1000} XP`;
-        const pct = (this.xp / (this.level * 1000)) * 100;
+        const xpNeeded = this.level * 1000;
+        document.getElementById('xpText').innerText = `${this.xp} / ${xpNeeded} XP`;
+        const pct = (this.xp / xpNeeded) * 100;
         document.getElementById('xpFill').style.width = `${pct}%`;
-    }
-
-    updateJackpot(amount) {
-        this.jackpot += amount;
-        this.updateJackpotUI();
-        localStorage.setItem('plinko_jackpot', this.jackpot);
     }
 
     updateJackpotUI() {
         document.getElementById('jackpotDisplay').innerText = this.jackpot.toFixed(2);
     }
 
-    checkJackpotWin() {
-        if(Math.random() < 0.0001) {
-            const win = this.jackpot;
-            this.jackpot = 5000;
-            this.updateBalance(win);
-            this.game.sound.playJackpot();
-            this.showToast(`JACKPOT!!! You won $${win.toFixed(2)}!`, "success");
-            this.addHistory(9999);
+    async onWin(amount, multiplier) {
+        if (amount > 0) {
+            const result = await PhantomBridge.creditWin(amount, 'Plinko Pro Win');
+            if (result.success) {
+                this.balance = result.balance;
+                this.updateBalanceUI();
+            }
         }
-    }
-
-    onWin(amount, multiplier) {
-        this.updateBalance(amount);
-        this.checkJackpotWin();
         if(multiplier >= 1) this.stats.wins++;
         if(amount > this.stats.bestWin) this.stats.bestWin = amount;
         this.addHistory(multiplier);
+        this.saveStats();
     }
 
     saveStats() { localStorage.setItem('plinko_stats', JSON.stringify(this.stats)); }
@@ -871,13 +730,12 @@ class UIController {
         if(feed.children.length > 20) feed.removeChild(feed.lastChild);
     }
 
-    // --- SKINS LOGIC ---
     unlockSkin(id) {
         if(!this.unlockedSkins.includes(id)) {
             this.unlockedSkins.push(id);
             localStorage.setItem('plinko_unlocked_skins', JSON.stringify(this.unlockedSkins));
             this.setSkin(id);
-            this.showModal('skins'); // Refresh
+            this.showModal('skins');
         }
     }
 
@@ -885,7 +743,7 @@ class UIController {
         if(this.unlockedSkins.includes(id)) {
             this.currentSkin = id;
             localStorage.setItem('plinko_current_skin', id);
-            this.showModal('skins'); // Refresh
+            this.showModal('skins');
         }
     }
 
@@ -895,7 +753,6 @@ class UIController {
         overlay.className = 'ad-overlay';
         overlay.innerHTML = `
             <div class="ad-content-box">
-                <!-- PLACEHOLDER FOR ADSENSE CODE -->
                 <div style="font-size: 0.8rem; color: #888; position: absolute; top: 5px; right: 5px;">Ad</div>
                 <h3 style="margin-bottom:0.5rem">Google AdSense Demo</h3>
                 <p style="font-size:0.8rem; color:#666;">This is where your 300x250 ad unit would render.</p>
@@ -904,21 +761,18 @@ class UIController {
                     &lt;!-- Insert Adsense Code Here --&gt;
                 </div>
             </div>
-            
             <div class="spinner"></div>
             <div style="font-weight:bold; font-size:1.2rem; color:white;">Watching Ad...</div>
             <div style="color:#94a3b8; font-size:0.9rem;">Please wait 7 seconds</div>
         `;
         modal.appendChild(overlay);
-
         setTimeout(() => {
             overlay.remove();
             this.unlockSkin(id);
             this.showToast("Thanks for watching! Skin Unlocked.", "success");
-        }, 7000); // 7 Seconds Timer
+        }, 7000);
     }
 
-    // --- Modals ---
     showModal(type) {
         const modal = document.getElementById('infoModal');
         const title = document.getElementById('modalTitle');
@@ -934,7 +788,6 @@ class UIController {
                     <div class="stat-box"><div class="stat-val">$${this.stats.wagered.toFixed(0)}</div><div class="stat-lbl">Total Wagered</div></div>
                     <div class="stat-box"><div class="stat-val">$${this.stats.bestWin.toFixed(2)}</div><div class="stat-lbl">Best Win</div></div>
                 </div>
-                <button onclick="localStorage.clear(); location.reload()" style="margin-top:1rem; width:100%; background:var(--danger); padding:10px; border:none; border-radius:8px; color:white;">Reset Save Data</button>
             `;
         } else if (type === 'settings') {
             title.innerText = "Settings";
@@ -969,8 +822,6 @@ class UIController {
             SKINS.forEach(skin => {
                 const isUnlocked = this.unlockedSkins.includes(skin.id);
                 const isActive = this.currentSkin === skin.id;
-                
-                // Generate Preview HTML based on type
                 let previewHtml = '';
                 if(skin.type === 'text') previewHtml = `<div>${skin.content}</div>`;
                 else if(skin.type === 'gradient' || skin.type === 'glow') previewHtml = `<div style="width:20px; height:20px; border-radius:50%; background: linear-gradient(135deg, ${skin.colors[0]}, ${skin.colors[1]})"></div>`;
@@ -990,14 +841,12 @@ class UIController {
             });
             html += '</div>';
             content.innerHTML = html;
-
         } else if (type === 'rules') {
             title.innerText = "How to Play";
             content.innerHTML = `
                 <p>1. <strong>Bet:</strong> Choose amount and Risk.</p>
                 <p>2. <strong>Drop:</strong> Ball bounces through pins.</p>
                 <p>3. <strong>Skins:</strong> Watch ads to unlock cool balls!</p>
-                <p>4. <strong>Jackpot:</strong> Random chance to win the pool.</p>
             `;
         } else {
             title.innerText = "Fairness";
@@ -1014,35 +863,14 @@ class UIController {
 }
 
 const ui = new UIController();
+
 // ========== PhantomBet Bridge Integration ==========
 PhantomBridge.init('Plinko Pro');
-(function() {
-  // Wait for ui to be available (it's created in DOMContentLoaded)
-  function hookBridge() {
-    if (typeof window.plinkoUI === 'undefined' && typeof ui === 'undefined') {
-      setTimeout(hookBridge, 500);
-      return;
-    }
-    const uiObj = window.plinkoUI || ui;
-    if (!uiObj) return;
-    let _lastBal = uiObj.balance;
-    PhantomBridge.onReady(function(bal) {
-      uiObj.balance = bal;
-      _lastBal = bal;
-      uiObj.updateBalanceUI();
-    });
-    PhantomBridge.onBalanceChange(function(bal) {
-      uiObj.balance = bal;
-      _lastBal = bal;
-      uiObj.updateBalanceUI();
-    });
-    const origUpdateBalance = uiObj.updateBalance.bind(uiObj);
-    uiObj.updateBalance = function(amount) {
-      origUpdateBalance(amount);
-      if (amount < 0) PhantomBridge.deductBet(Math.abs(amount));
-      else if (amount > 0) PhantomBridge.creditWin(amount, 'Plinko Pro Win');
-      _lastBal = uiObj.balance;
-    };
-  }
-  hookBridge();
-})();
+PhantomBridge.onReady(function(bal) {
+    ui.balance = bal;
+    ui.updateBalanceUI();
+});
+PhantomBridge.onBalanceChange(function(bal) {
+    ui.balance = bal;
+    ui.updateBalanceUI();
+});

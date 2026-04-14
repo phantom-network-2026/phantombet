@@ -46,8 +46,16 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (typeof amount !== "number" || Math.abs(amount) > 20000) {
+    if (typeof amount !== "number" || Math.abs(amount) > 10000) {
       return new Response(JSON.stringify({ error: "Invalid amount" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Enforce max bet of $5 on deductions
+    if (amount < 0 && Math.abs(amount) > 5) {
+      return new Response(JSON.stringify({ error: "Maximum bet is $5" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

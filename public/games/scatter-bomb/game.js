@@ -20,8 +20,8 @@ function setBet(val) {
 
 function getBet() {
     let b = parseFloat(betInput.value);
-    if (isNaN(b) || b < 0.1) b = 0.1;
-    if (b > 50) b = 50;
+    const allowed = [0.10, 0.20, 0.50, 1, 2, 5];
+    if (isNaN(b) || !allowed.includes(b)) b = 1;
     betInput.value = b;
     return b;
 }
