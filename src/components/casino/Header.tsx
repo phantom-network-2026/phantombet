@@ -184,6 +184,9 @@ export function Header() {
                           <Gamepad2 className="h-3.5 w-3.5 mr-2" /> Slot Panel
                         </Button>
                       )}
+                      <Button variant="ghost" size="sm" className="w-full justify-start text-sky-400" onClick={() => { navigate("/staff-panel"); setMenuOpen(false); }}>
+                        <Shield className="h-3.5 w-3.5 mr-2" /> Staff Panel
+                      </Button>
                       {isOwner && (
                         <Button variant="ghost" size="sm" className="w-full justify-start text-casino-gold" onClick={() => { navigate("/owner-panel"); setMenuOpen(false); }}>
                           <Shield className="h-3.5 w-3.5 mr-2" /> Owner Panel
