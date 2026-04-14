@@ -149,7 +149,7 @@
                     <div class="flex items-center gap-2">
                         <button onclick="app.game.adjustBet(-0.5)" class="w-8 h-8 rounded bg-gray-700 hover:bg-gray-600 text-xl font-bold">-</button>
                         <!-- Updated Input Field for Manual Entry -->
-                        <input type="number" id="bet-input" value="1" min="0.1" max="50" step="0.1" onchange="app.game.setBet(this.value)" class="w-20 bg-transparent text-center font-mono font-bold text-white border-b border-gray-600 focus:outline-none focus:border-theme-primary">
+                        <input type="number" id="bet-input" value="1" min="0.1" max="5" step="0.1" onchange="app.game.setBet(this.value)" class="w-20 bg-transparent text-center font-mono font-bold text-white border-b border-gray-600 focus:outline-none focus:border-theme-primary">
                         <button onclick="app.game.adjustBet(0.5)" class="w-8 h-8 rounded bg-gray-700 hover:bg-gray-600 text-xl font-bold">+</button>
                     </div>
                 </div>
