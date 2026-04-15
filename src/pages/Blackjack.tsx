@@ -13,7 +13,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const SUITS = ["♠", "♥", "♦", "♣"];
 const RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
-const BET_OPTIONS = [10, 25, 50, 100, 250, 500, 1000, 5000, 10000];
+const BET_OPTIONS = [0.10, 0.20, 0.50, 1, 2, 5];
 
 interface Card {
   suit: string;
