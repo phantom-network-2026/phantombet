@@ -13,7 +13,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const SUITS = ["♠", "♥", "♦", "♣"];
 const RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
-const BET_OPTIONS = [10, 25, 50, 100, 250, 500, 1000, 5000, 10000];
+const BET_OPTIONS = [0.10, 0.20, 0.50, 1, 2, 5];
 
 interface Card {
   suit: string;
@@ -300,7 +300,7 @@ function BlackjackInner() {
                 <h1 className="font-display text-xl sm:text-2xl font-black text-white tracking-tight">
                   ♠ Blackjack
                 </h1>
-                <p className="text-[10px] sm:text-xs text-white/40 font-medium">Max bet: $10,000</p>
+                <p className="text-[10px] sm:text-xs text-white/40 font-medium">Max bet: $5</p>
               </div>
               <div className="flex flex-col items-end gap-1">
                 <div className="bg-black/30 backdrop-blur-sm rounded-full px-3 py-1 border border-white/10">
