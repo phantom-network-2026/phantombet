@@ -783,12 +783,16 @@
             document.querySelectorAll('.risk-btn').forEach(b => b.style.pointerEvents = this.isPlaying ? 'none' : 'auto');
         }
 
-        startGame() {
+        async startGame() {
             const betVal = parseFloat(this.inpBet.value);
-            if(isNaN(betVal) || betVal <= 0) return alert("Invalid Bet");
+            if(isNaN(betVal) || betVal <= 0 || betVal > 5) return alert("Invalid Bet (max $5)");
             if(betVal > this.balance) return alert("Insufficient Funds");
 
-            this.balance -= betVal;
+            // Deduct via bridge
+            const result = await PhantomBridge.deductBet(betVal);
+            if (!result.success) return alert(result.error || "Bet failed");
+            
+            this.balance = result.balance;
             this.currentBet = betVal;
             this.multiplier = 1.0;
             this.isPlaying = true;
@@ -833,11 +837,15 @@
             this.resetControls();
         }
 
-        cashOut() {
-            if(!this.isPlaying) return; // FIX: Prevent cashout if crashed
+        async cashOut() {
+            if(!this.isPlaying) return;
             
             const win = this.currentBet * this.multiplier;
-            this.balance += win;
+            // Credit win via bridge
+            const result = await PhantomBridge.creditWin(win, 'Stack Up Casino Win');
+            if (result.success) {
+                this.balance = result.balance;
+            }
             this.isPlaying = false;
             this.stage.celebrate();
             this.showFloat(`+${formatMoney(win)}`, "win");
@@ -1030,32 +1038,14 @@
 
 // ========== PhantomBet Bridge Integration ==========
 PhantomBridge.init('Stack Up Casino');
-(function() {
-  var _lastBalance = game.balance;
-  PhantomBridge.onReady(function(bal) {
+PhantomBridge.onReady(function(bal) {
     game.balance = bal;
-    _lastBalance = bal;
     game.updateUI();
-  });
-  PhantomBridge.onBalanceChange(function(bal) {
+});
+PhantomBridge.onBalanceChange(function(bal) {
     game.balance = bal;
-    _lastBalance = bal;
     game.updateUI();
-  });
-  var origUpdateUI = game.updateUI.bind(game);
-  game.updateUI = function() {
-    origUpdateUI();
-    if (game.balance !== _lastBalance) {
-      var delta = game.balance - _lastBalance;
-      _lastBalance = game.balance;
-      if (delta < 0) {
-        PhantomBridge.deductBet(Math.abs(delta));
-      } else if (delta > 0) {
-        PhantomBridge.creditWin(delta, 'Stack Up Casino Win');
-      }
-    }
-  };
-})();
+});
 </script>
 
 </body>
