@@ -43,7 +43,7 @@ const THEMES = [
 ];
 
 const STATE = {
-    balance: parseFloat(localStorage.getItem('crash_balance')) || 0,
+    balance: 0,
     phase: 'IDLE', currentMultiplier: 1.00, crashPoint: 0, startTime: 0,
     history: JSON.parse(localStorage.getItem('crash_history')) || [],
     bets: { 1: { active: false, amount: 0, cashedOut: false }, 2: { active: false, amount: 0, cashedOut: false } },
@@ -62,7 +62,6 @@ const STATE = {
 const savedSettings = JSON.parse(localStorage.getItem('crash_settings'));
 if(savedSettings) {
     STATE.settings = { ...STATE.settings, ...savedSettings };
-    // Merge unlocked lists just in case
     SKINS.forEach(s => { if(STATE.settings.unlockedSkins.includes(s.id)) s.unlocked = true; });
     THEMES.forEach(t => { if(STATE.settings.unlockedThemes.includes(t.id)) t.unlocked = true; });
 }
@@ -113,7 +112,7 @@ function gameLoop() {
         else { 
             checkAutoCashout(1); 
             checkAutoCashout(2); 
-            updateBots(); // Live Bot updates
+            updateBots();
         }
     }
     draw();
@@ -160,7 +159,6 @@ function crash() {
     resolveLosses();
     updateUIControls();
     
-    // Mark all active bots as LOST
     STATE.bots.forEach(bot => {
         if(!bot.cashed) {
             const row = document.getElementById(`bot-row-${bot.id}`);
@@ -185,14 +183,20 @@ function generateCrashPoint() {
 }
 
 /* BETTING LOGIC */
-function placeBet(panelId) {
+async function placeBet(panelId) {
     if (STATE.phase !== 'BETTING' && STATE.phase !== 'IDLE') return;
     if (STATE.bets[panelId].active) return;
     
     const amt = parseFloat(document.getElementById(`betInput${panelId}`).value);
-    if (isNaN(amt) || amt <= 0 || amt > STATE.balance) return;
+    if (isNaN(amt) || amt <= 0 || amt > STATE.balance || amt > 5) return;
 
-    updateBalance(-amt);
+    // Deduct via bridge
+    const result = await PhantomBridge.deductBet(amt);
+    if (!result.success) return;
+    
+    STATE.balance = result.balance;
+    updateBalanceDisplay();
+
     STATE.bets[panelId] = { active: true, amount: amt, cashedOut: false };
     STATE.stats.bets++;
     STATE.stats.profit -= amt;
@@ -203,14 +207,20 @@ function placeBet(panelId) {
     addSidebarRow('You', amt, '-', 'pending');
 }
 
-function doCashout(panelId) {
+async function doCashout(panelId) {
     if (STATE.phase !== 'FLYING') return;
     const bet = STATE.bets[panelId];
     if (!bet.active || bet.cashedOut) return;
 
     const win = bet.amount * STATE.currentMultiplier;
     bet.cashedOut = true;
-    updateBalance(win);
+    
+    // Credit win via bridge
+    const result = await PhantomBridge.creditWin(win, 'Plane Crash Win');
+    if (result.success) {
+        STATE.balance = result.balance;
+    }
+    updateBalanceDisplay();
     
     STATE.stats.wins++;
     STATE.stats.profit += win;
@@ -221,12 +231,6 @@ function doCashout(panelId) {
     const btn = document.getElementById(`btnAction${panelId}`);
     btn.innerText = `+ $${win.toFixed(2)}`;
     setTimeout(() => { if(btn.innerText.includes('+')) updateUIControls(); }, 2000);
-}
-
-function updateBalance(change) {
-    STATE.balance += change;
-    localStorage.setItem('crash_balance', STATE.balance);
-    updateBalanceDisplay();
 }
 
 /* CANVAS & SKINS */
@@ -261,7 +265,6 @@ function draw() {
     ctx.save();
     ctx.translate(-camX, camY);
 
-    // Grid
     ctx.strokeStyle = '#2c3e50'; ctx.lineWidth = 1; ctx.beginPath();
     const sY = Math.floor(-camY/50)*50, eY = h-camY;
     for(let i=sY; i<eY+50; i+=50) { ctx.moveTo(camX, i); ctx.lineTo(camX+w, i); }
@@ -269,7 +272,6 @@ function draw() {
     for(let i=sX; i<eX+50; i+=50) { ctx.moveTo(i, -camY); ctx.lineTo(i, h-camY); }
     ctx.stroke();
 
-    // Curve
     ctx.beginPath(); ctx.moveTo(0, h);
     for(let i=0; i<=t*10; i++) {
         const sT = i/10; const sM = Math.pow(Math.E, CONFIG.speed*sT);
@@ -279,7 +281,6 @@ function draw() {
 
     if(STATE.phase !== 'CRASHED') {
         ctx.save(); ctx.translate(tipX, tipY);
-        // Skin Drawing
         const skin = SKINS.find(s => s.id === STATE.settings.skin);
         if(skin.id === 'default') {
             ctx.rotate(-20 * Math.PI / 180);
@@ -313,7 +314,6 @@ const CHAT_VARIETY = [
 ];
 
 function chatLoop() {
-    // Random delay between 1000ms and 3000ms for fast chat
     const delay = Math.floor(Math.random() * 2000) + 1000;
     setTimeout(() => {
         const category = CHAT_VARIETY[Math.floor(Math.random() * CHAT_VARIETY.length)];
@@ -321,7 +321,7 @@ function chatLoop() {
         const user = REAL_NAMES[Math.floor(Math.random() * REAL_NAMES.length)];
         
         const div = document.createElement('div');
-        div.className = `chat-msg ${category.type}`; // Add class for coloring
+        div.className = `chat-msg ${category.type}`;
         div.innerHTML = `<span class="chat-user">${user}:</span><span class="chat-text">${msg}</span>`;
         
         const box = document.getElementById('chatMessages');
@@ -330,13 +330,11 @@ function chatLoop() {
             box.scrollTop = box.scrollHeight;
             if(box.children.length > 50) box.removeChild(box.firstChild);
         }
-        chatLoop(); // Recursive call
+        chatLoop();
     }, delay);
 }
-// Start Chat Loop
 chatLoop();
 
-// User Chat Logic
 document.getElementById('userChatInput').addEventListener('keypress', function (e) {
     if (e.key === 'Enter') {
         const msg = this.value.trim();
@@ -353,58 +351,6 @@ document.getElementById('userChatInput').addEventListener('keypress', function (
         }
     }
 });
-
-
-/* AD SYSTEM */
-let pendingAdAction = null;
-let pendingAdItem = null;
-let adTimer = null;
-
-function startAdSequence(action, itemId=null) {
-    pendingAdAction = action;
-    pendingAdItem = itemId;
-    document.getElementById('adModal').style.display = 'flex';
-    document.getElementById('adTitle').innerText = action === 'deposit' ? "Deposit $100" : "Unlock Content";
-    
-    let t = 10;
-    const el = document.getElementById('adTimer');
-    el.innerText = t;
-    
-    clearInterval(adTimer);
-    adTimer = setInterval(() => {
-        t--; el.innerText = t;
-        if(t<=0) { clearInterval(adTimer); finishAd(); }
-    }, 1000);
-}
-
-function finishAd() {
-    document.getElementById('adModal').style.display = 'none';
-    const success = document.getElementById('successModal');
-    const msg = document.getElementById('successMsg');
-    success.style.display = 'flex';
-
-    if(pendingAdAction === 'deposit') {
-        // disabled - uses bridge
-        msg.innerHTML = 'Your wallet has been topped up with <strong style="color:var(--accent);">$100.00</strong>';
-        AudioSys.playDeposit();
-    } else if(pendingAdAction === 'unlockSkin') {
-        const s = SKINS.find(x => x.id === pendingAdItem);
-        s.unlocked = true;
-        STATE.settings.unlockedSkins.push(s.id);
-        STATE.settings.skin = s.id;
-        msg.innerText = `Skin ${s.name} Unlocked!`;
-        saveSettings();
-        renderSkins();
-    } else if(pendingAdAction === 'unlockTheme') {
-        const t = THEMES.find(x => x.id === pendingAdItem);
-        t.unlocked = true;
-        STATE.settings.unlockedThemes.push(t.id);
-        applyTheme(t.id);
-        msg.innerText = `Theme ${t.name} Unlocked!`;
-        saveSettings();
-        renderThemes();
-    }
-}
 
 /* SETTINGS & MODALS */
 function openModal(id) {
@@ -423,7 +369,6 @@ function renderSkins() {
         div.innerHTML = `<span class="item-icon">${s.icon}</span><span class="item-name">${s.name}</span>`;
         div.onclick = () => {
             if(s.unlocked) { STATE.settings.skin = s.id; saveSettings(); renderSkins(); }
-            else { closeModal('skinsModal'); startAdSequence('unlockSkin', s.id); }
         };
         grid.appendChild(div);
     });
@@ -438,7 +383,6 @@ function renderThemes() {
         div.innerHTML = `<span class="item-icon">🎨</span><span class="item-name">${t.name}</span>`;
         div.onclick = () => {
             if(t.unlocked) { applyTheme(t.id); saveSettings(); renderThemes(); }
-            else { closeModal('themeModal'); startAdSequence('unlockTheme', t.id); }
         };
         grid.appendChild(div);
     });
@@ -487,7 +431,6 @@ function addSidebarRow(u, a, m, s, id) {
     d.innerHTML = `<span class="bet-user">${u}</span><span class="bet-mult">${m}</span><span class="bet-amt">$${a}</span>`;
     const l = document.getElementById('betsList'); l.insertBefore(d, l.firstChild);
 }
-// Utils
 function checkAutoCashout(id) {
     if(!STATE.bets[id].active || STATE.bets[id].cashedOut) return;
     const e = document.getElementById(`autoCashoutEnable${id}`).checked;
@@ -530,13 +473,12 @@ function generateBots() {
         const name = BOT_NAMES_LIST[Math.floor(Math.random() * BOT_NAMES_LIST.length)] + Math.floor(Math.random()*100);
         const bet = (Math.random() * 100 + 10).toFixed(0);
         
-        // Logic: 10% crash early, 40% low cashout, 40% med, 10% high
         let target;
         const r = Math.random();
-        if(r < 0.1) target = 1.0; // Will crash immediately/lose
-        else if(r < 0.5) target = 1.01 + Math.random() * 0.99; // 1.01x - 2.00x
-        else if(r < 0.9) target = 2.0 + Math.random() * 3.0;   // 2.00x - 5.00x
-        else target = 5.0 + Math.random() * 10.0;              // 5.00x+
+        if(r < 0.1) target = 1.0;
+        else if(r < 0.5) target = 1.01 + Math.random() * 0.99;
+        else if(r < 0.9) target = 2.0 + Math.random() * 3.0;
+        else target = 5.0 + Math.random() * 10.0;
 
         const bot = { id: i, name, bet, target, cashed: false };
         STATE.bots.push(bot);
@@ -546,7 +488,6 @@ function generateBots() {
 }
 
 function updateBots() {
-    // Run in game loop
     STATE.bots.forEach(bot => {
         if(!bot.cashed && STATE.currentMultiplier >= bot.target) {
             bot.cashed = true;
@@ -571,26 +512,14 @@ function resolveLosses() {
 // Kickoff
 requestAnimationFrame(gameLoop);
 startRound();
+
 // ========== PhantomBet Bridge Integration ==========
 PhantomBridge.init('Plane Crash');
-(function() {
-  PhantomBridge.onReady(function(bal) {
+PhantomBridge.onReady(function(bal) {
     STATE.balance = bal;
-    localStorage.setItem('crash_balance', bal);
     updateBalanceDisplay();
-  });
-  PhantomBridge.onBalanceChange(function(bal) {
+});
+PhantomBridge.onBalanceChange(function(bal) {
     STATE.balance = bal;
-    localStorage.setItem('crash_balance', bal);
     updateBalanceDisplay();
-  });
-  const origUpdateBalance = updateBalance;
-  updateBalance = function(change) {
-    origUpdateBalance(change);
-    if (change < 0) {
-      PhantomBridge.deductBet(Math.abs(change));
-    } else if (change > 0) {
-      PhantomBridge.creditWin(change, 'Plane Crash Win');
-    }
-  };
-})();
+});

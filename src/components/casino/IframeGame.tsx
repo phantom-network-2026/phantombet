@@ -4,7 +4,7 @@ import { BottomNav } from "@/components/casino/BottomNav";
 import { GameChat } from "@/components/casino/GameChat";
 import { AuthGuard } from "@/components/casino/AuthGuard";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Maximize2, Minimize2 } from "lucide-react";
+import { ArrowLeft, MessageSquare, X } from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,9 +18,8 @@ interface IframeGameProps {
 
 function IframeGameInner({ title, slug, description, emoji }: IframeGameProps) {
   const navigate = useNavigate();
-  const [fullscreen, setFullscreen] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const fullscreenIframeRef = useRef<HTMLIFrameElement>(null);
+  const [showChat, setShowChat] = useState(false);
   const { user, profile, refreshProfile } = useAuth();
 
   // Use refs to avoid stale closures
@@ -63,7 +62,6 @@ function IframeGameInner({ title, slug, description, emoji }: IframeGameProps) {
       // Refresh profile to sync header balance
       await refreshProfile();
 
-      // The server always returns the authoritative balance now
       const newBalance = data?.balance ?? profileRef.current?.balance ?? 0;
 
       (sourceWindow as Window).postMessage({
@@ -119,70 +117,71 @@ function IframeGameInner({ title, slug, description, emoji }: IframeGameProps) {
   // When profile balance changes, update the iframe
   useEffect(() => {
     if (profile?.balance !== undefined) {
-      const iframe = fullscreen ? fullscreenIframeRef.current : iframeRef.current;
-      if (iframe?.contentWindow) {
-        iframe.contentWindow.postMessage({
+      if (iframeRef.current?.contentWindow) {
+        iframeRef.current.contentWindow.postMessage({
           type: 'BALANCE_UPDATED',
           balance: profile.balance
         }, '*');
       }
     }
-  }, [profile?.balance, fullscreen]);
+  }, [profile?.balance]);
 
-  if (fullscreen) {
-    return (
-      <div className="fixed inset-0 z-50 bg-black flex flex-col">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setFullscreen(false)}
-          className="absolute top-2 right-2 z-50 text-white bg-black/50 hover:bg-black/70"
-        >
-          <Minimize2 className="h-4 w-4 mr-1" /> Exit Fullscreen
-        </Button>
+  return (
+    <div className="fixed inset-0 z-50 bg-black flex flex-col">
+      {/* Game iframe - takes all available space */}
+      <div className="flex-1 min-h-0 relative">
         <iframe
-          ref={fullscreenIframeRef}
+          ref={iframeRef}
           src={`/games/${slug}/index.html`}
           className="w-full h-full border-0"
           title={title}
           allow="autoplay"
         />
-      </div>
-    );
-  }
 
-  return (
-    <div className="h-[100dvh] flex flex-col gradient-casino-bg overflow-hidden">
-      <Header />
-      <div className="flex items-center justify-between px-3 py-1.5 shrink-0">
-        <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={() => navigate(-1)}>
-          <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Back
+        {/* Chat overlay */}
+        {showChat && (
+          <div className="absolute inset-0 z-40 bg-black/80 flex items-end">
+            <div className="w-full h-[60%] bg-card border-t border-border rounded-t-xl overflow-hidden flex flex-col">
+              <div className="flex items-center justify-between px-3 py-2 border-b border-border">
+                <span className="text-sm font-bold text-gold">{emoji} {title} Chat</span>
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setShowChat(false)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex-1 overflow-hidden">
+                <GameChat gameRoom={slug} />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Bottom navigation bar */}
+      <div className="shrink-0 bg-[#0f0a1e]/95 border-t border-white/10 flex items-center justify-between px-4 py-2 safe-area-bottom">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate(-1)}
+          className="text-white/80 hover:text-white h-9 px-3 text-xs gap-1.5"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Exit
         </Button>
-        <h1 className="font-display text-sm font-bold text-gold truncate mx-2">
-          {emoji && `${emoji} `}{title}
-        </h1>
-        <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={() => setFullscreen(true)}>
-          <Maximize2 className="h-3.5 w-3.5 mr-1" /> Full
+        
+        <span className="text-xs font-display font-bold text-gold truncate max-w-[40%]">
+          {emoji} {title}
+        </span>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowChat(!showChat)}
+          className="text-white/80 hover:text-white h-9 px-3 text-xs gap-1.5"
+        >
+          <MessageSquare className="h-4 w-4" />
+          Chat
         </Button>
       </div>
-
-      <div className="flex-1 min-h-0 flex flex-col md:flex-row md:gap-4 px-3 pb-2">
-        <div className="flex-1 min-h-0 rounded-xl overflow-hidden bg-card border border-border">
-          <iframe
-            ref={iframeRef}
-            src={`/games/${slug}/index.html`}
-            className="w-full h-full border-0"
-            title={title}
-            allow="autoplay"
-          />
-        </div>
-
-        <div className="shrink-0 mt-2 md:mt-0 md:w-72 md:h-full md:overflow-y-auto">
-          <GameChat gameRoom={slug} />
-        </div>
-      </div>
-
-      <BottomNav />
     </div>
   );
 }

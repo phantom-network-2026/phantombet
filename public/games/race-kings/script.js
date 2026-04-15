@@ -245,11 +245,12 @@ const CONFIG = {
             },
 
             /* --- RACE ENGINE --- */
-            startRace() {
-                this.balance -= this.currentBet;
+            async startRace() {
+                // Deduct bet via bridge
+                const result = await PhantomBridge.deductBet(this.currentBet);
+                if (!result.success) return;
+                this.balance = result.balance;
                 this.state = 'RACING';
-                this.saveData();
-                this.updateUI();
 
                 this.winnerIndex = this.determineWinner();
                 
@@ -303,15 +304,19 @@ const CONFIG = {
                 requestAnimationFrame(loop);
             },
 
-            endRace() {
+            async endRace() {
                 this.state = 'FINISHED';
                 const won = this.selectedCarIndex === this.winnerIndex;
                 let payout = 0;
 
                 if (won) {
                     const multiplier = this.odds[this.winnerIndex];
-                    payout = Math.floor(this.currentBet * multiplier);
-                    this.balance += payout;
+                    payout = Math.floor(this.currentBet * multiplier * 100) / 100;
+                    // Credit win via bridge
+                    const result = await PhantomBridge.creditWin(payout, 'Race Kings Win');
+                    if (result.success) {
+                        this.balance = result.balance;
+                    }
                     AudioSys.playWin();
                     Confetti.start();
                 }
@@ -595,26 +600,11 @@ const CONFIG = {
         };
 // ========== PhantomBet Bridge Integration ==========
 PhantomBridge.init('Race Kings');
-(function() {
-  let _lastBal = Game.balance;
-  PhantomBridge.onReady(function(bal) {
+PhantomBridge.onReady(function(bal) {
     Game.balance = bal;
-    _lastBal = bal;
     Game.updateUI();
-  });
-  PhantomBridge.onBalanceChange(function(bal) {
+});
+PhantomBridge.onBalanceChange(function(bal) {
     Game.balance = bal;
-    _lastBal = bal;
     Game.updateUI();
-  });
-  const origUpdateUI = Game.updateUI.bind(Game);
-  Game.updateUI = function() {
-    origUpdateUI();
-    if (Game.balance !== _lastBal) {
-      const delta = Game.balance - _lastBal;
-      _lastBal = Game.balance;
-      if (delta < 0) PhantomBridge.deductBet(Math.abs(delta));
-      else if (delta > 0) PhantomBridge.creditWin(delta, 'Race Kings Win');
-    }
-  };
-})();
+});

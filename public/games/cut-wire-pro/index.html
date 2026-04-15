@@ -66,9 +66,6 @@
                 <i class="fas fa-coins text-yellow-500 text-[10px] md:text-sm"></i>
                 <span id="wallet-balance" class="font-orbitron text-xs md:text-lg font-bold text-white">0.00</span>
             </div>
-            <button onclick="openAd()" class="bg-green-600 hover:bg-green-500 text-white p-2 md:px-4 md:py-2 rounded-lg md:rounded-xl text-[10px] md:text-xs font-bold uppercase transition-all shadow-lg">
-                <i class="fas fa-plus-circle"></i><span class="hidden sm:inline ml-2">ADD +100</span>
-            </button>
         </div>
     </nav>
 
@@ -150,20 +147,6 @@
         </aside>
     </main>
 
-    <!-- Ad Overlay -->
-    <div id="ad-overlay" class="fixed inset-0 bg-black/98 z-[2100] hidden flex-col items-center justify-center p-4 backdrop-blur-md">
-        <div class="max-w-md w-full text-center">
-            <h3 class="font-orbitron text-xl md:text-2xl font-black mb-8 tracking-tight">SPONSORED DATA STREAM</h3>
-            <div class="w-full aspect-video bg-zinc-900 rounded-3xl flex flex-col items-center justify-center border border-white/5 relative overflow-hidden mb-8 shadow-2xl">
-                <div class="text-6xl md:text-8xl font-black font-orbitron text-white/90" id="ad-counter">10</div>
-                <p class="text-[9px] md:text-[10px] uppercase font-black tracking-[0.5em] text-indigo-500 mt-2 md:mt-4">Transmitting Credits</p>
-                <div class="absolute bottom-0 left-0 h-1 bg-indigo-600/40 w-full"></div>
-            </div>
-            <button id="ad-claim-btn" disabled onclick="closeAd()" class="w-full py-4 md:py-5 bg-white/5 text-gray-600 rounded-2xl font-black uppercase tracking-widest transition-all">
-                Processing...
-            </button>
-        </div>
-    </div>
 
     <!-- Audio Effects -->
     <audio id="sfx-beep" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"></audio>

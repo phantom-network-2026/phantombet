@@ -9,19 +9,16 @@
       }, 500);
     });
 
-    // ---------- CONFIG (you can tweak here) ----------
-    // Increase per-mine risk bonus factor: each extra mine adds 0.5× step to every safe click multiplier.
-    // Change step or baseMines as you like.
+    // ---------- CONFIG ----------
     const RISK = {
-      step: 0.5,     // ← ek mine badhane par +0.5×
-      baseMines: 1   // comparison baseline mines
+      step: 0.5,
+      baseMines: 1
     };
 
     // ---------- Utility ----------
     const el = id => document.getElementById(id);
-    const formatINR = v => `₹${Number(v).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+    const formatINR = v => `$${Number(v).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
 
-    // Simple SHA-256 (browser SubtleCrypto)
     async function sha256(str){
       const buf = new TextEncoder().encode(str);
       const hash = await crypto.subtle.digest('SHA-256', buf);
@@ -29,7 +26,6 @@
       return bytes.map(b=>b.toString(16).padStart(2,'0')).join('');
     }
 
-    // Deterministic PRNG (Mulberry32)
     function mulberry32(seed){
       let t = seed >>> 0;
       return function(){
@@ -41,7 +37,6 @@
     }
 
     function hashToSeedInt(hex){
-      // take first 8 hex chars => 32-bit int
       return parseInt(hex.slice(0,8),16) >>> 0;
     }
 
@@ -55,7 +50,7 @@
     // ---------- Game State ----------
     const STATE = {
       balance: 0,
-      bet: 10,
+      bet: 1,
       mines: 3,
       total: 25,
       serverSeed: '',
@@ -114,7 +109,6 @@
       el('revealedView').textContent = `${STATE.opened.size} / ${safeTotal}`;
       el('nonce').textContent = String(STATE.nonce);
 
-      // auto status
       el('autoStatus').textContent = AUTO.running ? `running (${AUTO.remaining} left)` : 'idle';
     }
 
@@ -131,28 +125,30 @@
       cashoutBtn.disabled = !STATE.roundActive || STATE.opened.size===0;
     }
 
-    // ---------- Provably-fair like mine placement ----------
+    // ---------- Mine placement ----------
     async function newRound(){
-      // Validate bet
-      STATE.bet = Math.max(1, Math.floor(Number(betInput.value)||10));
+      STATE.bet = Math.max(0.1, Math.min(5, Number(betInput.value)||1));
       if(STATE.bet > STATE.balance){ toast('Insufficient balance'); stopAuto(); return; }
+
+      // Deduct bet via bridge
+      const result = await PhantomBridge.deductBet(STATE.bet);
+      if (!result.success) { toast(result.error || 'Bet failed'); stopAuto(); return; }
+      STATE.balance = result.balance;
 
       STATE.clientSeed = clientSeedInput.value.trim() || 'client';
       STATE.mines = Math.max(1, Math.min(24, Number(mineRange.value)||3));
       STATE.nonce += 1;
       STATE.roundActive = true;
       STATE.opened = new Set();
-      STATE.multiplier = 1; // reset
+      STATE.multiplier = 1;
       AUTO.roundClicks = 0;
 
-      // Hidden server seed for this round
       STATE.serverSeed = crypto.getRandomValues(new Uint32Array(4)).join('-');
       const seedStr = `${STATE.serverSeed}|${STATE.clientSeed}|${STATE.nonce}`;
       const hex = await sha256(seedStr);
       const seedInt = hashToSeedInt(hex);
       const prng = mulberry32(seedInt);
 
-      // Generate mine indices by shuffling 0..24 using PRNG and taking first N
       const arr = Array.from({length:STATE.total}, (_,i)=>i);
       for(let i=arr.length-1;i>0;i--){
         const j = Math.floor(prng()* (i+1));
@@ -160,7 +156,6 @@
       }
       STATE.mineSet = new Set(arr.slice(0, STATE.mines));
 
-      // UI
       drawGrid();
       refreshControls();
       const seedPreview = (await sha256(STATE.serverSeed)).slice(0,16);
@@ -170,7 +165,6 @@
     }
 
     function fairStepMultiplier(){
-      // Base fair odds for this step
       const opened = STATE.opened.size;
       const total = STATE.total;
       const mines = STATE.mines;
@@ -178,7 +172,6 @@
       const remainingSafe = (total - mines) - opened;
       if(remainingSafe <= 0) return STATE.multiplier;
 
-      // Risk bonus scales with mines count
       const step = (remainingCells / remainingSafe) * riskBonus();
       return STATE.multiplier * step;
     }
@@ -233,15 +226,13 @@
 
       if(isMine){
         playBlast();
-        // lose bet
-        STATE.balance -= STATE.bet;
+        // Lost - bet already deducted
         toast('Boom! You hit a mine. -' + formatINR(STATE.bet));
         endRound(true);
         updateKpis();
       }else{
         playClick();
         STATE.opened.add(idx);
-        // update multiplier fairly + risk bonus
         STATE.multiplier = fairStepMultiplier();
         updateKpis();
         cashoutBtn.disabled = false;
@@ -255,10 +246,16 @@
       }
     }
 
-    function cashout(){
+    async function cashout(){
       if(!STATE.roundActive || STATE.opened.size===0) return;
       const win = +(STATE.bet * STATE.multiplier).toFixed(2);
-      STATE.balance += (win - STATE.bet); // net profit added
+      
+      // Credit win via bridge
+      const result = await PhantomBridge.creditWin(win, 'Mines Win');
+      if (result.success) {
+        STATE.balance = result.balance;
+      }
+      
       toast('Cashed out: +'+formatINR(win - STATE.bet));
       endRound(false);
       updateKpis();
@@ -285,7 +282,6 @@
         newRound();
         return;
       }
-      // If round active, click a random cell
       const idx = randomUnopenedIndex();
       if(idx === -1){ cashout(); return; }
       const btn = grid.children[idx];
@@ -313,14 +309,13 @@
     }
 
     // ---------- Events ----------
-    betInput.addEventListener('change', ()=>{ STATE.bet = Math.max(1, Math.floor(Number(betInput.value)||10)); updateKpis(); });
+    betInput.addEventListener('change', ()=>{ STATE.bet = Math.max(0.1, Math.min(5, Number(betInput.value)||1)); updateKpis(); });
     mineRange.addEventListener('input', ()=>{ STATE.mines = Number(mineRange.value); mineView.textContent = STATE.mines; updateKpis(); });
     clientSeedInput.addEventListener('change', ()=>{ STATE.clientSeed = clientSeedInput.value; });
 
     startBtn.addEventListener('click', newRound);
     cashoutBtn.addEventListener('click', cashout);
     revealAllBtn.addEventListener('click', ()=>{ revealAll(); });
-    // Add funds disabled - uses bridge balance
 
     el('autoStart').addEventListener('click', startAuto);
     el('autoStop').addEventListener('click', stopAuto);
@@ -329,35 +324,17 @@
     drawGrid();
     refreshControls();
     updateKpis();
+
 // ========== PhantomBet Bridge Integration ==========
 PhantomBridge.init('Stake Mines');
-(function() {
-  let _lastBalance = STATE.balance;
-  PhantomBridge.onReady(function(bal) {
+PhantomBridge.onReady(function(bal) {
     STATE.balance = bal;
-    _lastBalance = bal;
     updateKpis();
     refreshControls();
-  });
-  PhantomBridge.onBalanceChange(function(bal) {
+});
+PhantomBridge.onBalanceChange(function(bal) {
     STATE.balance = bal;
-    _lastBalance = bal;
     updateKpis();
-  });
-  // Intercept balance changes
-  const origUpdateKpis = updateKpis;
-  updateKpis = function() {
-    origUpdateKpis();
-    if (STATE.balance !== _lastBalance) {
-      const delta = STATE.balance - _lastBalance;
-      _lastBalance = STATE.balance;
-      if (delta < 0) {
-        PhantomBridge.deductBet(Math.abs(delta));
-      } else if (delta > 0) {
-        PhantomBridge.creditWin(delta, 'Mines Win');
-      }
-    }
-  };
-  // Disable add funds
-  if (addFunds) addFunds.style.display = 'none';
-})();
+});
+// Hide add funds button
+if (addFunds) addFunds.style.display = 'none';

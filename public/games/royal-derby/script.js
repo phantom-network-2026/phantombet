@@ -349,17 +349,20 @@
         document.getElementById('bet-amount').value = amount;
     }
 
-    function startRace() {
+    async function startRace() {
         if (isRacing || gateOpening) return;
         
         let betInput = document.getElementById('bet-amount');
-        currentBet = parseInt(betInput.value);
+        currentBet = parseFloat(betInput.value);
 
         if (!selectedHorseId) { updateStatus("⚠️ Select a horse first!"); return; }
-        if (isNaN(currentBet) || currentBet <= 0) { updateStatus("⚠️ Invalid bet."); return; }
+        if (isNaN(currentBet) || currentBet <= 0 || currentBet > 5) { updateStatus("⚠️ Invalid bet."); return; }
         if (currentBet > wallet) { updateStatus("⚠️ Insufficient funds."); return; }
 
-        wallet -= currentBet;
+        // Deduct via bridge
+        const result = await PhantomBridge.deductBet(currentBet);
+        if (!result.success) { updateStatus("⚠️ " + (result.error || "Bet failed")); return; }
+        wallet = result.balance;
         updateWallet();
         
         document.getElementById('start-btn').disabled = true;
@@ -384,7 +387,7 @@
         }, 1000);
     }
 
-    function endRace() {
+    async function endRace() {
         isRacing = false;
         let winnerId = finishOrder[0];
         let won = (winnerId === selectedHorseId);
@@ -392,8 +395,12 @@
         let msg = "";
 
         if (won) {
-            winAmount = currentBet * 5; 
-            wallet += winAmount;
+            winAmount = Math.floor(currentBet * 5 * 100) / 100;
+            // Credit win via bridge
+            const result = await PhantomBridge.creditWin(winAmount, 'Royal Derby Win');
+            if (result.success) {
+                wallet = result.balance;
+            }
             msg = `🎉 WIN! Horse #${winnerId} Won! +$${winAmount}`;
         } else {
             msg = `❌ Lost. Winner: Horse #${winnerId}`;
@@ -561,26 +568,11 @@
     }
 // ========== PhantomBet Bridge Integration ==========
 PhantomBridge.init('Royal Derby');
-(function() {
-  let _lastWallet = wallet;
-  PhantomBridge.onReady(function(bal) {
+PhantomBridge.onReady(function(bal) {
     wallet = bal;
-    _lastWallet = bal;
     updateWallet();
-  });
-  PhantomBridge.onBalanceChange(function(bal) {
+});
+PhantomBridge.onBalanceChange(function(bal) {
     wallet = bal;
-    _lastWallet = bal;
     updateWallet();
-  });
-  const origUpdateWallet = updateWallet;
-  updateWallet = function() {
-    origUpdateWallet();
-    if (wallet !== _lastWallet) {
-      const delta = wallet - _lastWallet;
-      _lastWallet = wallet;
-      if (delta < 0) PhantomBridge.deductBet(Math.abs(delta));
-      else if (delta > 0) PhantomBridge.creditWin(delta, 'Royal Derby Win');
-    }
-  };
-})();
+});
