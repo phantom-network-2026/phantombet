@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { HouseEdgePanel } from "@/components/casino/HouseEdgePanel";
 import { GameProbabilityPanel } from "@/components/casino/GameProbabilityPanel";
 import { PromotionsManager } from "@/components/casino/PromotionsManager";
+import DevConsole from "@/components/casino/DevConsole";
 import {
   ArrowLeft, FolderOpen, Database, Settings, Upload, Trash2, Download,
   RefreshCw, Search, Table, FileText, Eye, EyeOff, ChevronRight, ChevronDown, ChevronUp,
@@ -20,7 +21,7 @@ import {
   AlertTriangle, Activity, Lock, Megaphone, HardDrive, Clock,
   Ban, Users, BarChart3, Wrench, Power, Bell, Percent, Trophy,
   Gamepad2, CreditCard, MessageSquare, UserCheck, Zap, LayoutGrid,
-  Info, Server, Hash, Gift, Wallet
+  Info, Server, Hash, Gift, Wallet, Terminal
 } from "lucide-react";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -2130,7 +2131,7 @@ function BroadcastPanel({ onBack }: { onBack: () => void }) {
 }
 
 // ── Main cPanel Page ────────────────────────────────────────────
-type ActivePanel = null | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "promotions" | "wallet-mode" | "deposits-withdrawals" | "welcome-config" | "ghost-users" | "broadcasts";
+type ActivePanel = null | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "promotions" | "wallet-mode" | "deposits-withdrawals" | "welcome-config" | "ghost-users" | "broadcasts" | "dev-console";
 
 export default function CPanel() {
   const { isAdmin, isOwner, loading, profile } = useAuth();
