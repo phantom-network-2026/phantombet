@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { HouseEdgePanel } from "@/components/casino/HouseEdgePanel";
 import { GameProbabilityPanel } from "@/components/casino/GameProbabilityPanel";
 import { PromotionsManager } from "@/components/casino/PromotionsManager";
+import DevConsole from "@/components/casino/DevConsole";
 import {
   ArrowLeft, FolderOpen, Database, Settings, Upload, Trash2, Download,
   RefreshCw, Search, Table, FileText, Eye, EyeOff, ChevronRight, ChevronDown, ChevronUp,
@@ -20,7 +21,7 @@ import {
   AlertTriangle, Activity, Lock, Megaphone, HardDrive, Clock,
   Ban, Users, BarChart3, Wrench, Power, Bell, Percent, Trophy,
   Gamepad2, CreditCard, MessageSquare, UserCheck, Zap, LayoutGrid,
-  Info, Server, Hash, Gift, Wallet
+  Info, Server, Hash, Gift, Wallet, Terminal
 } from "lucide-react";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -2130,7 +2131,7 @@ function BroadcastPanel({ onBack }: { onBack: () => void }) {
 }
 
 // ── Main cPanel Page ────────────────────────────────────────────
-type ActivePanel = null | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "promotions" | "wallet-mode" | "deposits-withdrawals" | "welcome-config" | "ghost-users" | "broadcasts";
+type ActivePanel = null | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "promotions" | "wallet-mode" | "deposits-withdrawals" | "welcome-config" | "ghost-users" | "broadcasts" | "dev-console";
 
 export default function CPanel() {
   const { isAdmin, isOwner, loading, profile } = useAuth();
@@ -2184,6 +2185,7 @@ export default function CPanel() {
           {activePanel === "welcome-config" && <WelcomeConfigPanel onBack={back} />}
           {activePanel === "ghost-users" && <GhostUsersPanel onBack={back} />}
           {activePanel === "broadcasts" && <BroadcastPanel onBack={back} />}
+          {activePanel === "dev-console" && <DevConsole onBack={back} />}
         </div>
       </div>
     );
@@ -2333,6 +2335,20 @@ export default function CPanel() {
                 <ToolCard icon={<Wrench className="h-6 w-6" />} label="Maintenance Mode" onClick={() => setActivePanel("maintenance")} />
                 <ToolCard icon={<Megaphone className="h-6 w-6" />} label="Announcements" onClick={() => setActivePanel("maintenance")} />
                 <ToolCard icon={<Power className="h-6 w-6" />} label="Toggles" onClick={() => setActivePanel("config")} />
+              </div>
+            </CpanelSection>
+            )}
+
+            {/* ── Dev Console ────────────────────────── */}
+            {sec("cpanel_dev") && (
+            <CpanelSection title="Dev Console" icon={<Terminal className="h-5 w-5" />} defaultOpen={false}>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1">
+                <ToolCard icon={<Terminal className="h-6 w-6" />} label="Code Editor" onClick={() => setActivePanel("dev-console")} />
+                <ToolCard icon={<Gamepad2 className="h-6 w-6" />} label="Install Game" onClick={() => setActivePanel("dev-console")} />
+                <ToolCard icon={<Code className="h-6 w-6" />} label="Edit Game Files" onClick={() => setActivePanel("dev-console")} />
+                <ToolCard icon={<Search className="h-6 w-6" />} label="Search Code" onClick={() => setActivePanel("dev-console")} />
+                <ToolCard icon={<FolderOpen className="h-6 w-6" />} label="File Manager" onClick={() => setActivePanel("dev-console")} />
+                <ToolCard icon={<Download className="h-6 w-6" />} label="Export Files" onClick={() => setActivePanel("dev-console")} />
               </div>
             </CpanelSection>
             )}
