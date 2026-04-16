@@ -2185,6 +2185,7 @@ export default function CPanel() {
           {activePanel === "welcome-config" && <WelcomeConfigPanel onBack={back} />}
           {activePanel === "ghost-users" && <GhostUsersPanel onBack={back} />}
           {activePanel === "broadcasts" && <BroadcastPanel onBack={back} />}
+          {activePanel === "dev-console" && <DevConsole onBack={back} />}
         </div>
       </div>
     );
