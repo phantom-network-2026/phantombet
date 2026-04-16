@@ -2338,6 +2338,20 @@ export default function CPanel() {
               </div>
             </CpanelSection>
             )}
+
+            {/* ── Dev Console ────────────────────────── */}
+            {sec("cpanel_dev") && (
+            <CpanelSection title="Dev Console" icon={<Terminal className="h-5 w-5" />} defaultOpen={false}>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1">
+                <ToolCard icon={<Terminal className="h-6 w-6" />} label="Code Editor" onClick={() => setActivePanel("dev-console")} />
+                <ToolCard icon={<Gamepad2 className="h-6 w-6" />} label="Install Game" onClick={() => setActivePanel("dev-console")} />
+                <ToolCard icon={<Code className="h-6 w-6" />} label="Edit Game Files" onClick={() => setActivePanel("dev-console")} />
+                <ToolCard icon={<Search className="h-6 w-6" />} label="Search Code" onClick={() => setActivePanel("dev-console")} />
+                <ToolCard icon={<FolderOpen className="h-6 w-6" />} label="File Manager" onClick={() => setActivePanel("dev-console")} />
+                <ToolCard icon={<Download className="h-6 w-6" />} label="Export Files" onClick={() => setActivePanel("dev-console")} />
+              </div>
+            </CpanelSection>
+            )}
           </div>
 
           {/* ── Sidebar (General Information) ─────── */}
