@@ -45,38 +45,80 @@ const STORAGE_LOADER_SHIELD_SOURCE = `(function(){
 })();`;
 
 const STORAGE_RUNTIME_SHIELD_SOURCE = `(function(){
+  function hasWebGLSupport(){
+    try {
+      var canvas = document.createElement('canvas');
+      return !!(window.WebGLRenderingContext && (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function installPhaserCompat(){
+    var P = window.Phaser;
+    if (!P) return false;
+    try {
+      var baseCache = P.Cache && P.Cache.BaseCache && P.Cache.BaseCache.prototype;
+      if (baseCache && !baseCache.has && typeof baseCache.exists === 'function') {
+        baseCache.has = function(key){ return this.exists(key); };
+      }
+    } catch (e) {}
+    return true;
+  }
+
   window.__PHANTOM_PREPARE_PHASER_CONFIG__ = function(config){
     if (!config || !window.Phaser) return config;
-    var ua = navigator.userAgent || '';
-    var isTouchMac = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
-    var isMobileWebKit = /iPhone|iPad|iPod/i.test(ua) || isTouchMac;
     config.render = Object.assign({ antialias: true, pixelArt: false }, config.render || {});
-    if (isMobileWebKit) {
+    if ((config.type == null || config.type === window.Phaser.AUTO) && !hasWebGLSupport()) {
       config.type = window.Phaser.CANVAS;
     }
     return config;
   };
 
-  window.addEventListener('error', function(event){
+  function showRuntimeError(message, details){
     try {
-      if (document.getElementById('__phantom_storage_game_error__')) return;
+      var existing = document.getElementById('__phantom_storage_game_error__');
+      if (existing) existing.remove();
       var overlay = document.createElement('div');
       overlay.id = '__phantom_storage_game_error__';
       overlay.style.position = 'fixed';
       overlay.style.left = '12px';
       overlay.style.right = '12px';
-      overlay.style.bottom = '12px';
+      overlay.style.top = '12px';
       overlay.style.zIndex = '99999';
-      overlay.style.padding = '10px 12px';
-      overlay.style.borderRadius = '12px';
-      overlay.style.background = 'rgba(15,10,30,0.92)';
+      overlay.style.padding = '14px 16px';
+      overlay.style.borderRadius = '16px';
+      overlay.style.background = 'rgba(20,12,40,0.96)';
       overlay.style.color = '#f8fafc';
       overlay.style.font = '12px system-ui, sans-serif';
       overlay.style.border = '1px solid rgba(255,215,0,0.35)';
-      overlay.textContent = 'Game runtime error: ' + (event && event.message ? event.message : 'Unknown error');
-      document.body.appendChild(overlay);
+      overlay.style.boxShadow = '0 14px 36px rgba(0,0,0,0.45)';
+      overlay.style.whiteSpace = 'pre-wrap';
+      overlay.style.wordBreak = 'break-word';
+      overlay.textContent = 'Game runtime error: ' + message + (details ? '\n' + details : '');
+      (document.body || document.documentElement).appendChild(overlay);
     } catch (e) {}
+  }
+
+  window.addEventListener('error', function(event){
+    var message = event && event.message ? event.message : 'Unknown error';
+    var details = [];
+    if (event && event.filename) details.push(event.filename + ':' + (event.lineno || 0) + ':' + (event.colno || 0));
+    if (event && event.error && event.error.stack) details.push(event.error.stack);
+    showRuntimeError(message, details.join('\n'));
   });
+
+  window.addEventListener('unhandledrejection', function(event){
+    var reason = event && event.reason;
+    var message = reason && reason.message ? reason.message : String(reason || 'Unhandled promise rejection');
+    var details = reason && reason.stack ? reason.stack : '';
+    showRuntimeError(message, details);
+  });
+
+  if (!installPhaserCompat()) {
+    var compatTimer = setInterval(function(){ if (installPhaserCompat()) clearInterval(compatTimer); }, 16);
+    setTimeout(function(){ try { clearInterval(compatTimer); } catch (e) {} }, 15000);
+  }
 })();`;
 
 let cachedBridgeSource: Promise<string> | null = null;
@@ -90,14 +132,15 @@ function loadBridgeSource(): Promise<string> {
 }
 
 function isInlineableStorageAsset(path: string) {
-  return Boolean(path) && !/^(?:[a-z]+:)?\/\//i.test(path) && !path.startsWith("data:") && !path.startsWith("blob:");
+  return Boolean(path) && !path.startsWith("data:") && !path.startsWith("blob:");
 }
 
 function sanitizeStorageGameScript(source: string) {
   return source
     .replace(/\bthis\.load\.audio(?:Sprite)?\s*\([\s\S]*?\);\s*/g, "")
     .replace(/\bthis\.load\.on\(\s*["']loaderror["'][\s\S]*?\);\s*/g, "")
-    .replace(/type\s*:\s*Phaser\.AUTO/g, "type: (window.__PHANTOM_PREPARE_PHASER_CONFIG__ ? Phaser.CANVAS : Phaser.AUTO)")
+    .replace(/\.cache\.audio\.has\(/g, ".cache.audio.exists(")
+    .replace(/type\s*:\s*Phaser\.AUTO/g, "type: Phaser.AUTO")
     .replace(
       /new\s+Phaser\.Game\(\s*config\s*\)/g,
       "new Phaser.Game(window.__PHANTOM_PREPARE_PHASER_CONFIG__ ? window.__PHANTOM_PREPARE_PHASER_CONFIG__(config) : config)"
@@ -115,6 +158,7 @@ async function fetchStorageAssetText(url: string) {
 async function prepareStorageGameHtml(html: string, baseHref: string, bridgeSource: string) {
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, "text/html");
+  const storageOrigin = new URL(baseHref).origin;
   const head = doc.head || doc.documentElement.insertBefore(doc.createElement("head"), doc.body ?? null);
 
   Array.from(doc.querySelectorAll("base")).forEach((node) => node.remove());
@@ -130,8 +174,9 @@ async function prepareStorageGameHtml(html: string, baseHref: string, bridgeSour
       const href = link.getAttribute("href") || "";
       if (!isInlineableStorageAsset(href)) return;
       try {
+        const resolvedHref = new URL(href, baseHref).toString();
         const style = doc.createElement("style");
-        style.textContent = await fetchStorageAssetText(new URL(href, baseHref).toString());
+        style.textContent = `${await fetchStorageAssetText(resolvedHref)}\n/*# sourceURL=${resolvedHref} */`;
         link.replaceWith(style);
       } catch (error) {
         console.warn("Failed to inline stylesheet for storage game:", href, error);
@@ -143,13 +188,14 @@ async function prepareStorageGameHtml(html: string, baseHref: string, bridgeSour
     const src = script.getAttribute("src") || "";
     if (!isInlineableStorageAsset(src)) continue;
     try {
+      const resolvedSrc = new URL(src, baseHref).toString();
       const inlineScript = doc.createElement("script");
-      inlineScript.textContent = sanitizeStorageGameScript(
-        await fetchStorageAssetText(new URL(src, baseHref).toString())
-      );
+      const scriptSource = await fetchStorageAssetText(resolvedSrc);
+      inlineScript.textContent = `${new URL(resolvedSrc).origin === storageOrigin ? sanitizeStorageGameScript(scriptSource) : scriptSource}\n//# sourceURL=${resolvedSrc}`;
       script.replaceWith(inlineScript);
     } catch (error) {
       console.warn("Failed to inline script for storage game:", src, error);
+      script.setAttribute("crossorigin", "anonymous");
     }
   }
 
