@@ -140,7 +140,7 @@ function sanitizeStorageGameScript(source: string) {
     .replace(/\bthis\.load\.audio(?:Sprite)?\s*\([\s\S]*?\);\s*/g, "")
     .replace(/\bthis\.load\.on\(\s*["']loaderror["'][\s\S]*?\);\s*/g, "")
     .replace(/\.cache\.audio\.has\(/g, ".cache.audio.exists(")
-    .replace(/type\s*:\s*Phaser\.AUTO/g, "type: (window.__PHANTOM_PREPARE_PHASER_CONFIG__ ? Phaser.CANVAS : Phaser.AUTO)")
+    .replace(/type\s*:\s*Phaser\.AUTO/g, "type: Phaser.AUTO")
     .replace(
       /new\s+Phaser\.Game\(\s*config\s*\)/g,
       "new Phaser.Game(window.__PHANTOM_PREPARE_PHASER_CONFIG__ ? window.__PHANTOM_PREPARE_PHASER_CONFIG__(config) : config)"
