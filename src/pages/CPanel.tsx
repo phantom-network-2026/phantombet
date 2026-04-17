@@ -14,6 +14,7 @@ import { HouseEdgePanel } from "@/components/casino/HouseEdgePanel";
 import { GameProbabilityPanel } from "@/components/casino/GameProbabilityPanel";
 import { PromotionsManager } from "@/components/casino/PromotionsManager";
 import DevConsole from "@/components/casino/DevConsole";
+import AiAgentPanel from "@/components/casino/AiAgentPanel";
 import {
   ArrowLeft, FolderOpen, Database, Settings, Upload, Trash2, Download,
   RefreshCw, Search, Table, FileText, Eye, EyeOff, ChevronRight, ChevronDown, ChevronUp,
@@ -2131,7 +2132,7 @@ function BroadcastPanel({ onBack }: { onBack: () => void }) {
 }
 
 // ── Main cPanel Page ────────────────────────────────────────────
-type ActivePanel = null | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "promotions" | "wallet-mode" | "deposits-withdrawals" | "welcome-config" | "ghost-users" | "broadcasts" | "dev-console";
+type ActivePanel = null | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "promotions" | "wallet-mode" | "deposits-withdrawals" | "welcome-config" | "ghost-users" | "broadcasts" | "dev-console" | "ai-agent";
 
 export default function CPanel() {
   const { isAdmin, isOwner, loading, profile } = useAuth();
@@ -2186,6 +2187,7 @@ export default function CPanel() {
           {activePanel === "ghost-users" && <GhostUsersPanel onBack={back} />}
           {activePanel === "broadcasts" && <BroadcastPanel onBack={back} />}
           {activePanel === "dev-console" && <DevConsole onBack={back} />}
+          {activePanel === "ai-agent" && <AiAgentPanel onBack={back} />}
         </div>
       </div>
     );
@@ -2343,6 +2345,7 @@ export default function CPanel() {
             {sec("cpanel_dev") && (
             <CpanelSection title="Dev Console" icon={<Terminal className="h-5 w-5" />} defaultOpen={false}>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1">
+                <ToolCard icon={<Sparkles className="h-6 w-6" />} label="AI Agent" onClick={() => setActivePanel("ai-agent")} />
                 <ToolCard icon={<Terminal className="h-6 w-6" />} label="Code Editor" onClick={() => setActivePanel("dev-console")} />
                 <ToolCard icon={<Gamepad2 className="h-6 w-6" />} label="Install Game" onClick={() => setActivePanel("dev-console")} />
                 <ToolCard icon={<Code className="h-6 w-6" />} label="Edit Game Files" onClick={() => setActivePanel("dev-console")} />
