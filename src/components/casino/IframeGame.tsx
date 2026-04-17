@@ -14,9 +14,12 @@ interface IframeGameProps {
   slug: string;
   description?: string;
   emoji?: string;
+  /** Optional override for the iframe URL (used when game lives in cloud storage instead of /games) */
+  src?: string;
 }
 
-function IframeGameInner({ title, slug, description, emoji }: IframeGameProps) {
+function IframeGameInner({ title, slug, description, emoji, src }: IframeGameProps) {
+  const iframeSrc = src || `/games/${slug}/index.html`;
   const navigate = useNavigate();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [showChat, setShowChat] = useState(false);
@@ -132,7 +135,7 @@ function IframeGameInner({ title, slug, description, emoji }: IframeGameProps) {
       <div className="flex-1 min-h-0 relative">
         <iframe
           ref={iframeRef}
-          src={`/games/${slug}/index.html`}
+          src={iframeSrc}
           className="w-full h-full border-0"
           title={title}
           allow="autoplay"
