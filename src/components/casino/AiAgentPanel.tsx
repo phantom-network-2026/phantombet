@@ -1,9 +1,18 @@
 import { useState, useRef, useEffect } from "react";
-import { ArrowLeft, Send, Sparkles, Database, FolderOpen, Code, AlertCircle, CheckCircle2, Copy } from "lucide-react";
+import { ArrowLeft, Send, Sparkles, Database, FolderOpen, Code, AlertCircle, CheckCircle2, Copy, History, Megaphone, Gamepad2, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+
+const MODELS = [
+  { value: "google/gemini-2.5-pro", label: "Gemini 2.5 Pro (smartest)" },
+  { value: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash (fast)" },
+  { value: "openai/gpt-5", label: "GPT-5 (precise)" },
+  { value: "openai/gpt-5-mini", label: "GPT-5 Mini" },
+];
 
 type ToolResult = {
   tool: string;
@@ -29,9 +38,11 @@ type Turn = {
 
 const EXAMPLES = [
   "Enable maintenance mode",
-  "Set wallet mode to mock",
-  "List files in game-files bucket",
-  "Set the site announcement to 'Weekend bonus is live!'",
+  "Post a broadcast: 'Weekend cashback is live, 10% back on all losses!' as type promo",
+  "Deactivate Plinko Pro game",
+  "Find user phantom and show their roles",
+  "Grant staff role to username phantom",
+  "List files in the slot-cowboy folder",
   "Suggest code to add a 'New' badge to the homepage hero",
 ];
 
@@ -39,7 +50,18 @@ export default function AiAgentPanel({ onBack }: { onBack: () => void }) {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [model, setModel] = useState<string>(MODELS[0].value);
+  const [history, setHistory] = useState<any[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  async function loadHistory() {
+    const { data } = await supabase
+      .from("ai_agent_log")
+      .select("id,prompt,reply,tool_results,created_at")
+      .order("created_at", { ascending: false })
+      .limit(25);
+    setHistory(data || []);
+  }
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -58,8 +80,9 @@ export default function AiAgentPanel({ onBack }: { onBack: () => void }) {
         role: t.role,
         content: t.content,
       }));
+      const hist = newTurns.slice(-10).slice(0, -1).map((t) => ({ role: t.role, content: t.content }));
       const { data, error } = await supabase.functions.invoke("ai-agent", {
-        body: { prompt: text, history },
+        body: { prompt: text, history: hist, model },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
