@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_agent_log: {
+        Row: {
+          created_at: string
+          id: string
+          prompt: string
+          reply: string | null
+          tool_results: Json | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          prompt: string
+          reply?: string | null
+          tool_results?: Json | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          prompt?: string
+          reply?: string | null
+          tool_results?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       broadcast_messages: {
         Row: {
           content: string
