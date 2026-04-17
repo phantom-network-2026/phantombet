@@ -347,26 +347,45 @@ export default function DevConsole({ onBack }: { onBack: () => void }) {
     let success = 0;
     let indexHtmlFound = false;
 
+    // Upload bridge.js into THIS game's folder first so relative path always resolves.
+    try {
+      const bridgeResp = await fetch("/games/bridge.js");
+      if (bridgeResp.ok) {
+        const bridgeBlob = await bridgeResp.blob();
+        await supabase.storage.from(BUCKET).upload(`${slug}/bridge.js`, bridgeBlob, { upsert: true, contentType: "application/javascript" });
+        // Also at bucket root for legacy ../bridge.js paths
+        await supabase.storage.from(BUCKET).upload("bridge.js", bridgeBlob, { upsert: true, contentType: "application/javascript" });
+      }
+    } catch (e) {
+      console.warn("Could not upload bridge.js", e);
+    }
+
     for (const file of installFiles) {
       const relativePath = file.webkitRelativePath
         ? file.webkitRelativePath.split("/").slice(1).join("/")
         : file.name;
+      // Skip any bridge.js the user included — we manage our own.
+      if (relativePath.toLowerCase() === "bridge.js") continue;
       const storagePath = `${slug}/${relativePath}`;
 
-      // Auto-inject PhantomBridge into index.html if missing so the game can sync balance.
+      // Auto-inject PhantomBridge into index.html so the game can sync balance.
+      // CRITICAL: must load BEFORE game scripts, so inject into <head>.
       let toUpload: Blob = file;
       if (relativePath.toLowerCase() === "index.html") {
         indexHtmlFound = true;
         try {
           const text = await file.text();
-          let patched = text;
-          if (!/bridge\.js/i.test(text)) {
-            const inject = `\n<script src="../bridge.js"></script>\n`;
-            if (/<\/body>/i.test(patched)) {
-              patched = patched.replace(/<\/body>/i, `${inject}</body>`);
-            } else {
-              patched = patched + inject;
-            }
+          // Strip any existing bridge.js script tags (wrong path/order from prior installs)
+          let patched = text.replace(/<script[^>]*src=["'][^"']*bridge\.js["'][^>]*><\/script>\s*/gi, "");
+          const inject = `<script src="bridge.js"></script>\n`;
+          if (/<\/head>/i.test(patched)) {
+            patched = patched.replace(/<\/head>/i, `  ${inject}</head>`);
+          } else if (/<head[^>]*>/i.test(patched)) {
+            patched = patched.replace(/<head[^>]*>/i, (m) => `${m}\n  ${inject}`);
+          } else if (/<body[^>]*>/i.test(patched)) {
+            patched = patched.replace(/<body[^>]*>/i, (m) => `${m}\n${inject}`);
+          } else {
+            patched = inject + patched;
           }
           toUpload = new Blob([patched], { type: "text/html" });
         } catch (e) {
@@ -377,15 +396,6 @@ export default function DevConsole({ onBack }: { onBack: () => void }) {
       const { error } = await supabase.storage.from(BUCKET).upload(storagePath, toUpload, { upsert: true, contentType: file.type || undefined });
       if (error) { console.error(`Failed: ${storagePath}`, error); } else { success++; }
     }
-
-    // Make sure bridge.js exists at bucket root (one-time idempotent upload).
-    try {
-      const bridgeResp = await fetch("/games/bridge.js");
-      if (bridgeResp.ok) {
-        const bridgeBlob = await bridgeResp.blob();
-        await supabase.storage.from(BUCKET).upload("bridge.js", bridgeBlob, { upsert: true, contentType: "application/javascript" });
-      }
-    } catch {}
 
     if (!indexHtmlFound) {
       toast.error("No index.html found in folder. Game won't be playable.");
