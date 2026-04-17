@@ -4,10 +4,31 @@ import { BottomNav } from "@/components/casino/BottomNav";
 import { GameChat } from "@/components/casino/GameChat";
 import { AuthGuard } from "@/components/casino/AuthGuard";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, MessageSquare, X } from "lucide-react";
+import { ArrowLeft, Loader2, MessageSquare, X } from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+
+const STORAGE_GAME_PATH = "/storage/v1/object/public/game-files/";
+
+function prepareStorageGameHtml(html: string, baseHref: string) {
+  const baseTag = `<base href="${baseHref}">`;
+  const bridgeTag = `<script src="bridge.js"></script>`;
+
+  let patched = html
+    .replace(/<base[^>]*>\s*/i, "")
+    .replace(/<script[^>]*src=["'][^"']*bridge\.js["'][^>]*><\/script>\s*/gi, "");
+
+  if (/<head[^>]*>/i.test(patched)) {
+    return patched.replace(/<head([^>]*)>/i, `<head$1>\n  ${baseTag}\n  ${bridgeTag}`);
+  }
+
+  if (/<html[^>]*>/i.test(patched)) {
+    return patched.replace(/<html([^>]*)>/i, `<html$1>\n<head>\n  ${baseTag}\n  ${bridgeTag}\n</head>`);
+  }
+
+  return `<head>${baseTag}${bridgeTag}</head>${patched}`;
+}
 
 interface IframeGameProps {
   title: string;
@@ -20,9 +41,12 @@ interface IframeGameProps {
 
 function IframeGameInner({ title, slug, description, emoji, src }: IframeGameProps) {
   const iframeSrc = src || `/games/${slug}/index.html`;
+  const isStorageGame = Boolean(src?.includes(STORAGE_GAME_PATH));
   const navigate = useNavigate();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [showChat, setShowChat] = useState(false);
+  const [iframeHtml, setIframeHtml] = useState<string | null>(null);
+  const [isIframeLoading, setIsIframeLoading] = useState(isStorageGame);
   const { user, profile, refreshProfile } = useAuth();
 
   // Use refs to avoid stale closures
@@ -30,6 +54,46 @@ function IframeGameInner({ title, slug, description, emoji, src }: IframeGamePro
   const userRef = useRef(user);
   useEffect(() => { profileRef.current = profile; }, [profile]);
   useEffect(() => { userRef.current = user; }, [user]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    if (!isStorageGame) {
+      setIframeHtml(null);
+      setIsIframeLoading(false);
+      return () => {
+        isActive = false;
+      };
+    }
+
+    setIsIframeLoading(true);
+    setIframeHtml(null);
+
+    fetch(iframeSrc, { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`Failed to load game HTML (${response.status})`);
+        }
+
+        const html = await response.text();
+        const baseHref = iframeSrc.slice(0, iframeSrc.lastIndexOf("/") + 1);
+        if (isActive) {
+          setIframeHtml(prepareStorageGameHtml(html, baseHref));
+          setIsIframeLoading(false);
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to prepare storage game iframe:", error);
+        if (isActive) {
+          setIframeHtml(null);
+          setIsIframeLoading(false);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [iframeSrc, isStorageGame]);
 
   const handleSettle = useCallback(async (
     amount: number,
@@ -133,13 +197,20 @@ function IframeGameInner({ title, slug, description, emoji, src }: IframeGamePro
     <div className="fixed inset-0 z-50 bg-black flex flex-col">
       {/* Game iframe - takes all available space */}
       <div className="flex-1 min-h-0 relative">
-        <iframe
-          ref={iframeRef}
-          src={iframeSrc}
-          className="w-full h-full border-0"
-          title={title}
-          allow="autoplay"
-        />
+        {isStorageGame && isIframeLoading ? (
+          <div className="absolute inset-0 flex items-center justify-center bg-black text-white">
+            <Loader2 className="h-8 w-8 animate-spin text-gold" />
+          </div>
+        ) : (
+          <iframe
+            ref={iframeRef}
+            src={iframeHtml ? undefined : iframeSrc}
+            srcDoc={iframeHtml ?? undefined}
+            className="w-full h-full border-0"
+            title={title}
+            allow="autoplay"
+          />
+        )}
 
         {/* Chat overlay */}
         {showChat && (
