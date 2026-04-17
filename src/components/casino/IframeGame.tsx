@@ -290,7 +290,7 @@ async function prepareStorageGameHtml(html: string, baseHref: string, bridgeSour
     })
   );
 
-  for (const script of Array.from(doc.querySelectorAll('script[src]'))) {
+  for (const script of Array.from(doc.querySelectorAll('script[src]')) as HTMLScriptElement[]) {
     const src = script.getAttribute("src") || "";
     if (!isInlineableStorageAsset(src)) continue;
     try {
