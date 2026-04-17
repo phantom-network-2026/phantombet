@@ -11,100 +11,74 @@ import { supabase } from "@/integrations/supabase/client";
 
 const STORAGE_GAME_PATH = "/storage/v1/object/public/game-files/";
 
-const STORAGE_AUDIO_BYPASS_SCRIPT = `<script>(function(){
-  function install(){
-    if (!window.Phaser?.Loader?.LoaderPlugin || window.__phantomStorageAudioPatched) return false;
-    window.__phantomStorageAudioPatched = true;
-    const proto = window.Phaser.Loader.LoaderPlugin.prototype;
-    proto.audio = function(){ return this; };
-    proto.audioSprite = function(){ return this; };
+/**
+ * Inline the bridge so storage games never depend on a relative bridge.js
+ * (Supabase Storage may serve sibling files with restrictive CSP / wrong MIME).
+ */
+const BRIDGE_INLINE_SCRIPT = `<script>/*__PHANTOM_BRIDGE_INLINE__*/__BRIDGE__</script>`;
+
+/**
+ * Universal Phaser loader hardening:
+ *  - Missing audio/image/atlas/spritesheet/json/binary files no longer hang the loader.
+ *  - Any loader 404 is converted into a silent skip so the game can still boot.
+ *  Safe for non-Phaser games (no-op if Phaser isn't present).
+ */
+const STORAGE_LOADER_SHIELD = `<script>(function(){
+  var installed = false;
+  function patch(){
+    if (installed) return true;
+    var P = window.Phaser;
+    if (!P || !P.Loader || !P.Loader.LoaderPlugin) return false;
+    installed = true;
+    var proto = P.Loader.LoaderPlugin.prototype;
+    var origStart = proto.start;
+    proto.start = function(){
+      try {
+        this.on('loaderror', function(file){
+          try { console.warn('[PhantomShield] Skipping missing asset:', file && file.key, file && file.src); } catch(e){}
+          try { this.nextFile(file, true); } catch(e){}
+        }, this);
+      } catch(e){}
+      return origStart.apply(this, arguments);
+    };
     return true;
   }
-
-  if (!install()) {
-    const timer = window.setInterval(() => {
-      if (install()) window.clearInterval(timer);
-    }, 0);
+  if (!patch()) {
+    var t = setInterval(function(){ if (patch()) clearInterval(t); }, 16);
+    setTimeout(function(){ try { clearInterval(t); } catch(e){} }, 15000);
   }
 })();</script>`;
 
-function extractLocalScriptPaths(html: string) {
-  return Array.from(html.matchAll(/<script[^>]*src=["']([^"']+)["'][^>]*><\/script>/gi))
-    .map((match) => match[1])
-    .filter((path) => !/^(https?:)?\/\//i.test(path) && !path.startsWith("data:") && !/bridge\.js$/i.test(path));
-}
-
-function extractAudioAssets(scriptContent: string) {
-  return Array.from(
-    scriptContent.matchAll(/\.audio\s*\(\s*["'][^"']+["']\s*,\s*(?:\[\s*)?["']([^"']+)["']/gi),
-  ).map((match) => match[1]);
-}
-
-async function assetExists(url: string) {
-  try {
-    const response = await fetch(url, { method: "HEAD", cache: "no-store" });
-    return response.ok;
-  } catch {
-    return false;
+let cachedBridgeSource: Promise<string> | null = null;
+function loadBridgeSource(): Promise<string> {
+  if (!cachedBridgeSource) {
+    cachedBridgeSource = fetch("/games/bridge.js", { cache: "force-cache" })
+      .then((r) => (r.ok ? r.text() : ""))
+      .catch(() => "");
   }
+  return cachedBridgeSource;
 }
 
-async function shouldDisableStorageGameAudio(html: string, baseHref: string) {
-  const scriptPaths = extractLocalScriptPaths(html);
-  if (!scriptPaths.length) return false;
-
-  const allAudioAssets = new Set<string>();
-
-  for (const scriptPath of scriptPaths) {
-    try {
-      const response = await fetch(new URL(scriptPath, baseHref).toString(), { cache: "no-store" });
-      if (!response.ok) continue;
-      const scriptContent = await response.text();
-      extractAudioAssets(scriptContent).forEach((assetPath) => allAudioAssets.add(assetPath));
-    } catch {
-      continue;
-    }
-  }
-
-  if (!allAudioAssets.size) return false;
-
-  const assetChecks = await Promise.all(
-    Array.from(allAudioAssets).map((assetPath) => assetExists(new URL(assetPath, baseHref).toString())),
-  );
-
-  return assetChecks.some((exists) => !exists);
-}
-
-function prepareStorageGameHtml(html: string, baseHref: string, options?: { disableAudio?: boolean }) {
+function prepareStorageGameHtml(html: string, baseHref: string, bridgeSource: string) {
   const baseTag = `<base href="${baseHref}">`;
-  const bridgeTag = `<script src="bridge.js"></script>`;
+  const bridgeTag = bridgeSource
+    ? BRIDGE_INLINE_SCRIPT.replace("__BRIDGE__", bridgeSource)
+    : `<script src="${baseHref}bridge.js"></script>`;
 
+  // Strip any prior bridge tags / base tags so we control them.
   let patched = html
-    .replace(/<base[^>]*>\s*/i, "")
+    .replace(/<base[^>]*>\s*/gi, "")
     .replace(/<script[^>]*src=["'][^"']*bridge\.js["'][^>]*><\/script>\s*/gi, "");
 
-  if (options?.disableAudio) {
-    if (/<script[^>]*src=["'][^"']*phaser[^"']*["'][^>]*><\/script>/i.test(patched)) {
-      patched = patched.replace(
-        /(<script[^>]*src=["'][^"']*phaser[^"']*["'][^>]*><\/script>)/i,
-        `$1\n${STORAGE_AUDIO_BYPASS_SCRIPT}`,
-      );
-    } else if (/<head[^>]*>/i.test(patched)) {
-      patched = patched.replace(/<head([^>]*)>/i, `<head$1>\n  ${STORAGE_AUDIO_BYPASS_SCRIPT}`);
-    } else {
-      patched = `${STORAGE_AUDIO_BYPASS_SCRIPT}${patched}`;
-    }
-  }
+  const headInjection = `${baseTag}\n  ${bridgeTag}\n  ${STORAGE_LOADER_SHIELD}`;
 
   if (/<head[^>]*>/i.test(patched)) {
-    return patched.replace(/<head([^>]*)>/i, `<head$1>\n  ${baseTag}\n  ${bridgeTag}`);
+    return patched.replace(/<head([^>]*)>/i, `<head$1>\n  ${headInjection}`);
   }
-
   if (/<html[^>]*>/i.test(patched)) {
-    return patched.replace(/<html([^>]*)>/i, `<html$1>\n<head>\n  ${baseTag}\n  ${bridgeTag}\n</head>`);
+    return patched.replace(/<html([^>]*)>/i, `<html$1>\n<head>\n  ${headInjection}\n</head>`);
   }
-
-  return `<head>${baseTag}${bridgeTag}</head>${patched}`;
+  return `<!doctype html><html><head>${headInjection}</head><body>${patched}</body></html>`;
 }
 
 interface IframeGameProps {
@@ -124,6 +98,7 @@ function IframeGameInner({ title, slug, description, emoji, src }: IframeGamePro
   const [showChat, setShowChat] = useState(false);
   const [iframeHtml, setIframeHtml] = useState<string | null>(null);
   const [isIframeLoading, setIsIframeLoading] = useState(isStorageGame);
+  const [iframeError, setIframeError] = useState<string | null>(null);
   const { user, profile, refreshProfile } = useAuth();
 
   // Use refs to avoid stale closures
@@ -145,27 +120,27 @@ function IframeGameInner({ title, slug, description, emoji, src }: IframeGamePro
 
     setIsIframeLoading(true);
     setIframeHtml(null);
+    setIframeError(null);
 
-    fetch(iframeSrc, { cache: "no-store" })
-      .then(async (response) => {
-        if (!response.ok) {
-          throw new Error(`Failed to load game HTML (${response.status})`);
-        }
-
-        const html = await response.text();
+    Promise.all([
+      fetch(iframeSrc, { cache: "no-store" }).then(async (response) => {
+        if (!response.ok) throw new Error(`Failed to load game HTML (${response.status})`);
+        return response.text();
+      }),
+      loadBridgeSource(),
+    ])
+      .then(([html, bridgeSource]) => {
+        if (!isActive) return;
         const baseHref = iframeSrc.slice(0, iframeSrc.lastIndexOf("/") + 1);
-        const disableAudio = await shouldDisableStorageGameAudio(html, baseHref);
-        if (isActive) {
-          setIframeHtml(prepareStorageGameHtml(html, baseHref, { disableAudio }));
-          setIsIframeLoading(false);
-        }
+        setIframeHtml(prepareStorageGameHtml(html, baseHref, bridgeSource));
+        setIsIframeLoading(false);
       })
       .catch((error) => {
         console.error("Failed to prepare storage game iframe:", error);
-        if (isActive) {
-          setIframeHtml(null);
-          setIsIframeLoading(false);
-        }
+        if (!isActive) return;
+        setIframeHtml(null);
+        setIframeError(error?.message || "Could not load this game.");
+        setIsIframeLoading(false);
       });
 
     return () => {
@@ -279,10 +254,19 @@ function IframeGameInner({ title, slug, description, emoji, src }: IframeGamePro
           <div className="absolute inset-0 flex items-center justify-center bg-black text-white">
             <Loader2 className="h-8 w-8 animate-spin text-gold" />
           </div>
+        ) : isStorageGame && iframeError ? (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black text-white p-6 text-center gap-2">
+            <p className="text-gold font-display">Game failed to load</p>
+            <p className="text-xs text-white/60 max-w-sm">{iframeError}</p>
+          </div>
+        ) : isStorageGame && !iframeHtml ? (
+          <div className="absolute inset-0 flex items-center justify-center bg-black text-white">
+            <Loader2 className="h-8 w-8 animate-spin text-gold" />
+          </div>
         ) : (
           <iframe
             ref={iframeRef}
-            src={iframeHtml ? undefined : iframeSrc}
+            src={isStorageGame ? undefined : iframeSrc}
             srcDoc={iframeHtml ?? undefined}
             className="w-full h-full border-0"
             title={title}
