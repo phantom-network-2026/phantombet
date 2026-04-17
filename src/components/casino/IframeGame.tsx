@@ -44,6 +44,41 @@ const STORAGE_LOADER_SHIELD_SOURCE = `(function(){
   }
 })();`;
 
+const STORAGE_RUNTIME_SHIELD_SOURCE = `(function(){
+  window.__PHANTOM_PREPARE_PHASER_CONFIG__ = function(config){
+    if (!config || !window.Phaser) return config;
+    var ua = navigator.userAgent || '';
+    var isTouchMac = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+    var isMobileWebKit = /iPhone|iPad|iPod/i.test(ua) || isTouchMac;
+    config.render = Object.assign({ antialias: true, pixelArt: false }, config.render || {});
+    if (isMobileWebKit) {
+      config.type = window.Phaser.CANVAS;
+    }
+    return config;
+  };
+
+  window.addEventListener('error', function(event){
+    try {
+      if (document.getElementById('__phantom_storage_game_error__')) return;
+      var overlay = document.createElement('div');
+      overlay.id = '__phantom_storage_game_error__';
+      overlay.style.position = 'fixed';
+      overlay.style.left = '12px';
+      overlay.style.right = '12px';
+      overlay.style.bottom = '12px';
+      overlay.style.zIndex = '99999';
+      overlay.style.padding = '10px 12px';
+      overlay.style.borderRadius = '12px';
+      overlay.style.background = 'rgba(15,10,30,0.92)';
+      overlay.style.color = '#f8fafc';
+      overlay.style.font = '12px system-ui, sans-serif';
+      overlay.style.border = '1px solid rgba(255,215,0,0.35)';
+      overlay.textContent = 'Game runtime error: ' + (event && event.message ? event.message : 'Unknown error');
+      document.body.appendChild(overlay);
+    } catch (e) {}
+  });
+})();`;
+
 let cachedBridgeSource: Promise<string> | null = null;
 function loadBridgeSource(): Promise<string> {
   if (!cachedBridgeSource) {
@@ -61,7 +96,12 @@ function isInlineableStorageAsset(path: string) {
 function sanitizeStorageGameScript(source: string) {
   return source
     .replace(/\bthis\.load\.audio(?:Sprite)?\s*\([\s\S]*?\);\s*/g, "")
-    .replace(/\bthis\.load\.on\(\s*["']loaderror["'][\s\S]*?\);\s*/g, "");
+    .replace(/\bthis\.load\.on\(\s*["']loaderror["'][\s\S]*?\);\s*/g, "")
+    .replace(/type\s*:\s*Phaser\.AUTO/g, "type: (window.__PHANTOM_PREPARE_PHASER_CONFIG__ ? Phaser.CANVAS : Phaser.AUTO)")
+    .replace(
+      /new\s+Phaser\.Game\(\s*config\s*\)/g,
+      "new Phaser.Game(window.__PHANTOM_PREPARE_PHASER_CONFIG__ ? window.__PHANTOM_PREPARE_PHASER_CONFIG__(config) : config)"
+    );
 }
 
 async function fetchStorageAssetText(url: string) {
@@ -128,6 +168,10 @@ async function prepareStorageGameHtml(html: string, baseHref: string, bridgeSour
   const shieldScript = doc.createElement("script");
   shieldScript.textContent = STORAGE_LOADER_SHIELD_SOURCE;
   head.appendChild(shieldScript);
+
+  const runtimeShieldScript = doc.createElement("script");
+  runtimeShieldScript.textContent = STORAGE_RUNTIME_SHIELD_SOURCE;
+  head.appendChild(runtimeShieldScript);
 
   return `<!doctype html>\n${doc.documentElement.outerHTML}`;
 }
