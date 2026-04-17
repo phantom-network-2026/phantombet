@@ -275,6 +275,8 @@ export type Database = {
           is_active: boolean
           is_featured: boolean
           name: string
+          slug: string | null
+          source: string
         }
         Insert: {
           category?: Database["public"]["Enums"]["game_category"]
@@ -285,6 +287,8 @@ export type Database = {
           is_active?: boolean
           is_featured?: boolean
           name: string
+          slug?: string | null
+          source?: string
         }
         Update: {
           category?: Database["public"]["Enums"]["game_category"]
@@ -295,6 +299,8 @@ export type Database = {
           is_active?: boolean
           is_featured?: boolean
           name?: string
+          slug?: string | null
+          source?: string
         }
         Relationships: []
       }

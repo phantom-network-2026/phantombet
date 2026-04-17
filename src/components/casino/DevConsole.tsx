@@ -345,26 +345,69 @@ export default function DevConsole({ onBack }: { onBack: () => void }) {
     setInstalling(true);
     const slug = installName.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-");
     let success = 0;
+    let indexHtmlFound = false;
+
     for (const file of installFiles) {
       const relativePath = file.webkitRelativePath
         ? file.webkitRelativePath.split("/").slice(1).join("/")
         : file.name;
       const storagePath = `${slug}/${relativePath}`;
-      const { error } = await supabase.storage.from(BUCKET).upload(storagePath, file, { upsert: true });
+
+      // Auto-inject PhantomBridge into index.html if missing so the game can sync balance.
+      let toUpload: Blob = file;
+      if (relativePath.toLowerCase() === "index.html") {
+        indexHtmlFound = true;
+        try {
+          const text = await file.text();
+          let patched = text;
+          if (!/bridge\.js/i.test(text)) {
+            const inject = `\n<script src="../bridge.js"></script>\n`;
+            if (/<\/body>/i.test(patched)) {
+              patched = patched.replace(/<\/body>/i, `${inject}</body>`);
+            } else {
+              patched = patched + inject;
+            }
+          }
+          toUpload = new Blob([patched], { type: "text/html" });
+        } catch (e) {
+          console.warn("Could not patch index.html", e);
+        }
+      }
+
+      const { error } = await supabase.storage.from(BUCKET).upload(storagePath, toUpload, { upsert: true, contentType: file.type || undefined });
       if (error) { console.error(`Failed: ${storagePath}`, error); } else { success++; }
+    }
+
+    // Make sure bridge.js exists at bucket root (one-time idempotent upload).
+    try {
+      const bridgeResp = await fetch("/games/bridge.js");
+      if (bridgeResp.ok) {
+        const bridgeBlob = await bridgeResp.blob();
+        await supabase.storage.from(BUCKET).upload("bridge.js", bridgeBlob, { upsert: true, contentType: "application/javascript" });
+      }
+    } catch {}
+
+    if (!indexHtmlFound) {
+      toast.error("No index.html found in folder. Game won't be playable.");
     }
 
     if (success > 0) {
       const displayName = installName.trim().split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
       const { error: dbErr } = await supabase.from("games").insert({
         name: displayName,
+        slug,
+        source: "storage",
         category: installCategory as any,
         description: `Custom installed game: ${displayName}`,
         is_active: true,
         is_featured: false,
-      });
-      if (dbErr) console.error("DB insert error:", dbErr);
-      toast.success(`Installed ${success} files for "${displayName}"`);
+      } as any);
+      if (dbErr) {
+        console.error("DB insert error:", dbErr);
+        toast.error("Files uploaded but game registration failed: " + dbErr.message);
+      } else {
+        toast.success(`✓ Installed "${displayName}" — appears in /games now!`);
+      }
       setInstallFiles([]);
       setInstallName("");
       fetchStorageGames();

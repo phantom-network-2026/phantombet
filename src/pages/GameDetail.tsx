@@ -52,11 +52,18 @@ function GameDetailInner() {
 
   useEffect(() => {
     if (!id) return;
-    supabase.from("games").select("name").eq("id", id).single().then(({ data }) => {
+    supabase.from("games").select("name, slug, source").eq("id", id).maybeSingle().then(({ data }) => {
       if (data?.name) {
         setGameName(data.name);
-        const route = GAME_ROUTES[data.name];
-        if (route) navigate(route, { replace: true });
+        const nativeRoute = GAME_ROUTES[data.name];
+        if (nativeRoute) {
+          navigate(nativeRoute, { replace: true });
+          return;
+        }
+        // Any other game (built-in iframe or installed via Dev Console) → generic player
+        if ((data as any).slug) {
+          navigate(`/play/${id}`, { replace: true });
+        }
       }
     });
   }, [id, navigate]);

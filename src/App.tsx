@@ -36,6 +36,7 @@ import Help from "./pages/Help.tsx";
 import Exchange from "./pages/Exchange.tsx";
 import Wallet from "./pages/Wallet.tsx";
 import UserProfile from "./pages/UserProfile.tsx";
+import PlayGame from "./pages/PlayGame.tsx";
 
 // New HTML5 games
 import ChickenCross from "./pages/games/ChickenCross.tsx";
@@ -84,6 +85,7 @@ const App = () => (
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/game/:id" element={<GameDetail />} />
+              <Route path="/play/:id" element={<PlayGame />} />
               <Route path="/promotions" element={<Promotions />} />
               <Route path="/deposit" element={<Deposit />} />
               <Route path="/withdraw" element={<Withdraw />} />
