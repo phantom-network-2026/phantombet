@@ -59,6 +59,45 @@ function isTextFile(name: string) {
   return ["js","ts","tsx","jsx","html","htm","css","json","md","xml","svg","sql","py","sh","yaml","yml","txt","wasm","map"].includes(ext);
 }
 
+function getContentType(name: string, fallback = "application/octet-stream") {
+  const ext = name.split(".").pop()?.toLowerCase() || "";
+  const map: Record<string, string> = {
+    html: "text/html",
+    htm: "text/html",
+    css: "text/css",
+    js: "text/javascript",
+    mjs: "text/javascript",
+    cjs: "text/javascript",
+    ts: "text/plain",
+    tsx: "text/plain",
+    jsx: "text/plain",
+    json: "application/json",
+    map: "application/json",
+    txt: "text/plain",
+    md: "text/markdown",
+    xml: "application/xml",
+    svg: "image/svg+xml",
+    png: "image/png",
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    gif: "image/gif",
+    webp: "image/webp",
+    ico: "image/x-icon",
+    mp3: "audio/mpeg",
+    wav: "audio/wav",
+    ogg: "audio/ogg",
+    m4a: "audio/mp4",
+    wasm: "application/wasm",
+    sql: "text/plain",
+    py: "text/plain",
+    sh: "text/plain",
+    yaml: "text/yaml",
+    yml: "text/yaml",
+  };
+
+  return map[ext] || fallback;
+}
+
 export default function DevConsole({ onBack }: { onBack: () => void }) {
   const [mode, setMode] = useState<"editor" | "installer">("editor");
   const [games, setGames] = useState<string[]>([]);
@@ -175,8 +214,9 @@ export default function DevConsole({ onBack }: { onBack: () => void }) {
     if (gameSource === "builtin") {
       const storagePath = `${selectedGame}/${selectedFile}`;
       setSaving(true);
-      const blob = new Blob([fileContent], { type: "text/plain" });
-      const { error } = await supabase.storage.from(BUCKET).upload(storagePath, blob, { upsert: true });
+      const contentType = getContentType(selectedFile, "text/plain");
+      const blob = new Blob([fileContent], { type: contentType });
+      const { error } = await supabase.storage.from(BUCKET).upload(storagePath, blob, { upsert: true, contentType });
       if (error) { toast.error("Save failed: " + error.message); setSaving(false); return; }
       toast.success("Saved to storage (override)");
       setOriginalContent(fileContent);
@@ -190,8 +230,9 @@ export default function DevConsole({ onBack }: { onBack: () => void }) {
 
     const storagePath = `${selectedGame}/${selectedFile}`;
     setSaving(true);
-    const blob = new Blob([fileContent], { type: "text/plain" });
-    const { error } = await supabase.storage.from(BUCKET).upload(storagePath, blob, { upsert: true });
+    const contentType = getContentType(selectedFile, "text/plain");
+    const blob = new Blob([fileContent], { type: contentType });
+    const { error } = await supabase.storage.from(BUCKET).upload(storagePath, blob, { upsert: true, contentType });
     if (error) { toast.error("Save failed: " + error.message); setSaving(false); return; }
     toast.success("File saved");
     setOriginalContent(fileContent);
@@ -212,8 +253,9 @@ export default function DevConsole({ onBack }: { onBack: () => void }) {
   const createFile = async () => {
     if (!newFileName.trim()) return;
     const fullPath = currentPath ? `${selectedGame}/${currentPath}/${newFileName}` : `${selectedGame}/${newFileName}`;
-    const blob = new Blob([""], { type: "text/plain" });
-    const { error } = await supabase.storage.from(BUCKET).upload(fullPath, blob, { upsert: false });
+    const contentType = getContentType(newFileName, "text/plain");
+    const blob = new Blob([""], { type: contentType });
+    const { error } = await supabase.storage.from(BUCKET).upload(fullPath, blob, { upsert: false, contentType });
     if (error) { toast.error("Create failed: " + error.message); return; }
     toast.success(`Created ${newFileName}`);
     setNewFileName("");
@@ -393,7 +435,8 @@ export default function DevConsole({ onBack }: { onBack: () => void }) {
         }
       }
 
-      const { error } = await supabase.storage.from(BUCKET).upload(storagePath, toUpload, { upsert: true, contentType: file.type || undefined });
+      const contentType = getContentType(relativePath, file.type || (isTextFile(relativePath) ? "text/plain" : "application/octet-stream"));
+      const { error } = await supabase.storage.from(BUCKET).upload(storagePath, toUpload, { upsert: true, contentType });
       if (error) { console.error(`Failed: ${storagePath}`, error); } else { success++; }
     }
 
@@ -579,7 +622,8 @@ export default function DevConsole({ onBack }: { onBack: () => void }) {
                       let success = 0;
                       for (const file of Array.from(uploadFiles)) {
                         const path = currentPath ? `${selectedGame}/${currentPath}/${file.name}` : `${selectedGame}/${file.name}`;
-                        const { error } = await supabase.storage.from(BUCKET).upload(path, file, { upsert: true });
+                         const contentType = getContentType(file.name, file.type || (isTextFile(file.name) ? "text/plain" : "application/octet-stream"));
+                         const { error } = await supabase.storage.from(BUCKET).upload(path, file, { upsert: true, contentType });
                         if (!error) success++;
                       }
                       if (success) toast.success(`${success} file(s) uploaded`);
