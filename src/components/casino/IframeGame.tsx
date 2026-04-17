@@ -11,13 +11,90 @@ import { supabase } from "@/integrations/supabase/client";
 
 const STORAGE_GAME_PATH = "/storage/v1/object/public/game-files/";
 
-function prepareStorageGameHtml(html: string, baseHref: string) {
+const STORAGE_AUDIO_BYPASS_SCRIPT = `<script>(function(){
+  function install(){
+    if (!window.Phaser?.Loader?.LoaderPlugin || window.__phantomStorageAudioPatched) return false;
+    window.__phantomStorageAudioPatched = true;
+    const proto = window.Phaser.Loader.LoaderPlugin.prototype;
+    proto.audio = function(){ return this; };
+    proto.audioSprite = function(){ return this; };
+    return true;
+  }
+
+  if (!install()) {
+    const timer = window.setInterval(() => {
+      if (install()) window.clearInterval(timer);
+    }, 0);
+  }
+})();</script>`;
+
+function extractLocalScriptPaths(html: string) {
+  return Array.from(html.matchAll(/<script[^>]*src=["']([^"']+)["'][^>]*><\/script>/gi))
+    .map((match) => match[1])
+    .filter((path) => !/^(https?:)?\/\//i.test(path) && !path.startsWith("data:") && !/bridge\.js$/i.test(path));
+}
+
+function extractAudioAssets(scriptContent: string) {
+  return Array.from(
+    scriptContent.matchAll(/\.audio\s*\(\s*["'][^"']+["']\s*,\s*(?:\[\s*)?["']([^"']+)["']/gi),
+  ).map((match) => match[1]);
+}
+
+async function assetExists(url: string) {
+  try {
+    const response = await fetch(url, { method: "HEAD", cache: "no-store" });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+async function shouldDisableStorageGameAudio(html: string, baseHref: string) {
+  const scriptPaths = extractLocalScriptPaths(html);
+  if (!scriptPaths.length) return false;
+
+  const allAudioAssets = new Set<string>();
+
+  for (const scriptPath of scriptPaths) {
+    try {
+      const response = await fetch(new URL(scriptPath, baseHref).toString(), { cache: "no-store" });
+      if (!response.ok) continue;
+      const scriptContent = await response.text();
+      extractAudioAssets(scriptContent).forEach((assetPath) => allAudioAssets.add(assetPath));
+    } catch {
+      continue;
+    }
+  }
+
+  if (!allAudioAssets.size) return false;
+
+  const assetChecks = await Promise.all(
+    Array.from(allAudioAssets).map((assetPath) => assetExists(new URL(assetPath, baseHref).toString())),
+  );
+
+  return assetChecks.some((exists) => !exists);
+}
+
+function prepareStorageGameHtml(html: string, baseHref: string, options?: { disableAudio?: boolean }) {
   const baseTag = `<base href="${baseHref}">`;
   const bridgeTag = `<script src="bridge.js"></script>`;
 
   let patched = html
     .replace(/<base[^>]*>\s*/i, "")
     .replace(/<script[^>]*src=["'][^"']*bridge\.js["'][^>]*><\/script>\s*/gi, "");
+
+  if (options?.disableAudio) {
+    if (/<script[^>]*src=["'][^"']*phaser[^"']*["'][^>]*><\/script>/i.test(patched)) {
+      patched = patched.replace(
+        /(<script[^>]*src=["'][^"']*phaser[^"']*["'][^>]*><\/script>)/i,
+        `$1\n${STORAGE_AUDIO_BYPASS_SCRIPT}`,
+      );
+    } else if (/<head[^>]*>/i.test(patched)) {
+      patched = patched.replace(/<head([^>]*)>/i, `<head$1>\n  ${STORAGE_AUDIO_BYPASS_SCRIPT}`);
+    } else {
+      patched = `${STORAGE_AUDIO_BYPASS_SCRIPT}${patched}`;
+    }
+  }
 
   if (/<head[^>]*>/i.test(patched)) {
     return patched.replace(/<head([^>]*)>/i, `<head$1>\n  ${baseTag}\n  ${bridgeTag}`);
@@ -77,8 +154,9 @@ function IframeGameInner({ title, slug, description, emoji, src }: IframeGamePro
 
         const html = await response.text();
         const baseHref = iframeSrc.slice(0, iframeSrc.lastIndexOf("/") + 1);
+        const disableAudio = await shouldDisableStorageGameAudio(html, baseHref);
         if (isActive) {
-          setIframeHtml(prepareStorageGameHtml(html, baseHref));
+          setIframeHtml(prepareStorageGameHtml(html, baseHref, { disableAudio }));
           setIsIframeLoading(false);
         }
       })
