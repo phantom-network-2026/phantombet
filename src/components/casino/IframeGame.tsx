@@ -11,6 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 
 const STORAGE_GAME_PATH = "/storage/v1/object/public/game-files/";
 const BRIDGE_FALLBACK_SRC = "/games/bridge.js";
+const STORAGE_BUCKET = "game-files";
+const STORAGE_ENTRY_CANDIDATE_DIRS = ["", "dist", "build", "public"] as const;
 
 /**
  * Universal Phaser loader hardening:
@@ -135,6 +137,31 @@ function isInlineableStorageAsset(path: string) {
   return Boolean(path) && !path.startsWith("data:") && !path.startsWith("blob:");
 }
 
+function buildStoragePublicUrl(origin: string, objectPath: string) {
+  return `${origin}${STORAGE_GAME_PATH}${objectPath.replace(/^\/+/, "")}`;
+}
+
+function isStorageFolder(item: { id?: string | null; metadata?: { mimetype?: string } | null }) {
+  return !item.id && !item.metadata?.mimetype;
+}
+
+function rankStorageHtmlPath(path: string) {
+  const normalized = path.toLowerCase();
+  let score = 0;
+
+  if (normalized.endsWith("/index.html")) score += 100;
+  if (normalized.includes("/dist/index.html")) score += 25;
+  if (normalized.includes("/build/index.html")) score += 20;
+  if (normalized.includes("/public/index.html")) score += 10;
+
+  score -= normalized.split("/").length;
+  return score;
+}
+
+function looksExecutableGameHtml(html: string) {
+  return /<script[\s>]/i.test(html) || /<canvas[\s>]/i.test(html) || /<iframe[\s>]/i.test(html);
+}
+
 function sanitizeStorageGameScript(source: string) {
   return source
     .replace(/\bthis\.load\.audio(?:Sprite)?\s*\([\s\S]*?\);\s*/g, "")
@@ -153,6 +180,85 @@ async function fetchStorageAssetText(url: string) {
     throw new Error(`Failed to load asset (${response.status})`);
   }
   return response.text();
+}
+
+async function resolveStorageGameHtml(initialSrc: string, slug: string) {
+  const storageOrigin = new URL(initialSrc, window.location.origin).origin;
+  const triedPaths = new Set<string>();
+
+  const tryPath = async (objectPath: string) => {
+    const normalizedPath = objectPath.replace(/^\/+/, "");
+    if (triedPaths.has(normalizedPath)) return null;
+    triedPaths.add(normalizedPath);
+
+    const entryUrl = buildStoragePublicUrl(storageOrigin, normalizedPath);
+    try {
+      const html = await fetchStorageAssetText(entryUrl);
+      if (!looksExecutableGameHtml(html)) return null;
+      return { entryUrl, html };
+    } catch {
+      return null;
+    }
+  };
+
+  for (const dir of STORAGE_ENTRY_CANDIDATE_DIRS) {
+    const candidate = dir ? `${slug}/${dir}/index.html` : `${slug}/index.html`;
+    const resolved = await tryPath(candidate);
+    if (resolved) return resolved;
+  }
+
+  const candidateHtmlPaths = new Set<string>();
+  const foldersToInspect: string[] = [];
+
+  const collectHtmlFiles = async (prefix: string) => {
+    const { data, error } = await supabase.storage.from(STORAGE_BUCKET).list(prefix, {
+      limit: 200,
+      sortBy: { column: "name", order: "asc" },
+    });
+
+    if (error || !data) return;
+
+    for (const item of data as Array<{ name: string; id?: string | null; metadata?: { mimetype?: string } | null }>) {
+      if (!item.name || item.name.startsWith(".")) continue;
+      const fullPath = `${prefix}/${item.name}`;
+
+      if (isStorageFolder(item)) {
+        foldersToInspect.push(fullPath);
+        continue;
+      }
+
+      if (item.name.toLowerCase().endsWith(".html")) {
+        candidateHtmlPaths.add(fullPath);
+      }
+    }
+  };
+
+  await collectHtmlFiles(slug);
+  for (const folder of foldersToInspect) {
+    await collectHtmlFiles(folder);
+  }
+
+  const rankedPaths = Array.from(candidateHtmlPaths).sort((a, b) => rankStorageHtmlPath(b) - rankStorageHtmlPath(a));
+  for (const objectPath of rankedPaths) {
+    const resolved = await tryPath(objectPath);
+    if (resolved) return resolved;
+  }
+
+  throw new Error("Could not find a playable HTML entry file for this installed game.");
+}
+
+function copyScriptAttributes(source: HTMLScriptElement, target: HTMLScriptElement) {
+  const type = source.getAttribute("type");
+  if (type) target.setAttribute("type", type);
+  if (source.noModule) target.noModule = true;
+  if (source.async) target.async = true;
+  if (source.defer) target.defer = true;
+
+  const crossOrigin = source.getAttribute("crossorigin");
+  if (crossOrigin) target.setAttribute("crossorigin", crossOrigin);
+
+  const referrerPolicy = source.getAttribute("referrerpolicy");
+  if (referrerPolicy) target.setAttribute("referrerpolicy", referrerPolicy);
 }
 
 async function prepareStorageGameHtml(html: string, baseHref: string, bridgeSource: string) {
@@ -190,6 +296,7 @@ async function prepareStorageGameHtml(html: string, baseHref: string, bridgeSour
     try {
       const resolvedSrc = new URL(src, baseHref).toString();
       const inlineScript = doc.createElement("script");
+      copyScriptAttributes(script, inlineScript);
       const scriptSource = await fetchStorageAssetText(resolvedSrc);
       inlineScript.textContent = `${new URL(resolvedSrc).origin === storageOrigin ? sanitizeStorageGameScript(scriptSource) : scriptSource}\n//# sourceURL=${resolvedSrc}`;
       script.replaceWith(inlineScript);
@@ -264,16 +371,13 @@ function IframeGameInner({ title, slug, description, emoji, src }: IframeGamePro
     setIframeError(null);
 
     Promise.all([
-      fetch(iframeSrc, { cache: "no-store" }).then(async (response) => {
-        if (!response.ok) throw new Error(`Failed to load game HTML (${response.status})`);
-        return response.text();
-      }),
+      resolveStorageGameHtml(iframeSrc, slug),
       loadBridgeSource(),
     ])
-      .then(async ([html, bridgeSource]) => {
+      .then(async ([resolvedGame, bridgeSource]) => {
         if (!isActive) return;
-        const baseHref = iframeSrc.slice(0, iframeSrc.lastIndexOf("/") + 1);
-        setIframeHtml(await prepareStorageGameHtml(html, baseHref, bridgeSource));
+        const baseHref = resolvedGame.entryUrl.slice(0, resolvedGame.entryUrl.lastIndexOf("/") + 1);
+        setIframeHtml(await prepareStorageGameHtml(resolvedGame.html, baseHref, bridgeSource));
         setIsIframeLoading(false);
       })
       .catch((error) => {
