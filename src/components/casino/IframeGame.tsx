@@ -10,12 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
 const STORAGE_GAME_PATH = "/storage/v1/object/public/game-files/";
-
-/**
- * Inline the bridge so storage games never depend on a relative bridge.js
- * (Supabase Storage may serve sibling files with restrictive CSP / wrong MIME).
- */
-const BRIDGE_INLINE_SCRIPT = `<script>/*__PHANTOM_BRIDGE_INLINE__*/__BRIDGE__</script>`;
+const BRIDGE_FALLBACK_SRC = "/games/bridge.js";
 
 /**
  * Universal Phaser loader hardening:
@@ -23,7 +18,7 @@ const BRIDGE_INLINE_SCRIPT = `<script>/*__PHANTOM_BRIDGE_INLINE__*/__BRIDGE__</s
  *  - Any loader 404 is converted into a silent skip so the game can still boot.
  *  Safe for non-Phaser games (no-op if Phaser isn't present).
  */
-const STORAGE_LOADER_SHIELD = `<script>(function(){
+const STORAGE_LOADER_SHIELD_SOURCE = `(function(){
   var installed = false;
   function patch(){
     if (installed) return true;
@@ -47,7 +42,7 @@ const STORAGE_LOADER_SHIELD = `<script>(function(){
     var t = setInterval(function(){ if (patch()) clearInterval(t); }, 16);
     setTimeout(function(){ try { clearInterval(t); } catch(e){} }, 15000);
   }
-})();</script>`;
+})();`;
 
 let cachedBridgeSource: Promise<string> | null = null;
 function loadBridgeSource(): Promise<string> {
@@ -59,26 +54,82 @@ function loadBridgeSource(): Promise<string> {
   return cachedBridgeSource;
 }
 
-function prepareStorageGameHtml(html: string, baseHref: string, bridgeSource: string) {
-  const baseTag = `<base href="${baseHref}">`;
-  const bridgeTag = bridgeSource
-    ? BRIDGE_INLINE_SCRIPT.replace("__BRIDGE__", bridgeSource)
-    : `<script src="${baseHref}bridge.js"></script>`;
+function isInlineableStorageAsset(path: string) {
+  return Boolean(path) && !/^(?:[a-z]+:)?\/\//i.test(path) && !path.startsWith("data:") && !path.startsWith("blob:");
+}
 
-  // Strip any prior bridge tags / base tags so we control them.
-  let patched = html
-    .replace(/<base[^>]*>\s*/gi, "")
-    .replace(/<script[^>]*src=["'][^"']*bridge\.js["'][^>]*><\/script>\s*/gi, "");
+function sanitizeStorageGameScript(source: string) {
+  return source
+    .replace(/\bthis\.load\.audio(?:Sprite)?\s*\([\s\S]*?\);\s*/g, "")
+    .replace(/\bthis\.load\.on\(\s*["']loaderror["'][\s\S]*?\);\s*/g, "");
+}
 
-  const headInjection = `${baseTag}\n  ${bridgeTag}\n  ${STORAGE_LOADER_SHIELD}`;
-
-  if (/<head[^>]*>/i.test(patched)) {
-    return patched.replace(/<head([^>]*)>/i, `<head$1>\n  ${headInjection}`);
+async function fetchStorageAssetText(url: string) {
+  const response = await fetch(url, { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(`Failed to load asset (${response.status})`);
   }
-  if (/<html[^>]*>/i.test(patched)) {
-    return patched.replace(/<html([^>]*)>/i, `<html$1>\n<head>\n  ${headInjection}\n</head>`);
+  return response.text();
+}
+
+async function prepareStorageGameHtml(html: string, baseHref: string, bridgeSource: string) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, "text/html");
+  const head = doc.head || doc.documentElement.insertBefore(doc.createElement("head"), doc.body ?? null);
+
+  Array.from(doc.querySelectorAll("base")).forEach((node) => node.remove());
+  Array.from(doc.querySelectorAll('script[src]')).forEach((script) => {
+    const src = script.getAttribute("src") || "";
+    if (/bridge\.js(?:[?#].*)?$/i.test(src)) {
+      script.remove();
+    }
+  });
+
+  await Promise.all(
+    Array.from(doc.querySelectorAll('link[rel="stylesheet"][href]')).map(async (link) => {
+      const href = link.getAttribute("href") || "";
+      if (!isInlineableStorageAsset(href)) return;
+      try {
+        const style = doc.createElement("style");
+        style.textContent = await fetchStorageAssetText(new URL(href, baseHref).toString());
+        link.replaceWith(style);
+      } catch (error) {
+        console.warn("Failed to inline stylesheet for storage game:", href, error);
+      }
+    })
+  );
+
+  for (const script of Array.from(doc.querySelectorAll('script[src]'))) {
+    const src = script.getAttribute("src") || "";
+    if (!isInlineableStorageAsset(src)) continue;
+    try {
+      const inlineScript = doc.createElement("script");
+      inlineScript.textContent = sanitizeStorageGameScript(
+        await fetchStorageAssetText(new URL(src, baseHref).toString())
+      );
+      script.replaceWith(inlineScript);
+    } catch (error) {
+      console.warn("Failed to inline script for storage game:", src, error);
+    }
   }
-  return `<!doctype html><html><head>${headInjection}</head><body>${patched}</body></html>`;
+
+  const base = doc.createElement("base");
+  base.setAttribute("href", baseHref);
+  head.prepend(base);
+
+  const bridgeScript = doc.createElement("script");
+  if (bridgeSource) {
+    bridgeScript.textContent = bridgeSource;
+  } else {
+    bridgeScript.setAttribute("src", BRIDGE_FALLBACK_SRC);
+  }
+  head.appendChild(bridgeScript);
+
+  const shieldScript = doc.createElement("script");
+  shieldScript.textContent = STORAGE_LOADER_SHIELD_SOURCE;
+  head.appendChild(shieldScript);
+
+  return `<!doctype html>\n${doc.documentElement.outerHTML}`;
 }
 
 interface IframeGameProps {
@@ -129,10 +180,10 @@ function IframeGameInner({ title, slug, description, emoji, src }: IframeGamePro
       }),
       loadBridgeSource(),
     ])
-      .then(([html, bridgeSource]) => {
+      .then(async ([html, bridgeSource]) => {
         if (!isActive) return;
         const baseHref = iframeSrc.slice(0, iframeSrc.lastIndexOf("/") + 1);
-        setIframeHtml(prepareStorageGameHtml(html, baseHref, bridgeSource));
+        setIframeHtml(await prepareStorageGameHtml(html, baseHref, bridgeSource));
         setIsIframeLoading(false);
       })
       .catch((error) => {
