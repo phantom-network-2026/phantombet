@@ -798,7 +798,7 @@ function PiratePlunderInner() {
       setCoinPing((n) => n + 1);
       setCoinMeter((prev) => {
         const next = prev + doubloonsThisSpin;
-        if (next >= COIN_GOAL) {
+        if (next >= coinGoal) {
           // Trigger chest burst → bonus
           setTimeout(() => {
             setChestBurst(true);
@@ -807,9 +807,10 @@ function PiratePlunderInner() {
           setTimeout(() => {
             setChestBurst(false);
             setCoinMeter(0);
+            setCoinGoal(800 + Math.floor(Math.random() * 1201));
             setBonusActive(true);
           }, 2400);
-          return COIN_GOAL;
+          return coinGoal;
         }
         return next;
       });
