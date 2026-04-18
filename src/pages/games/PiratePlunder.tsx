@@ -636,10 +636,10 @@ function PiratePlunderInner() {
   const [autoSpin, setAutoSpin] = useState(false);
   const [showPaytable, setShowPaytable] = useState(false);
   const [holdProgress, setHoldProgress] = useState(0); // 0..1 while holding spin button
-  const COIN_GOAL = 30;
+  const [coinGoal, setCoinGoal] = useState(() => 800 + Math.floor(Math.random() * 1201)); // 800-2000
   const [coinMeter, setCoinMeter] = useState(0);
   const [chestBurst, setChestBurst] = useState(false);
-  const [coinPing, setCoinPing] = useState(0); // increments to trigger pulse anim
+  const [coinPing, setCoinPing] = useState(0);
 
   // refs for stale closures
   const profileRef = useRef(profile);
