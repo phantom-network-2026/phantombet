@@ -225,8 +225,8 @@ const BonusMap = React.forwardRef<HTMLDivElement, { bet: number; onComplete: (to
   // 12 islands, hidden prizes
   const prizes = useMemo(() => {
     const arr: (number | "end")[] = [
-      bet * 2, bet * 5, bet * 10, bet * 3, bet * 25, bet * 1.5,
-      bet * 50, bet * 4, bet * 100, bet * 8, "end", bet * 200,
+      bet * 0.5, bet * 1, bet * 1.5, bet * 0.75, bet * 3, bet * 0.25,
+      bet * 5, bet * 1, bet * 10, bet * 2, "end", bet * 20,
     ];
     // shuffle
     for (let i = arr.length - 1; i > 0; i--) {
