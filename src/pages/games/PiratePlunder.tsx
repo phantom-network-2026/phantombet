@@ -811,7 +811,7 @@ function PiratePlunderInner() {
 
   const handleSpinPressStart = useCallback(() => {
     if (autoSpin) return; // tap will cancel auto-spin in pressEnd
-    if (bonusActive || freeSpins > 0) return;
+    if (spinning || bonusActive || freeSpins > 0) return;
     holdTriggeredRef.current = false;
     holdStartRef.current = Date.now();
     const tick = () => {
