@@ -4,7 +4,7 @@ import { AuthGuard } from "@/components/casino/AuthGuard";
 import { GameChat } from "@/components/casino/GameChat";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, MessageSquare, X, Volume2, VolumeX, Settings2, Coins } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -186,10 +186,8 @@ function LoadingScreen({ progress }: { progress: number }) {
 }
 
 // ---- Bonus map (Seven Seas Bonus) ----
-function BonusMap({
-  bet,
-  onComplete,
-}: { bet: number; onComplete: (totalWin: number) => void }) {
+const BonusMap = React.forwardRef<HTMLDivElement, { bet: number; onComplete: (totalWin: number) => void }>(
+  ({ bet, onComplete }, ref) => {
   const [picks, setPicks] = useState<number[]>([]);
   const [revealed, setRevealed] = useState<Record<number, number | "end">>({});
   const [total, setTotal] = useState(0);
@@ -223,19 +221,14 @@ function BonusMap({
   };
 
   return (
-    <div className="absolute inset-0 z-40 bg-gradient-to-b from-[#3a1a05] via-[#1f0c02] to-black flex flex-col items-center justify-center p-4 overflow-hidden">
-      {/* parchment glow */}
-      <motion.div
-        className="absolute inset-0 opacity-40"
+    <div ref={ref} className="absolute inset-0 z-40 bg-gradient-to-b from-[#3a1a05] via-[#1f0c02] to-black flex flex-col items-center justify-center p-4 overflow-hidden">
+      {/* parchment glow (cheap CSS pulse) */}
+      <div
+        className="absolute inset-0 opacity-40 animate-pulse"
         style={{ background: "radial-gradient(circle at 50% 40%, rgba(255,180,80,0.4), transparent 60%)" }}
-        animate={{ opacity: [0.2, 0.5, 0.2] }}
-        transition={{ duration: 3, repeat: Infinity }}
       />
-      <motion.h2
+      <h2
         className="font-display text-3xl font-black bg-gradient-to-b from-yellow-200 to-amber-600 bg-clip-text text-transparent drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] mb-1"
-        initial={{ scale: 0.5, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: "spring", damping: 12 }}
       >
         ⚓ SEVEN SEAS BONUS ⚓
       </motion.h2>
