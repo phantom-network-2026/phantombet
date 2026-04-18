@@ -3,7 +3,7 @@ import { Header } from "@/components/casino/Header";
 import { AuthGuard } from "@/components/casino/AuthGuard";
 import { GameChat } from "@/components/casino/GameChat";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, MessageSquare, X, Volume2, VolumeX, Settings2, Coins } from "lucide-react";
+import { ArrowLeft, MessageSquare, X, Volume2, VolumeX, Settings2, Coins, Info, Repeat } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
