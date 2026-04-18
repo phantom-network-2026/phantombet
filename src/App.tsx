@@ -60,6 +60,7 @@ import SpinWheelRoyale from "./pages/games/SpinWheelRoyale.tsx";
 import StackUpCasino from "./pages/games/StackUpCasino.tsx";
 import StakeMines from "./pages/games/StakeMines.tsx";
 import ScatterBomb from "./pages/games/ScatterBomb.tsx";
+import RoyalRumble from "./pages/games/RoyalRumble.tsx";
 
 const queryClient = new QueryClient();
 
@@ -130,6 +131,7 @@ const App = () => (
               <Route path="/stack-up-casino" element={<StackUpCasino />} />
               <Route path="/stake-mines" element={<StakeMines />} />
               <Route path="/scatter-bomb" element={<ScatterBomb />} />
+              <Route path="/royal-rumble" element={<RoyalRumble />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </PresenceTracker>

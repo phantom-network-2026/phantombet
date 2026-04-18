@@ -1,0 +1,1 @@
+UPDATE public.games SET source = 'external' WHERE slug = 'royal-rumble';
