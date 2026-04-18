@@ -706,6 +706,32 @@ function PiratePlunderInner() {
           }}
         />
 
+        {/* Floating embers */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {Array.from({ length: 14 }).map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 rounded-full bg-amber-300 shadow-[0_0_6px_rgba(255,180,60,0.9)]"
+              style={{
+                left: `${(i * 7.3) % 100}%`,
+                bottom: -10,
+                willChange: "transform, opacity",
+              }}
+              animate={{
+                y: [0, -400 - (i % 5) * 40],
+                opacity: [0, 1, 0],
+                x: [(i % 2 === 0 ? -1 : 1) * 0, (i % 2 === 0 ? -1 : 1) * 30],
+              }}
+              transition={{
+                duration: 6 + (i % 4),
+                repeat: Infinity,
+                delay: i * 0.6,
+                ease: "linear",
+              }}
+            />
+          ))}
+        </div>
+
         {/* Bonus enhancements bar */}
         <div className="relative z-10 px-2 pt-2">
           <div className="text-center font-display font-black text-yellow-300 text-[10px] tracking-widest mb-1 drop-shadow">
