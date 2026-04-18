@@ -349,6 +349,61 @@ const BigWinOverlay = React.forwardRef<HTMLDivElement, { amount: number; label: 
 });
 BigWinOverlay.displayName = "BigWinOverlay";
 
+// ---- Floating Win Popup (per-spin) ----
+function WinPopup({ amount, bet, onDone }: { amount: number; bet: number; onDone: () => void }) {
+  const ratio = amount / bet;
+  const tier = ratio >= 50 ? "mega" : ratio >= 20 ? "huge" : ratio >= 10 ? "big" : ratio >= 3 ? "nice" : "win";
+  const colors: Record<string, string> = {
+    mega: "from-fuchsia-300 via-pink-400 to-rose-600",
+    huge: "from-orange-200 via-amber-400 to-red-600",
+    big: "from-yellow-200 via-amber-400 to-amber-700",
+    nice: "from-yellow-200 via-yellow-400 to-amber-600",
+    win: "from-yellow-100 via-yellow-300 to-amber-500",
+  };
+  useEffect(() => {
+    const t = setTimeout(onDone, 1800);
+    return () => clearTimeout(t);
+  }, [onDone]);
+  return (
+    <motion.div
+      className="pointer-events-none absolute left-1/2 top-[44%] -translate-x-1/2 -translate-y-1/2 z-30"
+      initial={{ scale: 0, y: 30, opacity: 0 }}
+      animate={{ scale: [0, 1.25, 1], y: [30, -10, -20], opacity: [0, 1, 1] }}
+      exit={{ scale: 0.6, opacity: 0, y: -60 }}
+      transition={{ duration: 0.6, ease: "backOut" }}
+    >
+      <div className="absolute inset-0 -m-8 pointer-events-none">
+        {Array.from({ length: 10 }).map((_, i) => {
+          const angle = (i / 10) * Math.PI * 2;
+          return (
+            <motion.div
+              key={i}
+              className="absolute left-1/2 top-1/2 w-2 h-2 rounded-full bg-yellow-200 shadow-[0_0_8px_rgba(255,220,80,1)]"
+              initial={{ x: 0, y: 0, opacity: 0, scale: 0 }}
+              animate={{
+                x: Math.cos(angle) * 70,
+                y: Math.sin(angle) * 70,
+                opacity: [0, 1, 0],
+                scale: [0, 1.2, 0],
+              }}
+              transition={{ duration: 1.4, delay: 0.1 + i * 0.04 }}
+              style={{ willChange: "transform" }}
+            />
+          );
+        })}
+      </div>
+      <div className={`relative px-5 py-2 rounded-2xl bg-gradient-to-b ${colors[tier]} border-2 border-yellow-100 shadow-[0_0_30px_rgba(255,200,80,0.8),inset_0_2px_4px_rgba(255,255,255,0.4)]`}>
+        <div className="text-[10px] font-display font-black uppercase tracking-[0.25em] text-black/70 text-center leading-none">
+          {tier === "mega" ? "MEGA WIN" : tier === "huge" ? "HUGE WIN" : tier === "big" ? "BIG WIN" : tier === "nice" ? "NICE WIN" : "WIN"}
+        </div>
+        <div className="font-mono font-black text-2xl text-black drop-shadow text-center leading-tight">
+          +${amount.toFixed(2)}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 // ---- Spinning Reel column ----
 function Reel({
   colIndex,
