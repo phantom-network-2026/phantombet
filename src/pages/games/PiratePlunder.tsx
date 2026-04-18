@@ -770,6 +770,66 @@ function PiratePlunderInner() {
     }
   }, [freeSpins, spinning, bonusActive, bigWin, spin]);
 
+  // Auto-spin loop (when toggled on, keep spinning until cancelled or balance too low)
+  useEffect(() => {
+    if (!autoSpin) return;
+    if (spinning || bonusActive || bigWin || freeSpins > 0) return;
+    const bal = profileRef.current?.balance ?? 0;
+    if (bal < bet) {
+      setAutoSpin(false);
+      toast({ title: "Auto spin stopped", description: "Insufficient balance." });
+      return;
+    }
+    const t = setTimeout(() => spin(false), 600);
+    return () => clearTimeout(t);
+  }, [autoSpin, spinning, bonusActive, bigWin, freeSpins, bet, spin]);
+
+  // Hold-to-start auto-spin: 3-second hold on spin button
+  const holdTimerRef = useRef<number | null>(null);
+  const holdRafRef = useRef<number | null>(null);
+  const holdStartRef = useRef<number>(0);
+  const holdTriggeredRef = useRef<boolean>(false);
+
+  const clearHold = useCallback(() => {
+    if (holdTimerRef.current) { clearTimeout(holdTimerRef.current); holdTimerRef.current = null; }
+    if (holdRafRef.current) { cancelAnimationFrame(holdRafRef.current); holdRafRef.current = null; }
+    setHoldProgress(0);
+  }, []);
+
+  const handleSpinPressStart = useCallback(() => {
+    if (autoSpin) return; // tap will cancel auto-spin in pressEnd
+    if (bonusActive || freeSpins > 0) return;
+    holdTriggeredRef.current = false;
+    holdStartRef.current = Date.now();
+    const tick = () => {
+      const elapsed = (Date.now() - holdStartRef.current) / 3000;
+      setHoldProgress(Math.min(1, elapsed));
+      if (elapsed < 1) holdRafRef.current = requestAnimationFrame(tick);
+    };
+    holdRafRef.current = requestAnimationFrame(tick);
+    holdTimerRef.current = window.setTimeout(() => {
+      holdTriggeredRef.current = true;
+      setAutoSpin(true);
+      setHoldProgress(0);
+      toast({ title: "🔁 Auto Spin Started", description: "Tap SPIN once to cancel." });
+    }, 3000);
+  }, [autoSpin, bonusActive, freeSpins]);
+
+  const handleSpinPressEnd = useCallback(() => {
+    const wasTriggered = holdTriggeredRef.current;
+    clearHold();
+    if (wasTriggered) return;
+    if (autoSpin) {
+      setAutoSpin(false);
+      toast({ title: "Auto Spin Cancelled" });
+      return;
+    }
+    if (spinning || bonusActive || freeSpins > 0) return;
+    spin(false);
+  }, [autoSpin, spinning, bonusActive, freeSpins, spin, clearHold]);
+
+  useEffect(() => () => clearHold(), [clearHold]);
+
   const balance = profile?.balance ?? 0;
 
   return (
