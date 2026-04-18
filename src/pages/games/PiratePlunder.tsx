@@ -587,7 +587,7 @@ function Paytable({ onClose }: { onClose: () => void }) {
         </div>
         <div className="bg-black/40 rounded-lg p-3 border border-yellow-700/30">
           <h3 className="font-display font-black text-yellow-300 text-sm mb-1">🪙 SCATTER (Treasure Chest)</h3>
-          <p>Hit 4 or more SCATTER symbols anywhere on the reels to trigger the SEVEN SEAS BONUS round.</p>
+          <p>Hit 5 or more SCATTER symbols anywhere on the reels to trigger the SEVEN SEAS BONUS round.</p>
         </div>
         <div className="bg-black/40 rounded-lg p-3 border border-yellow-700/30">
           <h3 className="font-display font-black text-yellow-300 text-sm mb-1">⚓ FREE SPINS</h3>
