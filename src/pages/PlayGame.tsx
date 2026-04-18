@@ -16,6 +16,7 @@ const NATIVE_ROUTES: Record<string, string> = {
   "penny-roulette": "/penny-roulette",
   "prize-reel": "/prize-reel",
   "royal-rumble": "/royal-rumble",
+  "pirate-plunder": "/pirate-plunder",
 };
 
 interface GameRow {
