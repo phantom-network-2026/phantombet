@@ -62,6 +62,10 @@ import StakeMines from "./pages/games/StakeMines.tsx";
 import ScatterBomb from "./pages/games/ScatterBomb.tsx";
 import RoyalRumble from "./pages/games/RoyalRumble.tsx";
 import PiratePlunder from "./pages/games/PiratePlunder.tsx";
+import FishingMayhem from "./pages/games/FishingMayhem.tsx";
+import CastleDefence from "./pages/games/CastleDefence.tsx";
+import Lucky7s from "./pages/games/Lucky7s.tsx";
+import JackpotJoy from "./pages/games/JackpotJoy.tsx";
 
 const queryClient = new QueryClient();
 
@@ -134,6 +138,10 @@ const App = () => (
               <Route path="/scatter-bomb" element={<ScatterBomb />} />
               <Route path="/royal-rumble" element={<RoyalRumble />} />
               <Route path="/pirate-plunder" element={<PiratePlunder />} />
+              <Route path="/fishing-mayhem" element={<FishingMayhem />} />
+              <Route path="/castle-defence" element={<CastleDefence />} />
+              <Route path="/lucky-7s" element={<Lucky7s />} />
+              <Route path="/jackpotjoy" element={<JackpotJoy />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </PresenceTracker>
