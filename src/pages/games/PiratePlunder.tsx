@@ -848,14 +848,57 @@ function PiratePlunderInner() {
   return (
     <div className="fixed inset-0 z-50 bg-black flex flex-col overflow-hidden font-sans">
       {/* Top status bar */}
-      <div className="shrink-0 bg-gradient-to-r from-red-900 via-red-800 to-red-900 border-b-2 border-yellow-600/60 flex items-center justify-between px-3 py-1.5 safe-area-top">
-        <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="text-white h-8 px-2 text-xs gap-1 hover:bg-white/10">
+      <div className="relative shrink-0 bg-gradient-to-r from-red-950 via-red-800 to-red-950 border-b-2 border-yellow-500/70 flex items-center justify-between px-3 py-1.5 safe-area-top overflow-hidden">
+        {/* animated golden shimmer sweep */}
+        <motion.div
+          className="absolute inset-y-0 w-1/3 pointer-events-none"
+          style={{
+            background: "linear-gradient(90deg, transparent, rgba(255,215,0,0.25), transparent)",
+          }}
+          animate={{ x: ["-150%", "350%"] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+        />
+        {/* rope trim */}
+        <div
+          className="absolute bottom-0 left-0 right-0 h-[3px] opacity-80 pointer-events-none"
+          style={{
+            backgroundImage: "repeating-linear-gradient(90deg, #d4a017 0 6px, #6b3410 6px 12px)",
+          }}
+        />
+        <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="relative z-10 text-white h-8 px-2 text-xs gap-1 hover:bg-white/10">
           <ArrowLeft className="h-4 w-4" /> Exit
         </Button>
-        <span className="font-display font-black text-yellow-200 text-sm tracking-wider drop-shadow">
-          🏴‍☠️ {GAME_TITLE}
-        </span>
-        <Button variant="ghost" size="sm" onClick={() => setShowChat((v) => !v)} className="text-white h-8 px-2 text-xs gap-1 hover:bg-white/10">
+        <div className="relative z-10 flex items-center gap-1.5">
+          <motion.span
+            className="text-base"
+            animate={{ rotate: [-12, 12, -12], y: [0, -1, 0] }}
+            transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+          >
+            🏴‍☠️
+          </motion.span>
+          <motion.span
+            className="font-display font-black text-sm tracking-wider"
+            style={{
+              backgroundImage: "linear-gradient(90deg, #fde047, #fff7c2, #fbbf24, #fde047)",
+              backgroundSize: "200% 100%",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.8))",
+            }}
+            animate={{ backgroundPositionX: ["0%", "200%"] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+          >
+            {GAME_TITLE}
+          </motion.span>
+          <motion.span
+            className="text-base"
+            animate={{ rotate: [12, -12, 12], y: [0, -1, 0] }}
+            transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+          >
+            ⚔️
+          </motion.span>
+        </div>
+        <Button variant="ghost" size="sm" onClick={() => setShowChat((v) => !v)} className="relative z-10 text-white h-8 px-2 text-xs gap-1 hover:bg-white/10">
           <MessageSquare className="h-4 w-4" />
         </Button>
       </div>
@@ -898,26 +941,76 @@ function PiratePlunderInner() {
 
         {/* Bonus enhancements bar */}
         <div className="relative z-10 px-2 pt-2">
-          <div className="text-center font-display font-black text-yellow-300 text-[10px] tracking-widest mb-1 drop-shadow">
-            ⚜ SEVEN SEAS BONUS ENHANCEMENTS ⚜
-          </div>
-          <div className="grid grid-cols-6 gap-1">
-            {[
-              { sym: "doubloon_3", label: "2.00x", color: "from-yellow-400 to-amber-600" },
-              { sym: "ships_compass_3", label: "MULTI", color: "from-blue-400 to-indigo-600" },
-              { sym: "treasure_chest_key", label: "+3 SPINS", color: "from-purple-400 to-pink-600" },
-              { sym: "cannon_3", label: "CANNON", color: "from-red-500 to-orange-600" },
-              { sym: "doubloon_3", label: "200 COINS", color: "from-amber-300 to-yellow-700" },
-              { sym: "treasure_chest_1", label: "SUPER", color: "from-rose-400 to-red-700" },
-            ].map((e, i) => (
-              <div
-                key={i}
-                className={`relative flex flex-col items-center p-1 rounded-lg bg-gradient-to-b ${e.color} border border-yellow-700/60 shadow-[0_2px_6px_rgba(0,0,0,0.6)]`}
-              >
-                <img src={`${ROOT}/${e.sym}.png`} className="w-7 h-7 object-contain drop-shadow" />
-                <span className="text-[8px] font-black text-white drop-shadow uppercase leading-tight">{e.label}</span>
-              </div>
+          <div className="relative rounded-lg border border-yellow-600/60 bg-gradient-to-b from-[#2a0d00]/80 to-[#1a0500]/80 px-2 py-1.5 overflow-hidden shadow-[inset_0_0_12px_rgba(255,180,60,0.15)]">
+            {/* shimmer sweep across whole panel */}
+            <motion.div
+              className="absolute inset-y-0 w-1/4 pointer-events-none"
+              style={{ background: "linear-gradient(90deg, transparent, rgba(255,215,0,0.18), transparent)" }}
+              animate={{ x: ["-120%", "420%"] }}
+              transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
+            />
+            {/* mini floating sparkles */}
+            {Array.from({ length: 6 }).map((_, i) => (
+              <motion.div
+                key={`spk-${i}`}
+                className="absolute w-[3px] h-[3px] rounded-full bg-yellow-200 shadow-[0_0_4px_rgba(255,215,0,0.9)] pointer-events-none"
+                style={{ left: `${10 + i * 14}%`, top: "50%" }}
+                animate={{ y: [-8, 8, -8], opacity: [0.2, 1, 0.2] }}
+                transition={{ duration: 2 + (i % 3) * 0.4, repeat: Infinity, delay: i * 0.3 }}
+              />
             ))}
+
+            <motion.div
+              className="relative text-center font-display font-black text-[10px] tracking-widest mb-1.5 flex items-center justify-center gap-1.5"
+              style={{
+                backgroundImage: "linear-gradient(90deg, #fbbf24, #fef3c7, #fbbf24, #fde047)",
+                backgroundSize: "200% 100%",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.9))",
+              }}
+              animate={{ backgroundPositionX: ["0%", "200%"] }}
+              transition={{ duration: 3.5, repeat: Infinity, ease: "linear" }}
+            >
+              <motion.span animate={{ rotate: [0, 15, -15, 0] }} transition={{ duration: 3, repeat: Infinity }}>⚜</motion.span>
+              SEVEN SEAS BONUS ENHANCEMENTS
+              <motion.span animate={{ rotate: [0, -15, 15, 0] }} transition={{ duration: 3, repeat: Infinity }}>⚜</motion.span>
+            </motion.div>
+
+            <div className="relative grid grid-cols-6 gap-1">
+              {[
+                { sym: "doubloon_3", label: "2.00x", color: "from-yellow-300 to-amber-600" },
+                { sym: "ships_compass_3", label: "MULTI", color: "from-blue-400 to-indigo-700" },
+                { sym: "treasure_chest_key", label: "+3 SPINS", color: "from-fuchsia-400 to-purple-700" },
+                { sym: "cannon_3", label: "CANNON", color: "from-orange-400 to-red-700" },
+                { sym: "doubloon_3", label: "200 COINS", color: "from-amber-300 to-yellow-700" },
+                { sym: "treasure_chest_1", label: "SUPER", color: "from-rose-400 to-red-800" },
+              ].map((e, i) => (
+                <motion.div
+                  key={i}
+                  className={`relative flex flex-col items-center p-1 rounded-lg bg-gradient-to-b ${e.color} border border-yellow-400/70 shadow-[0_2px_6px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.4)] overflow-hidden`}
+                  animate={{ y: [0, -2, 0] }}
+                  transition={{ duration: 2.2, repeat: Infinity, delay: i * 0.18, ease: "easeInOut" }}
+                >
+                  <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/30 to-transparent pointer-events-none rounded-t-lg" />
+                  <motion.div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{ background: "linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.45) 50%, transparent 70%)" }}
+                    animate={{ x: ["-100%", "120%"] }}
+                    transition={{ duration: 3, repeat: Infinity, delay: i * 0.4, ease: "linear" }}
+                  />
+                  <motion.img
+                    src={`${ROOT}/${e.sym}.png`}
+                    className="relative w-7 h-7 object-contain drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"
+                    animate={{ rotate: [-4, 4, -4], scale: [1, 1.06, 1] }}
+                    transition={{ duration: 2.4, repeat: Infinity, delay: i * 0.2, ease: "easeInOut" }}
+                  />
+                  <span className="relative text-[8px] font-black text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.9)] uppercase leading-tight">
+                    {e.label}
+                  </span>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </div>
 
