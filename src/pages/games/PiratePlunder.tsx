@@ -393,15 +393,15 @@ function Reel({
       style={{ aspectRatio: `1 / ${ROWS}` }}
     >
       <motion.div
-        key={stripVersion}
+        key={`${stripVersion}-${spinning ? "spin" : "stop"}`}
         className="absolute left-0 right-0 top-0 flex flex-col gap-0.5"
         style={{ height: `${(strip.length / ROWS) * 100}%` }}
-        initial={{ y: `${startPercent}%` }}
-        animate={spinning ? { y: ["0%", "0%"] } : { y: `${restingPercent}%` }}
+        initial={spinning ? { y: `${restingPercent}%` } : { y: "0%" }}
+        animate={spinning ? { y: "0%" } : { y: `${restingPercent}%` }}
         transition={
           spinning
-            ? { duration: 0.05 }
-            : { duration: spinDuration, ease: [0.22, 1.4, 0.36, 1] } // overshoot bounce at end
+            ? { duration: 0.45, ease: "linear", repeat: Infinity }
+            : { duration: spinDuration, ease: [0.22, 1.4, 0.36, 1], delay: stopDelay }
         }
       >
         {strip.map((symId, idx) => {
