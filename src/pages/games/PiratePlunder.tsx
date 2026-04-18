@@ -791,6 +791,30 @@ function PiratePlunderInner() {
 
     if (isFree) setFreeSpins((n) => Math.max(0, n - 1));
 
+    // Count doubloons on this spin → fill the chest meter
+    let doubloonsThisSpin = 0;
+    for (let r = 0; r < REELS; r++) for (let c = 0; c < ROWS; c++) if (newGrid[r][c] === "doubloon") doubloonsThisSpin++;
+    if (doubloonsThisSpin > 0) {
+      setCoinPing((n) => n + 1);
+      setCoinMeter((prev) => {
+        const next = prev + doubloonsThisSpin;
+        if (next >= COIN_GOAL) {
+          // Trigger chest burst → bonus
+          setTimeout(() => {
+            setChestBurst(true);
+            sfx.bonusJingle();
+          }, 600);
+          setTimeout(() => {
+            setChestBurst(false);
+            setCoinMeter(0);
+            setBonusActive(true);
+          }, 2400);
+          return COIN_GOAL;
+        }
+        return next;
+      });
+    }
+
     if (scatterCount >= 5) {
       setTimeout(() => {
         sfx.bonusJingle();
