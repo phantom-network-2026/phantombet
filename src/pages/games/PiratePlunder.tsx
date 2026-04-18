@@ -629,6 +629,19 @@ function PiratePlunderInner() {
   const settle = useCallback(async (amount: number, outcome: string) => {
     const u = userRef.current;
     if (!u || amount === 0) return null;
+
+    // Ensure we have a valid session before invoking; refresh if missing
+    const { data: sessionData } = await supabase.auth.getSession();
+    let token = sessionData.session?.access_token;
+    if (!token) {
+      const { data: refreshed } = await supabase.auth.refreshSession();
+      token = refreshed.session?.access_token;
+    }
+    if (!token) {
+      console.error("Pirate Plunder settle: no auth session");
+      return null;
+    }
+
     const { data, error } = await supabase.functions.invoke("game-settle", {
       body: { userId: u.id, amount, gameType: GAME_TITLE, outcome },
     });
