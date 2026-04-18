@@ -826,7 +826,7 @@ function PiratePlunderInner() {
       setHoldProgress(0);
       toast({ title: "🔁 Auto Spin Started", description: "Tap SPIN once to cancel." });
     }, 3000);
-  }, [autoSpin, bonusActive, freeSpins]);
+  }, [autoSpin, spinning, bonusActive, freeSpins]);
 
   const handleSpinPressEnd = useCallback(() => {
     const wasTriggered = holdTriggeredRef.current;
