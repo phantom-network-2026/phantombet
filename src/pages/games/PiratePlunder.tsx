@@ -28,24 +28,24 @@ type Sym = {
 
 const SYMBOLS: Sym[] = [
   // Premium
-  { id: "chest", img: `${ROOT}/treasure_chest_1.png`, pay: [2, 6, 25, 100], weight: 4, tier: "premium" },
-  { id: "galleon", img: `${ROOT}/pirate_galleon_4.png`, pay: [1.5, 4, 15, 60], weight: 5, tier: "premium" },
+  { id: "chest", img: `${ROOT}/treasure_chest_1.png`, pay: [0.5, 1.5, 5, 20], weight: 1, tier: "premium" },
+  { id: "galleon", img: `${ROOT}/pirate_galleon_4.png`, pay: [0.4, 1.2, 4, 15], weight: 4, tier: "premium" },
   // High
-  { id: "locker", img: `${ROOT}/capns_locker.png`, pay: [1, 3, 10, 40], weight: 6, tier: "high" },
-  { id: "doubloon", img: `${ROOT}/doubloon_3.png`, pay: [0.8, 2.5, 8, 30], weight: 7, tier: "high" },
+  { id: "locker", img: `${ROOT}/capns_locker.png`, pay: [0.3, 0.9, 3, 10], weight: 6, tier: "high" },
+  { id: "doubloon", img: `${ROOT}/doubloon_3.png`, pay: [0.25, 0.7, 2.5, 8], weight: 7, tier: "high" },
   // Mid
-  { id: "bell", img: `${ROOT}/ships_bell_3.png`, pay: [0.5, 1.5, 5, 18], weight: 9, tier: "mid" },
-  { id: "wheel", img: `${ROOT}/ships_wheel_2.png`, pay: [0.5, 1.5, 5, 18], weight: 9, tier: "mid" },
-  { id: "lantern", img: `${ROOT}/ships_lantern_3.png`, pay: [0.4, 1.2, 4, 15], weight: 10, tier: "mid" },
-  { id: "compass", img: `${ROOT}/ships_compass_3.png`, pay: [0.4, 1.2, 4, 15], weight: 10, tier: "mid" },
+  { id: "bell", img: `${ROOT}/ships_bell_3.png`, pay: [0.15, 0.4, 1.5, 5], weight: 9, tier: "mid" },
+  { id: "wheel", img: `${ROOT}/ships_wheel_2.png`, pay: [0.15, 0.4, 1.5, 5], weight: 9, tier: "mid" },
+  { id: "lantern", img: `${ROOT}/ships_lantern_3.png`, pay: [0.12, 0.3, 1.2, 4], weight: 10, tier: "mid" },
+  { id: "compass", img: `${ROOT}/ships_compass_3.png`, pay: [0.12, 0.3, 1.2, 4], weight: 10, tier: "mid" },
   // Low
-  { id: "globe", img: `${ROOT}/pirate_globe_2.png`, pay: [0.3, 0.8, 2.5, 10], weight: 12, tier: "low" },
-  { id: "bottle", img: `${ROOT}/ship_in_a_bottle_3.png`, pay: [0.3, 0.8, 2.5, 10], weight: 12, tier: "low" },
-  { id: "cannon", img: `${ROOT}/cannon_3.png`, pay: [0.2, 0.6, 2, 8], weight: 13, tier: "low" },
-  { id: "flintlock", img: `${ROOT}/pirate_flintlock_3.png`, pay: [0.2, 0.6, 2, 8], weight: 13, tier: "low" },
-  { id: "squeeze", img: `${ROOT}/pirate_sqeezebox_2.png`, pay: [0.2, 0.5, 1.5, 6], weight: 14, tier: "low" },
+  { id: "globe", img: `${ROOT}/pirate_globe_2.png`, pay: [0.08, 0.2, 0.7, 2.5], weight: 12, tier: "low" },
+  { id: "bottle", img: `${ROOT}/ship_in_a_bottle_3.png`, pay: [0.08, 0.2, 0.7, 2.5], weight: 12, tier: "low" },
+  { id: "cannon", img: `${ROOT}/cannon_3.png`, pay: [0.05, 0.15, 0.5, 2], weight: 13, tier: "low" },
+  { id: "flintlock", img: `${ROOT}/pirate_flintlock_3.png`, pay: [0.05, 0.15, 0.5, 2], weight: 13, tier: "low" },
+  { id: "squeeze", img: `${ROOT}/pirate_sqeezebox_2.png`, pay: [0.05, 0.12, 0.4, 1.5], weight: 14, tier: "low" },
   // Special
-  { id: "key", img: `${ROOT}/treasure_chest_key.png`, pay: [3, 10, 50, 200], weight: 2, tier: "wild" }, // WILD - high pay
+  { id: "key", img: `${ROOT}/treasure_chest_key.png`, pay: [0.8, 2.5, 10, 40], weight: 1, tier: "wild" }, // WILD
 ];
 
 const SYMBOL_BY_ID = Object.fromEntries(SYMBOLS.map((s) => [s.id, s]));
