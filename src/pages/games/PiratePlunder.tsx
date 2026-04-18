@@ -64,8 +64,8 @@ const SPIN_POOL: string[] = (() => {
 })();
 
 function randomSymbol(forceLoss = false): string {
-  // ~5% wild drop chance per cell (creates extra wins)
-  if (!forceLoss && Math.random() < 0.04) return "key";
+  // ~1% wild drop chance per cell
+  if (!forceLoss && Math.random() < 0.01) return "key";
   return SPIN_POOL[Math.floor(Math.random() * SPIN_POOL.length)];
 }
 
