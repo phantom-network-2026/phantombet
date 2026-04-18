@@ -569,52 +569,15 @@ function PiratePlunderInner() {
         <div className="relative z-10 mx-2 mt-2 rounded-xl border-[3px] border-yellow-600 bg-gradient-to-br from-[#3a0d05] via-[#2a0a05] to-[#1a0500] shadow-[inset_0_0_20px_rgba(0,0,0,0.8),0_0_25px_rgba(255,180,60,0.3)] p-1.5">
           <div className="grid grid-cols-6 gap-0.5 bg-black/40 rounded-lg p-1">
             {grid.map((reel, ci) => (
-              <div key={ci} className="flex flex-col gap-0.5">
-                {reel.map((symId, ri) => {
-                  const isWin = winLines.some((wl) => wl.positions.some(([x, y]) => x === ci && y === ri));
-                  const sym = SYMBOL_BY_ID[symId];
-                  return (
-                    <motion.div
-                      key={`${ci}-${ri}`}
-                      className={`relative aspect-square rounded-md flex items-center justify-center overflow-hidden ${
-                        isWin
-                          ? "bg-gradient-to-br from-yellow-400/40 to-amber-600/40 ring-2 ring-yellow-300 shadow-[0_0_15px_rgba(255,220,80,0.8)]"
-                          : "bg-gradient-to-br from-red-950/60 to-black/60 border border-yellow-900/40"
-                      }`}
-                      animate={
-                        spinning
-                          ? { y: [0, -20, 0] }
-                          : isWin
-                          ? { scale: [1, 1.15, 1] }
-                          : {}
-                      }
-                      transition={
-                        spinning
-                          ? { duration: 0.15, repeat: Infinity, delay: ci * 0.04, ease: "linear" }
-                          : isWin
-                          ? { duration: 0.6, repeat: Infinity }
-                          : {}
-                      }
-                    >
-                      <img
-                        src={sym?.img}
-                        alt={symId}
-                        className={`w-[85%] h-[85%] object-contain drop-shadow-[0_2px_3px_rgba(0,0,0,0.7)] ${
-                          spinning ? "blur-[1px]" : ""
-                        }`}
-                      />
-                      {isWin && (
-                        <motion.div
-                          className="absolute inset-0 pointer-events-none"
-                          animate={{ opacity: [0, 0.6, 0] }}
-                          transition={{ duration: 0.8, repeat: Infinity }}
-                          style={{ background: "radial-gradient(circle, rgba(255,255,150,0.6), transparent 70%)" }}
-                        />
-                      )}
-                    </motion.div>
-                  );
-                })}
-              </div>
+              <Reel
+                key={ci}
+                colIndex={ci}
+                finalSymbols={reel}
+                spinning={spinning}
+                winPositions={winLines.flatMap((wl) =>
+                  wl.positions.filter(([x]) => x === ci).map(([, y]) => y)
+                )}
+              />
             ))}
           </div>
         </div>
