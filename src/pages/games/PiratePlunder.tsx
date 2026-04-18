@@ -848,14 +848,57 @@ function PiratePlunderInner() {
   return (
     <div className="fixed inset-0 z-50 bg-black flex flex-col overflow-hidden font-sans">
       {/* Top status bar */}
-      <div className="shrink-0 bg-gradient-to-r from-red-900 via-red-800 to-red-900 border-b-2 border-yellow-600/60 flex items-center justify-between px-3 py-1.5 safe-area-top">
-        <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="text-white h-8 px-2 text-xs gap-1 hover:bg-white/10">
+      <div className="relative shrink-0 bg-gradient-to-r from-red-950 via-red-800 to-red-950 border-b-2 border-yellow-500/70 flex items-center justify-between px-3 py-1.5 safe-area-top overflow-hidden">
+        {/* animated golden shimmer sweep */}
+        <motion.div
+          className="absolute inset-y-0 w-1/3 pointer-events-none"
+          style={{
+            background: "linear-gradient(90deg, transparent, rgba(255,215,0,0.25), transparent)",
+          }}
+          animate={{ x: ["-150%", "350%"] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+        />
+        {/* rope trim */}
+        <div
+          className="absolute bottom-0 left-0 right-0 h-[3px] opacity-80 pointer-events-none"
+          style={{
+            backgroundImage: "repeating-linear-gradient(90deg, #d4a017 0 6px, #6b3410 6px 12px)",
+          }}
+        />
+        <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="relative z-10 text-white h-8 px-2 text-xs gap-1 hover:bg-white/10">
           <ArrowLeft className="h-4 w-4" /> Exit
         </Button>
-        <span className="font-display font-black text-yellow-200 text-sm tracking-wider drop-shadow">
-          🏴‍☠️ {GAME_TITLE}
-        </span>
-        <Button variant="ghost" size="sm" onClick={() => setShowChat((v) => !v)} className="text-white h-8 px-2 text-xs gap-1 hover:bg-white/10">
+        <div className="relative z-10 flex items-center gap-1.5">
+          <motion.span
+            className="text-base"
+            animate={{ rotate: [-12, 12, -12], y: [0, -1, 0] }}
+            transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+          >
+            🏴‍☠️
+          </motion.span>
+          <motion.span
+            className="font-display font-black text-sm tracking-wider"
+            style={{
+              backgroundImage: "linear-gradient(90deg, #fde047, #fff7c2, #fbbf24, #fde047)",
+              backgroundSize: "200% 100%",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.8))",
+            }}
+            animate={{ backgroundPositionX: ["0%", "200%"] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+          >
+            {GAME_TITLE}
+          </motion.span>
+          <motion.span
+            className="text-base"
+            animate={{ rotate: [12, -12, 12], y: [0, -1, 0] }}
+            transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+          >
+            ⚔️
+          </motion.span>
+        </div>
+        <Button variant="ghost" size="sm" onClick={() => setShowChat((v) => !v)} className="relative z-10 text-white h-8 px-2 text-xs gap-1 hover:bg-white/10">
           <MessageSquare className="h-4 w-4" />
         </Button>
       </div>
