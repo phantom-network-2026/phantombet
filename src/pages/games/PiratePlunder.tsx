@@ -763,24 +763,12 @@ function PiratePlunderInner() {
       setTimeout(() => sfx.reelStop(i), 1200 + i * 350);
     }
 
-    const newGrid = generateGrid();
     setGrid(newGrid);
 
     // Wait for ALL reels to visually finish stopping before evaluating wins
     // Reel timing: stopDelay = colIndex*0.35, spinDuration = 1.2 + stopDelay
     // Last reel (col 5): finishes at ~1.2 + 5*0.35 + 1.2 = ~4.15s
     await new Promise((r) => setTimeout(r, 4200));
-    setSpinning(false);
-    await new Promise((r) => setTimeout(r, 250));
-
-    // Set the resting grid early so reels animate to the correct symbols
-    setGrid(newGrid);
-
-    // Wait for ALL reels to visually finish stopping before evaluating wins
-    // Reel timing: stopDelay = colIndex*0.18, spinDuration = 0.6 + stopDelay
-    // Last reel (col 5): starts at 0.9s, runs 1.5s -> finishes ~2.4s
-    // Keep spinning state true until reels actually settle, then add a small buffer.
-    await new Promise((r) => setTimeout(r, 2500));
     setSpinning(false);
     await new Promise((r) => setTimeout(r, 250));
 
