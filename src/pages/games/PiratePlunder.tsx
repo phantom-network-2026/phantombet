@@ -349,6 +349,61 @@ const BigWinOverlay = React.forwardRef<HTMLDivElement, { amount: number; label: 
 });
 BigWinOverlay.displayName = "BigWinOverlay";
 
+// ---- Floating Win Popup (per-spin) ----
+function WinPopup({ amount, bet, onDone }: { amount: number; bet: number; onDone: () => void }) {
+  const ratio = amount / bet;
+  const tier = ratio >= 50 ? "mega" : ratio >= 20 ? "huge" : ratio >= 10 ? "big" : ratio >= 3 ? "nice" : "win";
+  const colors: Record<string, string> = {
+    mega: "from-fuchsia-300 via-pink-400 to-rose-600",
+    huge: "from-orange-200 via-amber-400 to-red-600",
+    big: "from-yellow-200 via-amber-400 to-amber-700",
+    nice: "from-yellow-200 via-yellow-400 to-amber-600",
+    win: "from-yellow-100 via-yellow-300 to-amber-500",
+  };
+  useEffect(() => {
+    const t = setTimeout(onDone, 1800);
+    return () => clearTimeout(t);
+  }, [onDone]);
+  return (
+    <motion.div
+      className="pointer-events-none absolute left-1/2 top-[44%] -translate-x-1/2 -translate-y-1/2 z-30"
+      initial={{ scale: 0, y: 30, opacity: 0 }}
+      animate={{ scale: [0, 1.25, 1], y: [30, -10, -20], opacity: [0, 1, 1] }}
+      exit={{ scale: 0.6, opacity: 0, y: -60 }}
+      transition={{ duration: 0.6, ease: "backOut" }}
+    >
+      <div className="absolute inset-0 -m-8 pointer-events-none">
+        {Array.from({ length: 10 }).map((_, i) => {
+          const angle = (i / 10) * Math.PI * 2;
+          return (
+            <motion.div
+              key={i}
+              className="absolute left-1/2 top-1/2 w-2 h-2 rounded-full bg-yellow-200 shadow-[0_0_8px_rgba(255,220,80,1)]"
+              initial={{ x: 0, y: 0, opacity: 0, scale: 0 }}
+              animate={{
+                x: Math.cos(angle) * 70,
+                y: Math.sin(angle) * 70,
+                opacity: [0, 1, 0],
+                scale: [0, 1.2, 0],
+              }}
+              transition={{ duration: 1.4, delay: 0.1 + i * 0.04 }}
+              style={{ willChange: "transform" }}
+            />
+          );
+        })}
+      </div>
+      <div className={`relative px-5 py-2 rounded-2xl bg-gradient-to-b ${colors[tier]} border-2 border-yellow-100 shadow-[0_0_30px_rgba(255,200,80,0.8),inset_0_2px_4px_rgba(255,255,255,0.4)]`}>
+        <div className="text-[10px] font-display font-black uppercase tracking-[0.25em] text-black/70 text-center leading-none">
+          {tier === "mega" ? "MEGA WIN" : tier === "huge" ? "HUGE WIN" : tier === "big" ? "BIG WIN" : tier === "nice" ? "NICE WIN" : "WIN"}
+        </div>
+        <div className="font-mono font-black text-2xl text-black drop-shadow text-center leading-tight">
+          +${amount.toFixed(2)}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 // ---- Spinning Reel column ----
 function Reel({
   colIndex,
@@ -502,13 +557,16 @@ function PiratePlunderInner() {
     return data;
   }, [refreshProfile]);
 
-  // Audio: simple oscillator-based sfx
+  // Audio: oscillator-based sfx with richer presets
   const audioCtxRef = useRef<AudioContext | null>(null);
+  const getCtx = () => {
+    if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    return audioCtxRef.current!;
+  };
   const beep = useCallback((freq: number, dur = 0.1, type: OscillatorType = "sine", vol = 0.1) => {
     if (muted) return;
     try {
-      if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const ctx = audioCtxRef.current;
+      const ctx = getCtx();
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = type;
@@ -520,6 +578,28 @@ function PiratePlunderInner() {
       osc.stop(ctx.currentTime + dur);
     } catch { /* ignore */ }
   }, [muted]);
+
+  // Sound effect presets
+  const sfx = useMemo(() => ({
+    spinStart: () => {
+      beep(180, 0.15, "sawtooth", 0.06);
+      setTimeout(() => beep(260, 0.1, "square", 0.04), 80);
+    },
+    reelStop: (i: number) => beep(180 - i * 12, 0.08, "triangle", 0.07),
+    coin: (i: number) => {
+      beep(880 + i * 60, 0.08, "sine", 0.06);
+      setTimeout(() => beep(1320 + i * 80, 0.06, "sine", 0.04), 30);
+    },
+    bigWin: () => {
+      // ascending fanfare
+      const notes = [523, 659, 784, 1047, 1319];
+      notes.forEach((n, i) => setTimeout(() => beep(n, 0.25, "triangle", 0.08), i * 90));
+    },
+    bonusJingle: () => {
+      const notes = [392, 523, 659, 784, 988];
+      notes.forEach((n, i) => setTimeout(() => beep(n, 0.18, "square", 0.07), i * 100));
+    },
+  }), [beep]);
 
   const triggerBigWin = (amt: number, threshold: number) => {
     const ratio = amt / bet;
@@ -538,7 +618,7 @@ function PiratePlunderInner() {
     setSpinning(true);
     setWinLines([]);
     setLastWin(0);
-    beep(440, 0.05, "square", 0.05);
+    sfx.spinStart();
 
     // Deduct bet first (free spins skip this)
     if (!isFree) {
@@ -546,37 +626,41 @@ function PiratePlunderInner() {
       if (!r) { setSpinning(false); return; }
     }
 
-    // Force a bonus trigger ~ once per ~30 spins (or guaranteed if last 3 spins lost)
     const triggerBonus = Math.random() < 0.06;
     const newGrid = triggerBonus ? generateBonusGrid() : generateGrid();
 
-    // Animate reels stopping (reels stop in sequence: 0.4s base + 0.18s per column = ~1.5s last reel)
+    // Reels stop in sequence — play a thud per column
+    for (let i = 0; i < REELS; i++) {
+      setTimeout(() => sfx.reelStop(i), 600 + i * 180);
+    }
+
     await new Promise((r) => setTimeout(r, 1700));
     setGrid(newGrid);
-    beep(220, 0.2, "triangle", 0.08);
 
     const { totalWin, lines, scatterCount } = evaluateGrid(newGrid, bet);
     setWinLines(lines);
 
     if (totalWin > 0) {
       setLastWin(totalWin);
-      // Quick coin sounds
-      lines.forEach((_, i) => setTimeout(() => beep(660 + i * 50, 0.08, "sine", 0.06), i * 90));
+      lines.forEach((_, i) => setTimeout(() => sfx.coin(i), i * 110));
       await settle(totalWin, "Pirate Plunder win");
+      const ratio = totalWin / bet;
+      if (ratio >= 10) {
+        setTimeout(() => sfx.bigWin(), 200);
+      }
       triggerBigWin(totalWin, bet);
     }
 
     if (isFree) setFreeSpins((n) => Math.max(0, n - 1));
     setSpinning(false);
 
-    // Bonus trigger
     if (scatterCount >= 4) {
       setTimeout(() => {
-        beep(800, 0.5, "sawtooth", 0.1);
+        sfx.bonusJingle();
         setBonusActive(true);
       }, 800);
     }
-  }, [spinning, bonusActive, bet, settle, beep]);
+  }, [spinning, bonusActive, bet, settle, sfx]);
 
   const handleBonusComplete = useCallback(async (winAmt: number) => {
     setBonusActive(false);
@@ -621,6 +705,32 @@ function PiratePlunderInner() {
             backgroundImage: "radial-gradient(circle at 20% 30%, rgba(255,180,60,0.15), transparent 50%), radial-gradient(circle at 80% 70%, rgba(180,80,20,0.2), transparent 50%)",
           }}
         />
+
+        {/* Floating embers */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {Array.from({ length: 14 }).map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 rounded-full bg-amber-300 shadow-[0_0_6px_rgba(255,180,60,0.9)]"
+              style={{
+                left: `${(i * 7.3) % 100}%`,
+                bottom: -10,
+                willChange: "transform, opacity",
+              }}
+              animate={{
+                y: [0, -400 - (i % 5) * 40],
+                opacity: [0, 1, 0],
+                x: [(i % 2 === 0 ? -1 : 1) * 0, (i % 2 === 0 ? -1 : 1) * 30],
+              }}
+              transition={{
+                duration: 6 + (i % 4),
+                repeat: Infinity,
+                delay: i * 0.6,
+                ease: "linear",
+              }}
+            />
+          ))}
+        </div>
 
         {/* Bonus enhancements bar */}
         <div className="relative z-10 px-2 pt-2">
@@ -795,6 +905,13 @@ function PiratePlunderInner() {
       {/* Bonus round */}
       <AnimatePresence>
         {bonusActive && <BonusMap bet={bet} onComplete={handleBonusComplete} />}
+      </AnimatePresence>
+
+      {/* Per-spin floating win popup */}
+      <AnimatePresence>
+        {lastWin > 0 && !bigWin && (
+          <WinPopup amount={lastWin} bet={bet} onDone={() => { /* keep until next spin clears */ }} />
+        )}
       </AnimatePresence>
 
       {/* Big win overlay */}
