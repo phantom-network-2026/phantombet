@@ -352,6 +352,108 @@ function BigWinOverlay({ amount, label, onDone }: { amount: number; label: strin
   );
 }
 
+// ---- Spinning Reel column ----
+function Reel({
+  colIndex,
+  finalSymbols,
+  spinning,
+  winPositions,
+}: {
+  colIndex: number;
+  finalSymbols: string[]; // length = ROWS, the resting symbols top-to-bottom
+  spinning: boolean;
+  winPositions: number[];
+}) {
+  // Build a long strip: many random symbols on top + the final resting symbols at the bottom.
+  // During spin we translate the strip from a negative offset (showing only randoms) down to 0
+  // (showing the final symbols). We re-randomise on every new spin.
+  const SPIN_LEN = 18; // number of random symbols above the resting set
+  const stripRef = useRef<string[]>([]);
+  const [stripVersion, setStripVersion] = useState(0);
+
+  // Rebuild strip each time finalSymbols changes (i.e. each spin result)
+  useEffect(() => {
+    const randoms = Array.from({ length: SPIN_LEN }, () => randomSymbol());
+    stripRef.current = [...randoms, ...finalSymbols];
+    setStripVersion((v) => v + 1);
+  }, [finalSymbols]);
+
+  const strip = stripRef.current.length ? stripRef.current : finalSymbols;
+  // Each cell is 1fr of the column width. We use percentage translate so it works at any size.
+  // The viewport shows ROWS cells (height = ROWS * cell). The strip total height = strip.length * cell.
+  // Resting position translateY = -(SPIN_LEN cells) so the last ROWS cells are visible.
+  const restingPercent = -(SPIN_LEN / strip.length) * 100;
+  const startPercent = 0; // start showing the random symbols at the top
+  const stopDelay = colIndex * 0.18; // sequential stop per reel
+  const spinDuration = 0.6 + stopDelay; // total spin time for this column
+
+  return (
+    <div
+      className="relative overflow-hidden rounded-md bg-black/40"
+      style={{ aspectRatio: `1 / ${ROWS}` }}
+    >
+      <motion.div
+        key={stripVersion}
+        className="absolute left-0 right-0 top-0 flex flex-col gap-0.5"
+        style={{ height: `${(strip.length / ROWS) * 100}%` }}
+        initial={{ y: `${startPercent}%` }}
+        animate={spinning ? { y: ["0%", "0%"] } : { y: `${restingPercent}%` }}
+        transition={
+          spinning
+            ? { duration: 0.05 }
+            : { duration: spinDuration, ease: [0.22, 1.4, 0.36, 1] } // overshoot bounce at end
+        }
+      >
+        {strip.map((symId, idx) => {
+          const restingRow = idx - SPIN_LEN; // 0..ROWS-1 when in final visible window
+          const isWin = !spinning && restingRow >= 0 && winPositions.includes(restingRow);
+          const sym = SYMBOL_BY_ID[symId];
+          return (
+            <div
+              key={`${stripVersion}-${idx}`}
+              className={`relative flex items-center justify-center rounded-md overflow-hidden ${
+                isWin
+                  ? "bg-gradient-to-br from-yellow-400/40 to-amber-600/40 ring-2 ring-yellow-300 shadow-[0_0_15px_rgba(255,220,80,0.8)]"
+                  : "bg-gradient-to-br from-red-950/60 to-black/60 border border-yellow-900/40"
+              }`}
+              style={{ aspectRatio: "1 / 1" }}
+            >
+              <motion.img
+                src={sym?.img}
+                alt={symId}
+                className={`w-[85%] h-[85%] object-contain drop-shadow-[0_2px_3px_rgba(0,0,0,0.7)] ${
+                  spinning ? "blur-[1.5px]" : ""
+                }`}
+                animate={isWin ? { scale: [1, 1.15, 1] } : {}}
+                transition={isWin ? { duration: 0.6, repeat: Infinity } : {}}
+              />
+              {isWin && (
+                <motion.div
+                  className="absolute inset-0 pointer-events-none"
+                  animate={{ opacity: [0, 0.6, 0] }}
+                  transition={{ duration: 0.8, repeat: Infinity }}
+                  style={{ background: "radial-gradient(circle, rgba(255,255,150,0.6), transparent 70%)" }}
+                />
+              )}
+            </div>
+          );
+        })}
+      </motion.div>
+
+      {/* Motion-blur overlay during spin */}
+      {spinning && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              "linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 20%, transparent 80%, rgba(0,0,0,0.5) 100%)",
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
 // ---- Main Game ----
 function PiratePlunderInner() {
   const navigate = useNavigate();
@@ -451,8 +553,8 @@ function PiratePlunderInner() {
     const triggerBonus = Math.random() < 0.06;
     const newGrid = triggerBonus ? generateBonusGrid() : generateGrid();
 
-    // Animate reels stopping
-    await new Promise((r) => setTimeout(r, 1100));
+    // Animate reels stopping (reels stop in sequence: 0.4s base + 0.18s per column = ~1.5s last reel)
+    await new Promise((r) => setTimeout(r, 1700));
     setGrid(newGrid);
     beep(220, 0.2, "triangle", 0.08);
 
