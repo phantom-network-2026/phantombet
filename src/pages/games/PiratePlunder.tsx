@@ -3,7 +3,7 @@ import { Header } from "@/components/casino/Header";
 import { AuthGuard } from "@/components/casino/AuthGuard";
 import { GameChat } from "@/components/casino/GameChat";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, MessageSquare, X, Volume2, VolumeX, Settings2, Coins } from "lucide-react";
+import { ArrowLeft, MessageSquare, X, Volume2, VolumeX, Settings2, Coins, Info, Repeat } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -506,6 +506,86 @@ function Reel({
   );
 }
 
+
+// ---- Paytable Modal ----
+function Paytable({ onClose }: { onClose: () => void }) {
+  // Build display rows from SYMBOLS, ordered by tier
+  const order: Sym["tier"][] = ["wild", "premium", "high", "mid", "low"];
+  const rows = [...SYMBOLS].sort((a, b) => order.indexOf(a.tier) - order.indexOf(b.tier));
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="absolute inset-0 z-40 bg-gradient-to-b from-[#0a0a1a]/95 via-[#1a0c2e]/95 to-black/95 overflow-y-auto"
+    >
+      <div className="sticky top-0 z-10 bg-gradient-to-b from-black to-transparent flex items-center justify-between px-3 py-2">
+        <h2 className="font-display font-black text-yellow-200 text-base tracking-widest">GAME RULES</h2>
+        <button onClick={onClose} className="text-white/80 hover:text-white">
+          <X className="h-6 w-6" />
+        </button>
+      </div>
+      <p className="px-4 text-center text-white/80 text-xs leading-snug">
+        All symbols pay from left to right on adjacent reels starting from the leftmost reel.
+      </p>
+
+      <div className="grid grid-cols-2 gap-3 px-3 mt-4">
+        {rows.map((s) => (
+          <div key={s.id} className="flex flex-col items-center bg-black/40 rounded-lg p-2 border border-yellow-700/30">
+            <div className="relative">
+              <img src={s.img} className="w-16 h-16 object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
+              {s.tier === "wild" && (
+                <span className="absolute -top-1 -right-1 px-1 rounded-sm bg-purple-500 text-white text-[8px] font-black">WILD</span>
+              )}
+              {s.tier === "scatter" && (
+                <span className="absolute -top-1 -right-1 px-1 rounded-sm bg-rose-500 text-white text-[8px] font-black">SCATTER</span>
+              )}
+            </div>
+            <div className="mt-1 text-[11px] text-white/90 font-mono leading-tight text-center">
+              <div>6 — <span className="text-yellow-300">{s.pay[3]}x</span></div>
+              <div>5 — <span className="text-yellow-300">{s.pay[2]}x</span></div>
+              <div>4 — <span className="text-yellow-300">{s.pay[1]}x</span></div>
+              <div>3 — <span className="text-yellow-300">{s.pay[0]}x</span></div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="px-4 mt-4 space-y-3 text-white/90 text-xs leading-snug">
+        <div className="bg-black/40 rounded-lg p-3 border border-yellow-700/30">
+          <h3 className="font-display font-black text-yellow-300 text-sm mb-1">🗝️ WILD (Treasure Key)</h3>
+          <p>Substitutes for all symbols except SCATTER. Wild appears on all reels and pays the highest multipliers.</p>
+        </div>
+        <div className="bg-black/40 rounded-lg p-3 border border-yellow-700/30">
+          <h3 className="font-display font-black text-yellow-300 text-sm mb-1">🪙 SCATTER (Treasure Chest)</h3>
+          <p>Hit 4 or more SCATTER symbols anywhere on the reels to trigger the SEVEN SEAS BONUS round.</p>
+        </div>
+        <div className="bg-black/40 rounded-lg p-3 border border-yellow-700/30">
+          <h3 className="font-display font-black text-yellow-300 text-sm mb-1">⚓ FREE SPINS</h3>
+          <p>After completing the SEVEN SEAS BONUS, players are awarded 5 FREE SPINS that play automatically.</p>
+        </div>
+        <div className="bg-black/40 rounded-lg p-3 border border-yellow-700/30">
+          <h3 className="font-display font-black text-yellow-300 text-sm mb-1">🌊 SEVEN SEAS BONUS</h3>
+          <p>Pick islands on the map to reveal cash prizes (multipliers of your stake). Beware the Kraken — picking it ends the bonus!</p>
+        </div>
+        <div className="bg-black/40 rounded-lg p-3 border border-yellow-700/30">
+          <h3 className="font-display font-black text-yellow-300 text-sm mb-1">🔁 AUTO SPIN</h3>
+          <p>Hold the SPIN button for 3 seconds to start AUTO SPIN. Single-tap the SPIN button while spinning to cancel.</p>
+        </div>
+        <div className="bg-black/40 rounded-lg p-3 border border-yellow-700/30">
+          <h3 className="font-display font-black text-yellow-300 text-sm mb-1">💰 BET LIMITS</h3>
+          <p>Stake options: $0.10, $0.20, $0.50, $1.00, $2.00, $5.00.</p>
+        </div>
+        <div className="bg-black/40 rounded-lg p-3 border border-rose-700/30">
+          <h3 className="font-display font-black text-rose-300 text-sm mb-1">🏆 MAX WIN</h3>
+          <p>Maximum win per round is capped at 2,500x your total stake (MEGA jackpot).</p>
+        </div>
+        <div className="h-6" />
+      </div>
+    </motion.div>
+  );
+}
+
 // ---- Main Game ----
 function PiratePlunderInner() {
   const navigate = useNavigate();
@@ -524,6 +604,9 @@ function PiratePlunderInner() {
   const [bigWin, setBigWin] = useState<{ amt: number; label: string } | null>(null);
   const [bonusActive, setBonusActive] = useState(false);
   const [freeSpins, setFreeSpins] = useState(0);
+  const [autoSpin, setAutoSpin] = useState(false);
+  const [showPaytable, setShowPaytable] = useState(false);
+  const [holdProgress, setHoldProgress] = useState(0); // 0..1 while holding spin button
 
   // refs for stale closures
   const profileRef = useRef(profile);
@@ -687,6 +770,66 @@ function PiratePlunderInner() {
     }
   }, [freeSpins, spinning, bonusActive, bigWin, spin]);
 
+  // Auto-spin loop (when toggled on, keep spinning until cancelled or balance too low)
+  useEffect(() => {
+    if (!autoSpin) return;
+    if (spinning || bonusActive || bigWin || freeSpins > 0) return;
+    const bal = profileRef.current?.balance ?? 0;
+    if (bal < bet) {
+      setAutoSpin(false);
+      toast({ title: "Auto spin stopped", description: "Insufficient balance." });
+      return;
+    }
+    const t = setTimeout(() => spin(false), 600);
+    return () => clearTimeout(t);
+  }, [autoSpin, spinning, bonusActive, bigWin, freeSpins, bet, spin]);
+
+  // Hold-to-start auto-spin: 3-second hold on spin button
+  const holdTimerRef = useRef<number | null>(null);
+  const holdRafRef = useRef<number | null>(null);
+  const holdStartRef = useRef<number>(0);
+  const holdTriggeredRef = useRef<boolean>(false);
+
+  const clearHold = useCallback(() => {
+    if (holdTimerRef.current) { clearTimeout(holdTimerRef.current); holdTimerRef.current = null; }
+    if (holdRafRef.current) { cancelAnimationFrame(holdRafRef.current); holdRafRef.current = null; }
+    setHoldProgress(0);
+  }, []);
+
+  const handleSpinPressStart = useCallback(() => {
+    if (autoSpin) return; // tap will cancel auto-spin in pressEnd
+    if (bonusActive || freeSpins > 0) return;
+    holdTriggeredRef.current = false;
+    holdStartRef.current = Date.now();
+    const tick = () => {
+      const elapsed = (Date.now() - holdStartRef.current) / 3000;
+      setHoldProgress(Math.min(1, elapsed));
+      if (elapsed < 1) holdRafRef.current = requestAnimationFrame(tick);
+    };
+    holdRafRef.current = requestAnimationFrame(tick);
+    holdTimerRef.current = window.setTimeout(() => {
+      holdTriggeredRef.current = true;
+      setAutoSpin(true);
+      setHoldProgress(0);
+      toast({ title: "🔁 Auto Spin Started", description: "Tap SPIN once to cancel." });
+    }, 3000);
+  }, [autoSpin, bonusActive, freeSpins]);
+
+  const handleSpinPressEnd = useCallback(() => {
+    const wasTriggered = holdTriggeredRef.current;
+    clearHold();
+    if (wasTriggered) return;
+    if (autoSpin) {
+      setAutoSpin(false);
+      toast({ title: "Auto Spin Cancelled" });
+      return;
+    }
+    if (spinning || bonusActive || freeSpins > 0) return;
+    spin(false);
+  }, [autoSpin, spinning, bonusActive, freeSpins, spin, clearHold]);
+
+  useEffect(() => () => clearHold(), [clearHold]);
+
   const balance = profile?.balance ?? 0;
 
   return (
@@ -846,18 +989,55 @@ function PiratePlunderInner() {
             >
               <Coins className="h-4 w-4" />
             </button>
+            <button
+              onClick={() => setShowPaytable(true)}
+              className="w-9 h-9 rounded-full bg-black/60 border border-yellow-600/40 flex items-center justify-center text-white/80 hover:text-white"
+              aria-label="Paytable"
+            >
+              <Info className="h-4 w-4" />
+            </button>
           </div>
 
-          {/* Spin button */}
+          {/* Spin button (hold 3s for auto, tap to spin / cancel auto) */}
           <motion.button
-            onClick={() => spin(false)}
-            disabled={spinning || bonusActive || freeSpins > 0}
-            className="relative w-16 h-16 rounded-full bg-gradient-to-b from-yellow-300 via-amber-500 to-amber-800 border-4 border-yellow-200 shadow-[0_0_25px_rgba(255,200,60,0.7),inset_0_2px_4px_rgba(255,255,255,0.4)] flex items-center justify-center disabled:opacity-60"
+            onPointerDown={handleSpinPressStart}
+            onPointerUp={handleSpinPressEnd}
+            onPointerLeave={clearHold}
+            onPointerCancel={clearHold}
+            onContextMenu={(e) => e.preventDefault()}
+            disabled={bonusActive || freeSpins > 0}
+            className="relative w-16 h-16 rounded-full bg-gradient-to-b from-yellow-300 via-amber-500 to-amber-800 border-4 border-yellow-200 shadow-[0_0_25px_rgba(255,200,60,0.7),inset_0_2px_4px_rgba(255,255,255,0.4)] flex items-center justify-center disabled:opacity-60 select-none touch-none"
             whileTap={{ scale: 0.92 }}
             animate={spinning ? { rotate: 360 } : {}}
             transition={spinning ? { duration: 0.6, repeat: Infinity, ease: "linear" } : {}}
+            style={{ WebkitUserSelect: "none" }}
           >
-            <div className="w-12 h-12 rounded-full border-[3px] border-black/60 border-t-transparent" />
+            {/* Hold progress ring */}
+            {holdProgress > 0 && (
+              <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="29" fill="none" stroke="rgba(0,0,0,0.3)" strokeWidth="3" />
+                <circle
+                  cx="32" cy="32" r="29"
+                  fill="none"
+                  stroke="hsl(280 90% 65%)"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeDasharray={2 * Math.PI * 29}
+                  strokeDashoffset={(1 - holdProgress) * 2 * Math.PI * 29}
+                  style={{ filter: "drop-shadow(0 0 4px hsl(280 90% 65%))" }}
+                />
+              </svg>
+            )}
+            {autoSpin ? (
+              <Repeat className="h-6 w-6 text-black" />
+            ) : (
+              <div className="w-12 h-12 rounded-full border-[3px] border-black/60 border-t-transparent" />
+            )}
+            {autoSpin && (
+              <span className="absolute -top-2 -right-2 px-1.5 py-0.5 rounded-full bg-purple-600 text-white text-[8px] font-black border border-white/40 shadow">
+                AUTO
+              </span>
+            )}
           </motion.button>
 
           {/* Right info */}
@@ -931,6 +1111,11 @@ function PiratePlunderInner() {
             onDone={() => setBigWin(null)}
           />
         )}
+      </AnimatePresence>
+
+      {/* Paytable */}
+      <AnimatePresence>
+        {showPaytable && <Paytable onClose={() => setShowPaytable(false)} />}
       </AnimatePresence>
 
       {/* Chat */}
