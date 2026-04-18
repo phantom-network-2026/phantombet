@@ -604,6 +604,9 @@ function PiratePlunderInner() {
   const [bigWin, setBigWin] = useState<{ amt: number; label: string } | null>(null);
   const [bonusActive, setBonusActive] = useState(false);
   const [freeSpins, setFreeSpins] = useState(0);
+  const [autoSpin, setAutoSpin] = useState(false);
+  const [showPaytable, setShowPaytable] = useState(false);
+  const [holdProgress, setHoldProgress] = useState(0); // 0..1 while holding spin button
 
   // refs for stale closures
   const profileRef = useRef(profile);
