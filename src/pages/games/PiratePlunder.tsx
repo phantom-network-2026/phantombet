@@ -989,18 +989,55 @@ function PiratePlunderInner() {
             >
               <Coins className="h-4 w-4" />
             </button>
+            <button
+              onClick={() => setShowPaytable(true)}
+              className="w-9 h-9 rounded-full bg-black/60 border border-yellow-600/40 flex items-center justify-center text-white/80 hover:text-white"
+              aria-label="Paytable"
+            >
+              <Info className="h-4 w-4" />
+            </button>
           </div>
 
-          {/* Spin button */}
+          {/* Spin button (hold 3s for auto, tap to spin / cancel auto) */}
           <motion.button
-            onClick={() => spin(false)}
-            disabled={spinning || bonusActive || freeSpins > 0}
-            className="relative w-16 h-16 rounded-full bg-gradient-to-b from-yellow-300 via-amber-500 to-amber-800 border-4 border-yellow-200 shadow-[0_0_25px_rgba(255,200,60,0.7),inset_0_2px_4px_rgba(255,255,255,0.4)] flex items-center justify-center disabled:opacity-60"
+            onPointerDown={handleSpinPressStart}
+            onPointerUp={handleSpinPressEnd}
+            onPointerLeave={clearHold}
+            onPointerCancel={clearHold}
+            onContextMenu={(e) => e.preventDefault()}
+            disabled={bonusActive || freeSpins > 0}
+            className="relative w-16 h-16 rounded-full bg-gradient-to-b from-yellow-300 via-amber-500 to-amber-800 border-4 border-yellow-200 shadow-[0_0_25px_rgba(255,200,60,0.7),inset_0_2px_4px_rgba(255,255,255,0.4)] flex items-center justify-center disabled:opacity-60 select-none touch-none"
             whileTap={{ scale: 0.92 }}
             animate={spinning ? { rotate: 360 } : {}}
             transition={spinning ? { duration: 0.6, repeat: Infinity, ease: "linear" } : {}}
+            style={{ WebkitUserSelect: "none" }}
           >
-            <div className="w-12 h-12 rounded-full border-[3px] border-black/60 border-t-transparent" />
+            {/* Hold progress ring */}
+            {holdProgress > 0 && (
+              <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="29" fill="none" stroke="rgba(0,0,0,0.3)" strokeWidth="3" />
+                <circle
+                  cx="32" cy="32" r="29"
+                  fill="none"
+                  stroke="hsl(280 90% 65%)"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeDasharray={2 * Math.PI * 29}
+                  strokeDashoffset={(1 - holdProgress) * 2 * Math.PI * 29}
+                  style={{ filter: "drop-shadow(0 0 4px hsl(280 90% 65%))" }}
+                />
+              </svg>
+            )}
+            {autoSpin ? (
+              <Repeat className="h-6 w-6 text-black" />
+            ) : (
+              <div className="w-12 h-12 rounded-full border-[3px] border-black/60 border-t-transparent" />
+            )}
+            {autoSpin && (
+              <span className="absolute -top-2 -right-2 px-1.5 py-0.5 rounded-full bg-purple-600 text-white text-[8px] font-black border border-white/40 shadow">
+                AUTO
+              </span>
+            )}
           </motion.button>
 
           {/* Right info */}
