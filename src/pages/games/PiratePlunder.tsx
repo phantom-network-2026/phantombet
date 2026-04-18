@@ -502,13 +502,16 @@ function PiratePlunderInner() {
     return data;
   }, [refreshProfile]);
 
-  // Audio: simple oscillator-based sfx
+  // Audio: oscillator-based sfx with richer presets
   const audioCtxRef = useRef<AudioContext | null>(null);
+  const getCtx = () => {
+    if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    return audioCtxRef.current!;
+  };
   const beep = useCallback((freq: number, dur = 0.1, type: OscillatorType = "sine", vol = 0.1) => {
     if (muted) return;
     try {
-      if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const ctx = audioCtxRef.current;
+      const ctx = getCtx();
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = type;
@@ -520,6 +523,28 @@ function PiratePlunderInner() {
       osc.stop(ctx.currentTime + dur);
     } catch { /* ignore */ }
   }, [muted]);
+
+  // Sound effect presets
+  const sfx = useMemo(() => ({
+    spinStart: () => {
+      beep(180, 0.15, "sawtooth", 0.06);
+      setTimeout(() => beep(260, 0.1, "square", 0.04), 80);
+    },
+    reelStop: (i: number) => beep(180 - i * 12, 0.08, "triangle", 0.07),
+    coin: (i: number) => {
+      beep(880 + i * 60, 0.08, "sine", 0.06);
+      setTimeout(() => beep(1320 + i * 80, 0.06, "sine", 0.04), 30);
+    },
+    bigWin: () => {
+      // ascending fanfare
+      const notes = [523, 659, 784, 1047, 1319];
+      notes.forEach((n, i) => setTimeout(() => beep(n, 0.25, "triangle", 0.08), i * 90));
+    },
+    bonusJingle: () => {
+      const notes = [392, 523, 659, 784, 988];
+      notes.forEach((n, i) => setTimeout(() => beep(n, 0.18, "square", 0.07), i * 100));
+    },
+  }), [beep]);
 
   const triggerBigWin = (amt: number, threshold: number) => {
     const ratio = amt / bet;
