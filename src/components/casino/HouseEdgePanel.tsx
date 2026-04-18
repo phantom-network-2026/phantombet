@@ -34,7 +34,6 @@ const KNOWN_GAMES = [
   "Race Kings", "Royal Derby", "Royal Heist", "Safe Door",
   "Scratch Royale", "Spin Wheel Royale", "Stack Up Casino", "Stake Mines",
   "Slot Cowboy", "Roulette", "Scatter Bomb", "Pirate Plunder",
-  "Fishing Mayhem", "Castle Defence", "Lucky 7s", "JackpotJoy",
 ];
 
 async function fetchHouseEdgeConfig(): Promise<HouseEdgeConfig> {
