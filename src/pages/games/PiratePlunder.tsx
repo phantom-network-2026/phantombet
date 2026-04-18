@@ -636,6 +636,10 @@ function PiratePlunderInner() {
   const [autoSpin, setAutoSpin] = useState(false);
   const [showPaytable, setShowPaytable] = useState(false);
   const [holdProgress, setHoldProgress] = useState(0); // 0..1 while holding spin button
+  const COIN_GOAL = 30;
+  const [coinMeter, setCoinMeter] = useState(0);
+  const [chestBurst, setChestBurst] = useState(false);
+  const [coinPing, setCoinPing] = useState(0); // increments to trigger pulse anim
 
   // refs for stale closures
   const profileRef = useRef(profile);
@@ -786,6 +790,30 @@ function PiratePlunderInner() {
     }
 
     if (isFree) setFreeSpins((n) => Math.max(0, n - 1));
+
+    // Count doubloons on this spin → fill the chest meter
+    let doubloonsThisSpin = 0;
+    for (let r = 0; r < REELS; r++) for (let c = 0; c < ROWS; c++) if (newGrid[r][c] === "doubloon") doubloonsThisSpin++;
+    if (doubloonsThisSpin > 0) {
+      setCoinPing((n) => n + 1);
+      setCoinMeter((prev) => {
+        const next = prev + doubloonsThisSpin;
+        if (next >= COIN_GOAL) {
+          // Trigger chest burst → bonus
+          setTimeout(() => {
+            setChestBurst(true);
+            sfx.bonusJingle();
+          }, 600);
+          setTimeout(() => {
+            setChestBurst(false);
+            setCoinMeter(0);
+            setBonusActive(true);
+          }, 2400);
+          return COIN_GOAL;
+        }
+        return next;
+      });
+    }
 
     if (scatterCount >= 5) {
       setTimeout(() => {
@@ -1074,6 +1102,103 @@ function PiratePlunderInner() {
             aria-hidden
             className="pointer-events-none select-none absolute inset-0 m-auto w-[70%] h-[70%] object-contain opacity-[0.07]"
           />
+
+          {/* Doubloon Chest Meter */}
+          <div className="pointer-events-none absolute -top-3 -right-2 z-30 flex flex-col items-center">
+            <motion.div
+              className="relative w-14 h-14"
+              animate={coinPing > 0 ? { scale: [1, 1.18, 1] } : {}}
+              transition={{ duration: 0.4 }}
+              key={`pulse-${coinPing}`}
+            >
+              {/* glow when full */}
+              {coinMeter >= COIN_GOAL && (
+                <motion.div
+                  className="absolute inset-0 rounded-full"
+                  style={{ boxShadow: "0 0 25px 6px rgba(255,200,60,0.9)" }}
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 0.8, repeat: Infinity }}
+                />
+              )}
+              {/* chest body */}
+              <img
+                src={`${ROOT}/treasure_chest_1.png`}
+                className="absolute inset-0 w-full h-full object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
+                style={{ display: chestBurst ? "none" : "block" }}
+              />
+              {/* fill overlay (rises with meter) */}
+              {!chestBurst && (
+                <div
+                  className="absolute left-1/2 -translate-x-1/2 bottom-1 w-8 rounded-sm overflow-hidden border border-yellow-700/60"
+                  style={{ height: 26 }}
+                >
+                  <motion.div
+                    className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-amber-500 via-yellow-300 to-yellow-100"
+                    style={{ height: `${(coinMeter / COIN_GOAL) * 100}%` }}
+                    animate={{ opacity: [0.7, 1, 0.7] }}
+                    transition={{ duration: 1.2, repeat: Infinity }}
+                  />
+                  <motion.div
+                    className="absolute inset-x-0 bg-white/40"
+                    style={{ bottom: `${(coinMeter / COIN_GOAL) * 100}%`, height: 2 }}
+                    animate={{ opacity: [0.3, 0.9, 0.3] }}
+                    transition={{ duration: 1, repeat: Infinity }}
+                  />
+                </div>
+              )}
+              {/* burst */}
+              <AnimatePresence>
+                {chestBurst && (
+                  <>
+                    {/* opening chest */}
+                    <motion.img
+                      src={`${ROOT}/treasure_chest_1.png`}
+                      className="absolute inset-0 w-full h-full object-contain"
+                      initial={{ scale: 1, rotate: 0 }}
+                      animate={{ scale: [1, 1.3, 1.1], rotate: [0, -8, 8, 0] }}
+                      transition={{ duration: 0.6 }}
+                      style={{ filter: "drop-shadow(0 0 14px rgba(255,220,80,1))" }}
+                    />
+                    {/* exploding coins */}
+                    {Array.from({ length: 18 }).map((_, i) => {
+                      const angle = (i / 18) * Math.PI * 2;
+                      const dist = 60 + (i % 4) * 15;
+                      return (
+                        <motion.img
+                          key={`c-${i}`}
+                          src={`${ROOT}/doubloon_3.png`}
+                          className="absolute top-1/2 left-1/2 w-4 h-4 object-contain"
+                          initial={{ x: -8, y: -8, opacity: 1, scale: 0.6 }}
+                          animate={{
+                            x: -8 + Math.cos(angle) * dist,
+                            y: -8 + Math.sin(angle) * dist + 30,
+                            opacity: 0,
+                            scale: 1.1,
+                            rotate: 360,
+                          }}
+                          transition={{ duration: 1.6, ease: "easeOut" }}
+                        />
+                      );
+                    })}
+                    {/* radial flash */}
+                    <motion.div
+                      className="absolute inset-0 rounded-full bg-yellow-200"
+                      initial={{ scale: 0.2, opacity: 0.9 }}
+                      animate={{ scale: 4, opacity: 0 }}
+                      transition={{ duration: 0.7 }}
+                    />
+                  </>
+                )}
+              </AnimatePresence>
+            </motion.div>
+            {/* meter label */}
+            <div className="mt-0.5 px-1.5 py-px rounded-full bg-black/70 border border-yellow-600/70">
+              <span className="font-mono font-black text-[8px] text-yellow-200 tracking-wider">
+                {coinMeter}/{COIN_GOAL}
+              </span>
+            </div>
+          </div>
+
           <div className="grid grid-cols-6 gap-0.5 bg-black/40 rounded-lg p-1">
             {grid.map((reel, ci) => (
               <Reel
