@@ -766,14 +766,13 @@ function PiratePlunderInner() {
     // Set the resting grid early so reels animate to the correct symbols
     setGrid(newGrid);
 
-    // Wait for ALL reels to visually finish stopping before flipping spinning=false
+    // Wait for ALL reels to visually finish stopping before evaluating wins
     // Reel timing: stopDelay = colIndex*0.18, spinDuration = 0.6 + stopDelay
-    // Last reel (col 5): starts at 0.9s, runs 1.5s -> finishes ~2.4s after spinning flips
-    // We give the spin loop 1.0s, then stop, then wait for last reel to settle.
-    await new Promise((r) => setTimeout(r, 1000));
-    setSpinning(false);
-    // Wait for last reel to complete its stop animation
+    // Last reel (col 5): starts at 0.9s, runs 1.5s -> finishes ~2.4s
+    // Keep spinning state true until reels actually settle, then add a small buffer.
     await new Promise((r) => setTimeout(r, 2500));
+    setSpinning(false);
+    await new Promise((r) => setTimeout(r, 250));
 
     const { totalWin, lines, scatterCount } = evaluateGrid(newGrid, bet);
     setWinLines(lines);
