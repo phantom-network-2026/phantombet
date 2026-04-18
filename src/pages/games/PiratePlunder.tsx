@@ -787,7 +787,7 @@ function PiratePlunderInner() {
 
     if (isFree) setFreeSpins((n) => Math.max(0, n - 1));
 
-    if (scatterCount >= 4) {
+    if (scatterCount >= 5) {
       setTimeout(() => {
         sfx.bonusJingle();
         setBonusActive(true);
