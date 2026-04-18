@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
+import phantombetLogo from "@/assets/phantombet-logo.svg";
 
 const GAME_TITLE = "Pirate Plunder";
 const GAME_SLUG = "pirate-plunder";
@@ -162,17 +163,45 @@ function LoadingScreen({ progress }: { progress: number }) {
         </svg>
       </div>
 
+      {/* HUGE PhantomBet logo */}
+      <motion.img
+        src={phantombetLogo}
+        alt="PhantomBet"
+        className="w-[78%] max-w-[480px] object-contain drop-shadow-[0_0_40px_rgba(255,215,0,0.8)]"
+        initial={{ scale: 0.6, opacity: 0 }}
+        animate={{ scale: [0.95, 1.04, 0.98, 1.02, 1], opacity: 1, y: [0, -6, 0] }}
+        transition={{ scale: { duration: 1.2, ease: "easeOut" }, opacity: { duration: 0.6 }, y: { duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1.2 } }}
+      />
+
+      {/* EXCLUSIVE banner */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="relative mt-3 px-5 py-1 rounded-full border border-yellow-400/70 bg-gradient-to-r from-amber-700/40 via-yellow-500/30 to-amber-700/40 overflow-hidden"
+      >
+        <motion.div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: "linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.5) 50%, transparent 70%)" }}
+          animate={{ x: ["-100%", "120%"] }}
+          transition={{ duration: 2.4, repeat: Infinity, ease: "linear" }}
+        />
+        <span className="relative font-display font-black text-[11px] tracking-[0.4em] text-yellow-200 drop-shadow">
+          PHANTOMBET EXCLUSIVE
+        </span>
+      </motion.div>
+
       <motion.img
         src={`${ROOT}/pirate_galleon_4.png`}
-        className="w-32 h-32 object-contain drop-shadow-[0_0_20px_rgba(255,200,80,0.6)]"
+        className="mt-6 w-24 h-24 object-contain drop-shadow-[0_0_20px_rgba(255,200,80,0.6)]"
         animate={{ rotate: [-3, 3, -3], y: [0, -8, 0] }}
         transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
       />
-      <h1 className="mt-6 font-display text-4xl font-black tracking-wider bg-gradient-to-b from-yellow-200 via-yellow-400 to-amber-700 bg-clip-text text-transparent drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+      <h1 className="mt-3 font-display text-3xl font-black tracking-wider bg-gradient-to-b from-yellow-200 via-yellow-400 to-amber-700 bg-clip-text text-transparent drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
         PIRATE PLUNDER
       </h1>
       <p className="text-amber-200/70 text-xs uppercase tracking-[0.3em] mt-1">Loading the seven seas…</p>
-      <div className="mt-8 w-64 h-2 bg-black/60 rounded-full overflow-hidden border border-amber-700/40">
+      <div className="mt-6 w-64 h-2 bg-black/60 rounded-full overflow-hidden border border-amber-700/40">
         <motion.div
           className="h-full bg-gradient-to-r from-amber-500 via-yellow-300 to-amber-500"
           style={{ width: `${progress}%` }}
@@ -1029,6 +1058,19 @@ function PiratePlunderInner() {
 
         {/* Reels frame */}
         <div className="relative z-10 mx-2 mt-2 rounded-xl border-[3px] border-yellow-600 bg-gradient-to-br from-[#3a0d05] via-[#2a0a05] to-[#1a0500] shadow-[inset_0_0_20px_rgba(0,0,0,0.8),0_0_25px_rgba(255,180,60,0.3)] p-1.5">
+          {/* PhantomBet watermark behind reels */}
+          <img
+            src={phantombetLogo}
+            alt=""
+            aria-hidden
+            className="pointer-events-none select-none absolute inset-0 m-auto w-[70%] h-[70%] object-contain opacity-[0.07]"
+          />
+          {/* PHANTOMBET EXCLUSIVE corner badge */}
+          <div className="pointer-events-none absolute -top-2 right-2 z-20 px-2 py-0.5 rounded-full border border-yellow-400/80 bg-gradient-to-r from-amber-700 via-yellow-600 to-amber-700 shadow-[0_2px_6px_rgba(0,0,0,0.8)]">
+            <span className="font-display font-black text-[8px] tracking-[0.25em] text-yellow-100 drop-shadow">
+              PHANTOMBET EXCLUSIVE
+            </span>
+          </div>
           <div className="grid grid-cols-6 gap-0.5 bg-black/40 rounded-lg p-1">
             {grid.map((reel, ci) => (
               <Reel
