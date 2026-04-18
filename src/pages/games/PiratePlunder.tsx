@@ -1081,95 +1081,100 @@ function PiratePlunderInner() {
           </div>
         </div>
 
-        {/* Animated Treasure Chest (no progress meter shown to player) */}
-        <div className="relative z-10 px-2 pt-1.5 flex justify-center">
-          <div className="relative w-24 h-20">
-            {/* Chest base — wobbles when coins drop in */}
-            <motion.img
-              src={`${ROOT}/treasure_chest_1.png`}
-              className="absolute inset-0 w-full h-full object-contain drop-shadow-[0_3px_5px_rgba(0,0,0,0.9)]"
-              animate={coinPing > 0 ? { scale: [1, 1.12, 1], rotate: [0, -3, 3, 0] } : {}}
-              transition={{ duration: 0.45 }}
-              key={`chest-${coinPing}`}
-              style={{ display: chestBurst ? "none" : "block" }}
+        {/* Doubloon Chest Meter (under bonus enhancements) */}
+        <div className="relative z-10 px-2 pt-1.5">
+          <div className="relative flex items-center gap-2 rounded-lg border border-yellow-500/70 bg-gradient-to-r from-[#2a0d00] via-[#3a1505] to-[#2a0d00] px-2 py-1 shadow-[inset_0_0_10px_rgba(255,180,60,0.2),0_2px_6px_rgba(0,0,0,0.6)] overflow-hidden">
+            {/* shimmer */}
+            <motion.div
+              className="absolute inset-y-0 w-1/4 pointer-events-none"
+              style={{ background: "linear-gradient(90deg, transparent, rgba(255,215,0,0.18), transparent)" }}
+              animate={{ x: ["-120%", "420%"] }}
+              transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
             />
 
-            {/* Coins flying INTO the chest from above (suction effect) */}
-            <AnimatePresence>
-              {!chestBurst && coinPing > 0 && (
-                <React.Fragment key={`suck-${coinPing}`}>
-                  {Array.from({ length: 7 }).map((_, i) => {
-                    const startX = -50 + Math.random() * 140;
-                    const startY = -55 - Math.random() * 30;
-                    return (
-                      <motion.img
-                        key={`suck-c-${coinPing}-${i}`}
-                        src={`${ROOT}/doubloon_3.png`}
-                        className="absolute left-1/2 top-1/2 w-3.5 h-3.5 object-contain pointer-events-none"
-                        initial={{ x: startX, y: startY, opacity: 0, scale: 0.6, rotate: 0 }}
-                        animate={{
-                          x: [startX, startX * 0.4, 0],
-                          y: [startY, startY * 0.3, 8],
-                          opacity: [0, 1, 0],
-                          scale: [0.6, 1, 0.4],
-                          rotate: 540,
-                        }}
-                        transition={{ duration: 0.95, delay: i * 0.05, ease: "easeIn" }}
-                      />
-                    );
-                  })}
-                  {/* Brief glow as coins drop in */}
-                  <motion.div
-                    className="absolute inset-x-2 bottom-1 h-2 rounded-full bg-yellow-300 blur-md pointer-events-none"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: [0, 0.7, 0] }}
-                    transition={{ duration: 0.8 }}
-                  />
-                </React.Fragment>
+            {/* Chest */}
+            <motion.div
+              className="relative w-11 h-11 shrink-0"
+              animate={coinPing > 0 ? { scale: [1, 1.18, 1] } : {}}
+              transition={{ duration: 0.4 }}
+              key={`pulse-${coinPing}`}
+            >
+              {coinMeter >= coinGoal && (
+                <motion.div
+                  className="absolute inset-0 rounded-full"
+                  style={{ boxShadow: "0 0 30px 8px rgba(255,200,60,0.95)" }}
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 0.8, repeat: Infinity }}
+                />
               )}
-            </AnimatePresence>
+              <img
+                src={`${ROOT}/treasure_chest_1.png`}
+                className="absolute inset-0 w-full h-full object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
+                style={{ display: chestBurst ? "none" : "block" }}
+              />
+              <AnimatePresence>
+                {chestBurst && (
+                  <>
+                    <motion.img
+                      src={`${ROOT}/treasure_chest_1.png`}
+                      className="absolute inset-0 w-full h-full object-contain"
+                      initial={{ scale: 1, rotate: 0 }}
+                      animate={{ scale: [1, 1.4, 1.2], rotate: [0, -8, 8, 0] }}
+                      transition={{ duration: 0.7 }}
+                      style={{ filter: "drop-shadow(0 0 18px rgba(255,220,80,1))" }}
+                    />
+                    {Array.from({ length: 22 }).map((_, i) => {
+                      const angle = (i / 22) * Math.PI * 2;
+                      const dist = 90 + (i % 4) * 20;
+                      return (
+                        <motion.img
+                          key={`c-${i}`}
+                          src={`${ROOT}/doubloon_3.png`}
+                          className="absolute top-1/2 left-1/2 w-5 h-5 object-contain pointer-events-none"
+                          initial={{ x: -10, y: -10, opacity: 1, scale: 0.6 }}
+                          animate={{
+                            x: -10 + Math.cos(angle) * dist,
+                            y: -10 + Math.sin(angle) * dist + 40,
+                            opacity: 0,
+                            scale: 1.2,
+                            rotate: 360,
+                          }}
+                          transition={{ duration: 1.8, ease: "easeOut" }}
+                        />
+                      );
+                    })}
+                    <motion.div
+                      className="absolute inset-0 rounded-full bg-yellow-200 pointer-events-none"
+                      initial={{ scale: 0.2, opacity: 0.9 }}
+                      animate={{ scale: 5, opacity: 0 }}
+                      transition={{ duration: 0.8 }}
+                    />
+                  </>
+                )}
+              </AnimatePresence>
+            </motion.div>
 
-            {/* Burst sequence (chest opens, all coins explode out) */}
-            <AnimatePresence>
-              {chestBurst && (
-                <>
-                  <motion.img
-                    src={`${ROOT}/treasure_chest_1.png`}
-                    className="absolute inset-0 w-full h-full object-contain"
-                    initial={{ scale: 1, rotate: 0 }}
-                    animate={{ scale: [1, 1.5, 1.3], rotate: [0, -10, 10, 0], y: [0, -6, -2] }}
-                    transition={{ duration: 0.8 }}
-                    style={{ filter: "drop-shadow(0 0 22px rgba(255,220,80,1))" }}
-                  />
-                  {Array.from({ length: 30 }).map((_, i) => {
-                    const angle = (i / 30) * Math.PI * 2;
-                    const dist = 90 + (i % 5) * 22;
-                    return (
-                      <motion.img
-                        key={`burst-c-${i}`}
-                        src={`${ROOT}/doubloon_3.png`}
-                        className="absolute top-1/2 left-1/2 w-4 h-4 object-contain pointer-events-none"
-                        initial={{ x: -8, y: -8, opacity: 1, scale: 0.7 }}
-                        animate={{
-                          x: -8 + Math.cos(angle) * dist,
-                          y: -8 + Math.sin(angle) * dist + 30,
-                          opacity: 0,
-                          scale: 1.3,
-                          rotate: 540,
-                        }}
-                        transition={{ duration: 1.8, ease: "easeOut" }}
-                      />
-                    );
-                  })}
-                  <motion.div
-                    className="absolute inset-0 rounded-full bg-yellow-200 pointer-events-none"
-                    initial={{ scale: 0.2, opacity: 0.9 }}
-                    animate={{ scale: 6, opacity: 0 }}
-                    transition={{ duration: 0.9 }}
-                  />
-                </>
-              )}
-            </AnimatePresence>
+            {/* Progress bar */}
+            <div className="relative flex-1 min-w-0">
+              <div className="font-display font-black text-yellow-200 text-[10px] tracking-[0.2em] uppercase mb-1 drop-shadow">
+                Doubloon Bonus Meter
+              </div>
+              <div className="relative h-4 rounded-full bg-black/70 border border-yellow-700/70 overflow-hidden shadow-inner">
+                <motion.div
+                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-600 via-yellow-300 to-amber-500"
+                  animate={{
+                    width: `${Math.min(100, (coinMeter / coinGoal) * 100)}%`,
+                  }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                />
+                <motion.div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{ background: "linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.5) 50%, transparent 70%)" }}
+                  animate={{ x: ["-100%", "120%"] }}
+                  transition={{ duration: 2.4, repeat: Infinity, ease: "linear" }}
+                />
+              </div>
+            </div>
           </div>
         </div>
         {/* Jackpot ladder */}
