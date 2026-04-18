@@ -231,7 +231,7 @@ const BonusMap = React.forwardRef<HTMLDivElement, { bet: number; onComplete: (to
         className="font-display text-3xl font-black bg-gradient-to-b from-yellow-200 to-amber-600 bg-clip-text text-transparent drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] mb-1"
       >
         ⚓ SEVEN SEAS BONUS ⚓
-      </motion.h2>
+      </h2>
       <p className="text-amber-200/80 text-xs uppercase tracking-widest mb-4">Pick islands to find treasure — beware the Kraken!</p>
 
       <div className="relative w-full max-w-md aspect-[4/3] rounded-xl border-4 border-amber-800/60 bg-gradient-to-br from-[#d8b074] via-[#a87d4a] to-[#7a5530] shadow-[0_0_40px_rgba(255,180,60,0.4)] p-3">
@@ -296,7 +296,8 @@ const BonusMap = React.forwardRef<HTMLDivElement, { bet: number; onComplete: (to
       )}
     </div>
   );
-}
+});
+BonusMap.displayName = "BonusMap";
 
 // ---- Big Win overlay ----
 const BigWinOverlay = React.forwardRef<HTMLDivElement, { amount: number; label: string; onDone: () => void }>(
@@ -306,22 +307,23 @@ const BigWinOverlay = React.forwardRef<HTMLDivElement, { amount: number; label: 
     return () => clearTimeout(t);
   }, [onDone]);
   return (
-    <div className="absolute inset-0 z-40 flex items-center justify-center pointer-events-none">
+    <div ref={ref} className="absolute inset-0 z-40 flex items-center justify-center pointer-events-none">
       <div className="absolute inset-0 bg-black/70" />
-      {/* coin burst */}
-      {Array.from({ length: 30 }).map((_, i) => (
+      {/* coin burst — reduced to 14 for perf */}
+      {Array.from({ length: 14 }).map((_, i) => (
         <motion.img
           key={i}
           src={`${ROOT}/doubloon_3.png`}
           className="absolute w-10 h-10 object-contain"
+          style={{ willChange: "transform, opacity" }}
           initial={{ x: 0, y: 0, scale: 0, rotate: 0 }}
           animate={{
-            x: (Math.random() - 0.5) * 600,
-            y: (Math.random() - 0.5) * 600,
+            x: (Math.random() - 0.5) * 500,
+            y: (Math.random() - 0.5) * 500,
             scale: [0, 1, 0.6],
-            rotate: Math.random() * 720 - 360,
+            rotate: Math.random() * 540 - 270,
           }}
-          transition={{ duration: 2.5, ease: "easeOut", delay: i * 0.04 }}
+          transition={{ duration: 2, ease: "easeOut", delay: i * 0.05 }}
         />
       ))}
       <motion.div
@@ -344,7 +346,8 @@ const BigWinOverlay = React.forwardRef<HTMLDivElement, { amount: number; label: 
       </motion.div>
     </div>
   );
-}
+});
+BigWinOverlay.displayName = "BigWinOverlay";
 
 // ---- Spinning Reel column ----
 function Reel({
@@ -633,15 +636,13 @@ function PiratePlunderInner() {
               { sym: "doubloon_3", label: "200 COINS", color: "from-amber-300 to-yellow-700" },
               { sym: "treasure_chest_1", label: "SUPER", color: "from-rose-400 to-red-700" },
             ].map((e, i) => (
-              <motion.div
+              <div
                 key={i}
                 className={`relative flex flex-col items-center p-1 rounded-lg bg-gradient-to-b ${e.color} border border-yellow-700/60 shadow-[0_2px_6px_rgba(0,0,0,0.6)]`}
-                animate={{ y: [0, -2, 0] }}
-                transition={{ duration: 2 + i * 0.2, repeat: Infinity, ease: "easeInOut" }}
               >
                 <img src={`${ROOT}/${e.sym}.png`} className="w-7 h-7 object-contain drop-shadow" />
                 <span className="text-[8px] font-black text-white drop-shadow uppercase leading-tight">{e.label}</span>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -649,15 +650,13 @@ function PiratePlunderInner() {
         {/* Jackpot ladder */}
         <div className="relative z-10 px-2 pt-1.5 grid grid-cols-4 gap-1">
           {JACKPOTS.map((j) => (
-            <motion.div
+            <div
               key={j.id}
               className={`relative rounded-md border-2 border-yellow-600/70 bg-gradient-to-b ${j.color} px-1 py-0.5 text-center shadow-[0_2px_4px_rgba(0,0,0,0.6)]`}
-              animate={{ scale: [1, 1.02, 1] }}
-              transition={{ duration: 1.5, repeat: Infinity, delay: JACKPOTS.indexOf(j) * 0.3 }}
             >
               <div className="font-display font-black text-[10px] text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.9)] tracking-wider">{j.label}</div>
               <div className="font-mono font-bold text-[11px] text-black bg-black/20 rounded">${j.value.toFixed(2)}</div>
-            </motion.div>
+            </div>
           ))}
         </div>
 
