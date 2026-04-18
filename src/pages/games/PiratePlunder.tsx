@@ -851,7 +851,7 @@ function PiratePlunderInner() {
       toast({ title: "Auto spin stopped", description: "Insufficient balance." });
       return;
     }
-    const t = setTimeout(() => spin(false), 1800);
+    const t = setTimeout(() => spin(false), 600);
     return () => clearTimeout(t);
   }, [autoSpin, spinning, bonusActive, bigWin, freeSpins, bet, spin]);
 
