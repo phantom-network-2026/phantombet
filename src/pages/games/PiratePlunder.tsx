@@ -1113,6 +1113,11 @@ function PiratePlunderInner() {
         )}
       </AnimatePresence>
 
+      {/* Paytable */}
+      <AnimatePresence>
+        {showPaytable && <Paytable onClose={() => setShowPaytable(false)} />}
+      </AnimatePresence>
+
       {/* Chat */}
       {showChat && (
         <div className="absolute inset-0 z-40 bg-black/80 flex items-end">
