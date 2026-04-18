@@ -28,24 +28,24 @@ type Sym = {
 
 const SYMBOLS: Sym[] = [
   // Premium
-  { id: "chest", img: `${ROOT}/treasure_chest_1.png`, pay: [0.5, 1.5, 5, 20], weight: 1, tier: "premium" },
-  { id: "galleon", img: `${ROOT}/pirate_galleon_4.png`, pay: [0.4, 1.2, 4, 15], weight: 4, tier: "premium" },
+  { id: "chest", img: `${ROOT}/treasure_chest_1.png`, pay: [2, 6, 25, 100], weight: 4, tier: "premium" },
+  { id: "galleon", img: `${ROOT}/pirate_galleon_4.png`, pay: [1.5, 4, 15, 60], weight: 5, tier: "premium" },
   // High
-  { id: "locker", img: `${ROOT}/capns_locker.png`, pay: [0.3, 0.9, 3, 10], weight: 6, tier: "high" },
-  { id: "doubloon", img: `${ROOT}/doubloon_3.png`, pay: [0.25, 0.7, 2.5, 8], weight: 7, tier: "high" },
+  { id: "locker", img: `${ROOT}/capns_locker.png`, pay: [1, 3, 10, 40], weight: 6, tier: "high" },
+  { id: "doubloon", img: `${ROOT}/doubloon_3.png`, pay: [0.8, 2.5, 8, 30], weight: 7, tier: "high" },
   // Mid
-  { id: "bell", img: `${ROOT}/ships_bell_3.png`, pay: [0.15, 0.4, 1.5, 5], weight: 9, tier: "mid" },
-  { id: "wheel", img: `${ROOT}/ships_wheel_2.png`, pay: [0.15, 0.4, 1.5, 5], weight: 9, tier: "mid" },
-  { id: "lantern", img: `${ROOT}/ships_lantern_3.png`, pay: [0.12, 0.3, 1.2, 4], weight: 10, tier: "mid" },
-  { id: "compass", img: `${ROOT}/ships_compass_3.png`, pay: [0.12, 0.3, 1.2, 4], weight: 10, tier: "mid" },
+  { id: "bell", img: `${ROOT}/ships_bell_3.png`, pay: [0.5, 1.5, 5, 18], weight: 9, tier: "mid" },
+  { id: "wheel", img: `${ROOT}/ships_wheel_2.png`, pay: [0.5, 1.5, 5, 18], weight: 9, tier: "mid" },
+  { id: "lantern", img: `${ROOT}/ships_lantern_3.png`, pay: [0.4, 1.2, 4, 15], weight: 10, tier: "mid" },
+  { id: "compass", img: `${ROOT}/ships_compass_3.png`, pay: [0.4, 1.2, 4, 15], weight: 10, tier: "mid" },
   // Low
-  { id: "globe", img: `${ROOT}/pirate_globe_2.png`, pay: [0.08, 0.2, 0.7, 2.5], weight: 12, tier: "low" },
-  { id: "bottle", img: `${ROOT}/ship_in_a_bottle_3.png`, pay: [0.08, 0.2, 0.7, 2.5], weight: 12, tier: "low" },
-  { id: "cannon", img: `${ROOT}/cannon_3.png`, pay: [0.05, 0.15, 0.5, 2], weight: 13, tier: "low" },
-  { id: "flintlock", img: `${ROOT}/pirate_flintlock_3.png`, pay: [0.05, 0.15, 0.5, 2], weight: 13, tier: "low" },
-  { id: "squeeze", img: `${ROOT}/pirate_sqeezebox_2.png`, pay: [0.05, 0.12, 0.4, 1.5], weight: 14, tier: "low" },
+  { id: "globe", img: `${ROOT}/pirate_globe_2.png`, pay: [0.3, 0.8, 2.5, 10], weight: 12, tier: "low" },
+  { id: "bottle", img: `${ROOT}/ship_in_a_bottle_3.png`, pay: [0.3, 0.8, 2.5, 10], weight: 12, tier: "low" },
+  { id: "cannon", img: `${ROOT}/cannon_3.png`, pay: [0.2, 0.6, 2, 8], weight: 13, tier: "low" },
+  { id: "flintlock", img: `${ROOT}/pirate_flintlock_3.png`, pay: [0.2, 0.6, 2, 8], weight: 13, tier: "low" },
+  { id: "squeeze", img: `${ROOT}/pirate_sqeezebox_2.png`, pay: [0.2, 0.5, 1.5, 6], weight: 14, tier: "low" },
   // Special
-  { id: "key", img: `${ROOT}/treasure_chest_key.png`, pay: [0.8, 2.5, 10, 40], weight: 1, tier: "wild" }, // WILD
+  { id: "key", img: `${ROOT}/treasure_chest_key.png`, pay: [3, 10, 50, 200], weight: 2, tier: "wild" }, // WILD - high pay
 ];
 
 const SYMBOL_BY_ID = Object.fromEntries(SYMBOLS.map((s) => [s.id, s]));
@@ -64,8 +64,8 @@ const SPIN_POOL: string[] = (() => {
 })();
 
 function randomSymbol(forceLoss = false): string {
-  // ~1% wild drop chance per cell
-  if (!forceLoss && Math.random() < 0.01) return "key";
+  // ~5% wild drop chance per cell (creates extra wins)
+  if (!forceLoss && Math.random() < 0.04) return "key";
   return SPIN_POOL[Math.floor(Math.random() * SPIN_POOL.length)];
 }
 
@@ -587,7 +587,7 @@ function Paytable({ onClose }: { onClose: () => void }) {
         </div>
         <div className="bg-black/40 rounded-lg p-3 border border-yellow-700/30">
           <h3 className="font-display font-black text-yellow-300 text-sm mb-1">🪙 SCATTER (Treasure Chest)</h3>
-          <p>Hit 5 or more SCATTER symbols anywhere on the reels to trigger the SEVEN SEAS BONUS round.</p>
+          <p>Hit 4 or more SCATTER symbols anywhere on the reels to trigger the SEVEN SEAS BONUS round.</p>
         </div>
         <div className="bg-black/40 rounded-lg p-3 border border-yellow-700/30">
           <h3 className="font-display font-black text-yellow-300 text-sm mb-1">⚓ FREE SPINS</h3>
@@ -636,10 +636,6 @@ function PiratePlunderInner() {
   const [autoSpin, setAutoSpin] = useState(false);
   const [showPaytable, setShowPaytable] = useState(false);
   const [holdProgress, setHoldProgress] = useState(0); // 0..1 while holding spin button
-  const [coinGoal, setCoinGoal] = useState(() => 800 + Math.floor(Math.random() * 1201)); // 800-2000
-  const [coinMeter, setCoinMeter] = useState(0);
-  const [chestBurst, setChestBurst] = useState(false);
-  const [coinPing, setCoinPing] = useState(0);
 
   // refs for stale closures
   const profileRef = useRef(profile);
@@ -791,32 +787,7 @@ function PiratePlunderInner() {
 
     if (isFree) setFreeSpins((n) => Math.max(0, n - 1));
 
-    // Count doubloons on this spin → fill the chest meter
-    let doubloonsThisSpin = 0;
-    for (let r = 0; r < REELS; r++) for (let c = 0; c < ROWS; c++) if (newGrid[r][c] === "doubloon") doubloonsThisSpin++;
-    if (doubloonsThisSpin > 0) {
-      setCoinPing((n) => n + 1);
-      setCoinMeter((prev) => {
-        const next = prev + doubloonsThisSpin;
-        if (next >= coinGoal) {
-          // Trigger chest burst → bonus
-          setTimeout(() => {
-            setChestBurst(true);
-            sfx.bonusJingle();
-          }, 600);
-          setTimeout(() => {
-            setChestBurst(false);
-            setCoinMeter(0);
-            setCoinGoal(800 + Math.floor(Math.random() * 1201));
-            setBonusActive(true);
-          }, 2400);
-          return coinGoal;
-        }
-        return next;
-      });
-    }
-
-    if (scatterCount >= 5) {
+    if (scatterCount >= 4) {
       setTimeout(() => {
         sfx.bonusJingle();
         setBonusActive(true);
@@ -1081,102 +1052,6 @@ function PiratePlunderInner() {
           </div>
         </div>
 
-        {/* Big Doubloon Chest Meter (under bonus enhancements) */}
-        <div className="relative z-10 px-2 pt-2">
-          <div className="relative flex items-center gap-3 rounded-xl border-2 border-yellow-500/70 bg-gradient-to-r from-[#2a0d00] via-[#3a1505] to-[#2a0d00] px-3 py-2 shadow-[inset_0_0_14px_rgba(255,180,60,0.2),0_2px_8px_rgba(0,0,0,0.6)] overflow-hidden">
-            {/* shimmer */}
-            <motion.div
-              className="absolute inset-y-0 w-1/4 pointer-events-none"
-              style={{ background: "linear-gradient(90deg, transparent, rgba(255,215,0,0.18), transparent)" }}
-              animate={{ x: ["-120%", "420%"] }}
-              transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
-            />
-
-            {/* Chest */}
-            <motion.div
-              className="relative w-20 h-20 shrink-0"
-              animate={coinPing > 0 ? { scale: [1, 1.18, 1] } : {}}
-              transition={{ duration: 0.4 }}
-              key={`pulse-${coinPing}`}
-            >
-              {coinMeter >= coinGoal && (
-                <motion.div
-                  className="absolute inset-0 rounded-full"
-                  style={{ boxShadow: "0 0 30px 8px rgba(255,200,60,0.95)" }}
-                  animate={{ opacity: [0.5, 1, 0.5] }}
-                  transition={{ duration: 0.8, repeat: Infinity }}
-                />
-              )}
-              <img
-                src={`${ROOT}/treasure_chest_1.png`}
-                className="absolute inset-0 w-full h-full object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
-                style={{ display: chestBurst ? "none" : "block" }}
-              />
-              <AnimatePresence>
-                {chestBurst && (
-                  <>
-                    <motion.img
-                      src={`${ROOT}/treasure_chest_1.png`}
-                      className="absolute inset-0 w-full h-full object-contain"
-                      initial={{ scale: 1, rotate: 0 }}
-                      animate={{ scale: [1, 1.4, 1.2], rotate: [0, -8, 8, 0] }}
-                      transition={{ duration: 0.7 }}
-                      style={{ filter: "drop-shadow(0 0 18px rgba(255,220,80,1))" }}
-                    />
-                    {Array.from({ length: 22 }).map((_, i) => {
-                      const angle = (i / 22) * Math.PI * 2;
-                      const dist = 90 + (i % 4) * 20;
-                      return (
-                        <motion.img
-                          key={`c-${i}`}
-                          src={`${ROOT}/doubloon_3.png`}
-                          className="absolute top-1/2 left-1/2 w-5 h-5 object-contain pointer-events-none"
-                          initial={{ x: -10, y: -10, opacity: 1, scale: 0.6 }}
-                          animate={{
-                            x: -10 + Math.cos(angle) * dist,
-                            y: -10 + Math.sin(angle) * dist + 40,
-                            opacity: 0,
-                            scale: 1.2,
-                            rotate: 360,
-                          }}
-                          transition={{ duration: 1.8, ease: "easeOut" }}
-                        />
-                      );
-                    })}
-                    <motion.div
-                      className="absolute inset-0 rounded-full bg-yellow-200 pointer-events-none"
-                      initial={{ scale: 0.2, opacity: 0.9 }}
-                      animate={{ scale: 5, opacity: 0 }}
-                      transition={{ duration: 0.8 }}
-                    />
-                  </>
-                )}
-              </AnimatePresence>
-            </motion.div>
-
-            {/* Progress bar */}
-            <div className="relative flex-1 min-w-0">
-              <div className="font-display font-black text-yellow-200 text-[10px] tracking-[0.2em] uppercase mb-1 drop-shadow">
-                Doubloon Bonus Meter
-              </div>
-              <div className="relative h-4 rounded-full bg-black/70 border border-yellow-700/70 overflow-hidden shadow-inner">
-                <motion.div
-                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-600 via-yellow-300 to-amber-500"
-                  animate={{
-                    width: `${Math.min(100, (coinMeter / coinGoal) * 100)}%`,
-                  }}
-                  transition={{ duration: 0.5, ease: "easeOut" }}
-                />
-                <motion.div
-                  className="absolute inset-0 pointer-events-none"
-                  style={{ background: "linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.5) 50%, transparent 70%)" }}
-                  animate={{ x: ["-100%", "120%"] }}
-                  transition={{ duration: 2.4, repeat: Infinity, ease: "linear" }}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
         {/* Jackpot ladder */}
         <div className="relative z-10 px-2 pt-1.5 grid grid-cols-4 gap-1">
           {JACKPOTS.map((j) => (
@@ -1199,7 +1074,6 @@ function PiratePlunderInner() {
             aria-hidden
             className="pointer-events-none select-none absolute inset-0 m-auto w-[70%] h-[70%] object-contain opacity-[0.07]"
           />
-
           <div className="grid grid-cols-6 gap-0.5 bg-black/40 rounded-lg p-1">
             {grid.map((reel, ci) => (
               <Reel
