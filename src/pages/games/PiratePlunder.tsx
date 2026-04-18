@@ -1081,6 +1081,102 @@ function PiratePlunderInner() {
           </div>
         </div>
 
+        {/* Big Doubloon Chest Meter (under bonus enhancements) */}
+        <div className="relative z-10 px-2 pt-2">
+          <div className="relative flex items-center gap-3 rounded-xl border-2 border-yellow-500/70 bg-gradient-to-r from-[#2a0d00] via-[#3a1505] to-[#2a0d00] px-3 py-2 shadow-[inset_0_0_14px_rgba(255,180,60,0.2),0_2px_8px_rgba(0,0,0,0.6)] overflow-hidden">
+            {/* shimmer */}
+            <motion.div
+              className="absolute inset-y-0 w-1/4 pointer-events-none"
+              style={{ background: "linear-gradient(90deg, transparent, rgba(255,215,0,0.18), transparent)" }}
+              animate={{ x: ["-120%", "420%"] }}
+              transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
+            />
+
+            {/* Chest */}
+            <motion.div
+              className="relative w-20 h-20 shrink-0"
+              animate={coinPing > 0 ? { scale: [1, 1.18, 1] } : {}}
+              transition={{ duration: 0.4 }}
+              key={`pulse-${coinPing}`}
+            >
+              {coinMeter >= coinGoal && (
+                <motion.div
+                  className="absolute inset-0 rounded-full"
+                  style={{ boxShadow: "0 0 30px 8px rgba(255,200,60,0.95)" }}
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 0.8, repeat: Infinity }}
+                />
+              )}
+              <img
+                src={`${ROOT}/treasure_chest_1.png`}
+                className="absolute inset-0 w-full h-full object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
+                style={{ display: chestBurst ? "none" : "block" }}
+              />
+              <AnimatePresence>
+                {chestBurst && (
+                  <>
+                    <motion.img
+                      src={`${ROOT}/treasure_chest_1.png`}
+                      className="absolute inset-0 w-full h-full object-contain"
+                      initial={{ scale: 1, rotate: 0 }}
+                      animate={{ scale: [1, 1.4, 1.2], rotate: [0, -8, 8, 0] }}
+                      transition={{ duration: 0.7 }}
+                      style={{ filter: "drop-shadow(0 0 18px rgba(255,220,80,1))" }}
+                    />
+                    {Array.from({ length: 22 }).map((_, i) => {
+                      const angle = (i / 22) * Math.PI * 2;
+                      const dist = 90 + (i % 4) * 20;
+                      return (
+                        <motion.img
+                          key={`c-${i}`}
+                          src={`${ROOT}/doubloon_3.png`}
+                          className="absolute top-1/2 left-1/2 w-5 h-5 object-contain pointer-events-none"
+                          initial={{ x: -10, y: -10, opacity: 1, scale: 0.6 }}
+                          animate={{
+                            x: -10 + Math.cos(angle) * dist,
+                            y: -10 + Math.sin(angle) * dist + 40,
+                            opacity: 0,
+                            scale: 1.2,
+                            rotate: 360,
+                          }}
+                          transition={{ duration: 1.8, ease: "easeOut" }}
+                        />
+                      );
+                    })}
+                    <motion.div
+                      className="absolute inset-0 rounded-full bg-yellow-200 pointer-events-none"
+                      initial={{ scale: 0.2, opacity: 0.9 }}
+                      animate={{ scale: 5, opacity: 0 }}
+                      transition={{ duration: 0.8 }}
+                    />
+                  </>
+                )}
+              </AnimatePresence>
+            </motion.div>
+
+            {/* Progress bar */}
+            <div className="relative flex-1 min-w-0">
+              <div className="font-display font-black text-yellow-200 text-[10px] tracking-[0.2em] uppercase mb-1 drop-shadow">
+                Doubloon Bonus Meter
+              </div>
+              <div className="relative h-4 rounded-full bg-black/70 border border-yellow-700/70 overflow-hidden shadow-inner">
+                <motion.div
+                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-600 via-yellow-300 to-amber-500"
+                  animate={{
+                    width: `${Math.min(100, (coinMeter / coinGoal) * 100)}%`,
+                  }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                />
+                <motion.div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{ background: "linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.5) 50%, transparent 70%)" }}
+                  animate={{ x: ["-100%", "120%"] }}
+                  transition={{ duration: 2.4, repeat: Infinity, ease: "linear" }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
         {/* Jackpot ladder */}
         <div className="relative z-10 px-2 pt-1.5 grid grid-cols-4 gap-1">
           {JACKPOTS.map((j) => (
