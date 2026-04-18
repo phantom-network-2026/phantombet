@@ -1081,9 +1081,9 @@ function PiratePlunderInner() {
           </div>
         </div>
 
-        {/* Big Doubloon Chest Meter (under bonus enhancements) */}
-        <div className="relative z-10 px-2 pt-2">
-          <div className="relative flex items-center gap-3 rounded-xl border-2 border-yellow-500/70 bg-gradient-to-r from-[#2a0d00] via-[#3a1505] to-[#2a0d00] px-3 py-2 shadow-[inset_0_0_14px_rgba(255,180,60,0.2),0_2px_8px_rgba(0,0,0,0.6)] overflow-hidden">
+        {/* Doubloon Chest Meter (under bonus enhancements) */}
+        <div className="relative z-10 px-2 pt-1.5">
+          <div className="relative flex items-center gap-2 rounded-lg border border-yellow-500/70 bg-gradient-to-r from-[#2a0d00] via-[#3a1505] to-[#2a0d00] px-2 py-1 shadow-[inset_0_0_10px_rgba(255,180,60,0.2),0_2px_6px_rgba(0,0,0,0.6)] overflow-hidden">
             {/* shimmer */}
             <motion.div
               className="absolute inset-y-0 w-1/4 pointer-events-none"
@@ -1094,7 +1094,7 @@ function PiratePlunderInner() {
 
             {/* Chest */}
             <motion.div
-              className="relative w-20 h-20 shrink-0"
+              className="relative w-11 h-11 shrink-0"
               animate={coinPing > 0 ? { scale: [1, 1.18, 1] } : {}}
               transition={{ duration: 0.4 }}
               key={`pulse-${coinPing}`}
