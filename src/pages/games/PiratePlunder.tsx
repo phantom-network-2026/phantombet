@@ -1065,12 +1065,6 @@ function PiratePlunderInner() {
             aria-hidden
             className="pointer-events-none select-none absolute inset-0 m-auto w-[70%] h-[70%] object-contain opacity-[0.07]"
           />
-          {/* PHANTOMBET EXCLUSIVE corner badge */}
-          <div className="pointer-events-none absolute -top-2 right-2 z-20 px-2 py-0.5 rounded-full border border-yellow-400/80 bg-gradient-to-r from-amber-700 via-yellow-600 to-amber-700 shadow-[0_2px_6px_rgba(0,0,0,0.8)]">
-            <span className="font-display font-black text-[8px] tracking-[0.25em] text-yellow-100 drop-shadow">
-              PHANTOMBET EXCLUSIVE
-            </span>
-          </div>
           <div className="grid grid-cols-6 gap-0.5 bg-black/40 rounded-lg p-1">
             {grid.map((reel, ci) => (
               <Reel
