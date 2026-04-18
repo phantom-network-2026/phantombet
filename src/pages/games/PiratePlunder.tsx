@@ -563,7 +563,7 @@ function PiratePlunderInner() {
     setSpinning(true);
     setWinLines([]);
     setLastWin(0);
-    beep(440, 0.05, "square", 0.05);
+    sfx.spinStart();
 
     // Deduct bet first (free spins skip this)
     if (!isFree) {
@@ -571,37 +571,41 @@ function PiratePlunderInner() {
       if (!r) { setSpinning(false); return; }
     }
 
-    // Force a bonus trigger ~ once per ~30 spins (or guaranteed if last 3 spins lost)
     const triggerBonus = Math.random() < 0.06;
     const newGrid = triggerBonus ? generateBonusGrid() : generateGrid();
 
-    // Animate reels stopping (reels stop in sequence: 0.4s base + 0.18s per column = ~1.5s last reel)
+    // Reels stop in sequence — play a thud per column
+    for (let i = 0; i < REELS; i++) {
+      setTimeout(() => sfx.reelStop(i), 600 + i * 180);
+    }
+
     await new Promise((r) => setTimeout(r, 1700));
     setGrid(newGrid);
-    beep(220, 0.2, "triangle", 0.08);
 
     const { totalWin, lines, scatterCount } = evaluateGrid(newGrid, bet);
     setWinLines(lines);
 
     if (totalWin > 0) {
       setLastWin(totalWin);
-      // Quick coin sounds
-      lines.forEach((_, i) => setTimeout(() => beep(660 + i * 50, 0.08, "sine", 0.06), i * 90));
+      lines.forEach((_, i) => setTimeout(() => sfx.coin(i), i * 110));
       await settle(totalWin, "Pirate Plunder win");
+      const ratio = totalWin / bet;
+      if (ratio >= 10) {
+        setTimeout(() => sfx.bigWin(), 200);
+      }
       triggerBigWin(totalWin, bet);
     }
 
     if (isFree) setFreeSpins((n) => Math.max(0, n - 1));
     setSpinning(false);
 
-    // Bonus trigger
     if (scatterCount >= 4) {
       setTimeout(() => {
-        beep(800, 0.5, "sawtooth", 0.1);
+        sfx.bonusJingle();
         setBonusActive(true);
       }, 800);
     }
-  }, [spinning, bonusActive, bet, settle, beep]);
+  }, [spinning, bonusActive, bet, settle, sfx]);
 
   const handleBonusComplete = useCallback(async (winAmt: number) => {
     setBonusActive(false);
