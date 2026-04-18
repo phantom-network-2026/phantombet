@@ -465,8 +465,8 @@ function Reel({
   // Resting position translateY = -(SPIN_LEN cells) so the last ROWS cells are visible.
   const restingPercent = -(SPIN_LEN / strip.length) * 100;
   const startPercent = 0; // start showing the random symbols at the top
-  const stopDelay = colIndex * 0.18; // sequential stop per reel
-  const spinDuration = 0.6 + stopDelay; // total spin time for this column
+  const stopDelay = colIndex * 0.35; // sequential stop per reel
+  const spinDuration = 1.2 + stopDelay; // total spin time for this column
 
   return (
     <div
@@ -760,17 +760,15 @@ function PiratePlunderInner() {
 
     // Reels stop in sequence — play a thud per column
     for (let i = 0; i < REELS; i++) {
-      setTimeout(() => sfx.reelStop(i), 600 + i * 180);
+      setTimeout(() => sfx.reelStop(i), 1200 + i * 350);
     }
 
-    // Set the resting grid early so reels animate to the correct symbols
     setGrid(newGrid);
 
     // Wait for ALL reels to visually finish stopping before evaluating wins
-    // Reel timing: stopDelay = colIndex*0.18, spinDuration = 0.6 + stopDelay
-    // Last reel (col 5): starts at 0.9s, runs 1.5s -> finishes ~2.4s
-    // Keep spinning state true until reels actually settle, then add a small buffer.
-    await new Promise((r) => setTimeout(r, 2500));
+    // Reel timing: stopDelay = colIndex*0.35, spinDuration = 1.2 + stopDelay
+    // Last reel (col 5): finishes at ~1.2 + 5*0.35 + 1.2 = ~4.15s
+    await new Promise((r) => setTimeout(r, 4200));
     setSpinning(false);
     await new Promise((r) => setTimeout(r, 250));
 
