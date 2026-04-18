@@ -27,25 +27,25 @@ type Sym = {
 };
 
 const SYMBOLS: Sym[] = [
-  // Premium (rare, big pays)
-  { id: "chest", img: `${ROOT}/treasure_chest_1.png`, pay: [0.2, 0.5, 2, 10], weight: 1, tier: "premium" },
-  { id: "galleon", img: `${ROOT}/pirate_galleon_4.png`, pay: [0.15, 0.4, 1.5, 7.5], weight: 3, tier: "premium" },
+  // Premium
+  { id: "chest", img: `${ROOT}/treasure_chest_1.png`, pay: [0.5, 1.5, 5, 20], weight: 1, tier: "premium" },
+  { id: "galleon", img: `${ROOT}/pirate_galleon_4.png`, pay: [0.4, 1.2, 4, 15], weight: 4, tier: "premium" },
   // High
-  { id: "locker", img: `${ROOT}/capns_locker.png`, pay: [0.1, 0.3, 1, 5], weight: 5, tier: "high" },
-  { id: "doubloon", img: `${ROOT}/doubloon_3.png`, pay: [0.1, 0.25, 0.8, 4], weight: 6, tier: "high" },
+  { id: "locker", img: `${ROOT}/capns_locker.png`, pay: [0.3, 0.9, 3, 10], weight: 6, tier: "high" },
+  { id: "doubloon", img: `${ROOT}/doubloon_3.png`, pay: [0.25, 0.7, 2.5, 8], weight: 7, tier: "high" },
   // Mid
-  { id: "bell", img: `${ROOT}/ships_bell_3.png`, pay: [0.05, 0.15, 0.5, 2.5], weight: 9, tier: "mid" },
-  { id: "wheel", img: `${ROOT}/ships_wheel_2.png`, pay: [0.05, 0.15, 0.5, 2.5], weight: 9, tier: "mid" },
-  { id: "lantern", img: `${ROOT}/ships_lantern_3.png`, pay: [0.04, 0.12, 0.4, 2], weight: 10, tier: "mid" },
-  { id: "compass", img: `${ROOT}/ships_compass_3.png`, pay: [0.04, 0.12, 0.4, 2], weight: 10, tier: "mid" },
+  { id: "bell", img: `${ROOT}/ships_bell_3.png`, pay: [0.15, 0.4, 1.5, 5], weight: 9, tier: "mid" },
+  { id: "wheel", img: `${ROOT}/ships_wheel_2.png`, pay: [0.15, 0.4, 1.5, 5], weight: 9, tier: "mid" },
+  { id: "lantern", img: `${ROOT}/ships_lantern_3.png`, pay: [0.12, 0.3, 1.2, 4], weight: 10, tier: "mid" },
+  { id: "compass", img: `${ROOT}/ships_compass_3.png`, pay: [0.12, 0.3, 1.2, 4], weight: 10, tier: "mid" },
   // Low
-  { id: "globe", img: `${ROOT}/pirate_globe_2.png`, pay: [0.02, 0.08, 0.25, 1.2], weight: 13, tier: "low" },
-  { id: "bottle", img: `${ROOT}/ship_in_a_bottle_3.png`, pay: [0.02, 0.08, 0.25, 1.2], weight: 13, tier: "low" },
-  { id: "cannon", img: `${ROOT}/cannon_3.png`, pay: [0.02, 0.06, 0.2, 1], weight: 14, tier: "low" },
-  { id: "flintlock", img: `${ROOT}/pirate_flintlock_3.png`, pay: [0.02, 0.06, 0.2, 1], weight: 14, tier: "low" },
-  { id: "squeeze", img: `${ROOT}/pirate_sqeezebox_2.png`, pay: [0.02, 0.05, 0.15, 0.8], weight: 15, tier: "low" },
-  // Special — WILD pays like a top premium symbol
-  { id: "key", img: `${ROOT}/treasure_chest_key.png`, pay: [0.3, 1, 4, 20], weight: 1, tier: "wild" },
+  { id: "globe", img: `${ROOT}/pirate_globe_2.png`, pay: [0.08, 0.2, 0.7, 2.5], weight: 12, tier: "low" },
+  { id: "bottle", img: `${ROOT}/ship_in_a_bottle_3.png`, pay: [0.08, 0.2, 0.7, 2.5], weight: 12, tier: "low" },
+  { id: "cannon", img: `${ROOT}/cannon_3.png`, pay: [0.05, 0.15, 0.5, 2], weight: 13, tier: "low" },
+  { id: "flintlock", img: `${ROOT}/pirate_flintlock_3.png`, pay: [0.05, 0.15, 0.5, 2], weight: 13, tier: "low" },
+  { id: "squeeze", img: `${ROOT}/pirate_sqeezebox_2.png`, pay: [0.05, 0.12, 0.4, 1.5], weight: 14, tier: "low" },
+  // Special
+  { id: "key", img: `${ROOT}/treasure_chest_key.png`, pay: [0.8, 2.5, 10, 40], weight: 1, tier: "wild" }, // WILD
 ];
 
 const SYMBOL_BY_ID = Object.fromEntries(SYMBOLS.map((s) => [s.id, s]));
@@ -64,8 +64,8 @@ const SPIN_POOL: string[] = (() => {
 })();
 
 function randomSymbol(forceLoss = false): string {
-  // ~0.3% wild drop chance per cell (rare bonus wild)
-  if (!forceLoss && Math.random() < 0.003) return "key";
+  // ~1% wild drop chance per cell
+  if (!forceLoss && Math.random() < 0.01) return "key";
   return SPIN_POOL[Math.floor(Math.random() * SPIN_POOL.length)];
 }
 
@@ -465,8 +465,8 @@ function Reel({
   // Resting position translateY = -(SPIN_LEN cells) so the last ROWS cells are visible.
   const restingPercent = -(SPIN_LEN / strip.length) * 100;
   const startPercent = 0; // start showing the random symbols at the top
-  const stopDelay = colIndex * 0.35; // sequential stop per reel
-  const spinDuration = 1.2 + stopDelay; // total spin time for this column
+  const stopDelay = colIndex * 0.18; // sequential stop per reel
+  const spinDuration = 0.6 + stopDelay; // total spin time for this column
 
   return (
     <div
@@ -760,17 +760,20 @@ function PiratePlunderInner() {
 
     // Reels stop in sequence — play a thud per column
     for (let i = 0; i < REELS; i++) {
-      setTimeout(() => sfx.reelStop(i), 1200 + i * 350);
+      setTimeout(() => sfx.reelStop(i), 600 + i * 180);
     }
 
+    // Set the resting grid early so reels animate to the correct symbols
     setGrid(newGrid);
 
-    // Wait for ALL reels to visually finish stopping before evaluating wins
-    // Reel timing: stopDelay = colIndex*0.35, spinDuration = 1.2 + stopDelay
-    // Last reel (col 5): finishes at ~1.2 + 5*0.35 + 1.2 = ~4.15s
-    await new Promise((r) => setTimeout(r, 4200));
+    // Wait for ALL reels to visually finish stopping before flipping spinning=false
+    // Reel timing: stopDelay = colIndex*0.18, spinDuration = 0.6 + stopDelay
+    // Last reel (col 5): starts at 0.9s, runs 1.5s -> finishes ~2.4s after spinning flips
+    // We give the spin loop 1.0s, then stop, then wait for last reel to settle.
+    await new Promise((r) => setTimeout(r, 1000));
     setSpinning(false);
-    await new Promise((r) => setTimeout(r, 250));
+    // Wait for last reel to complete its stop animation
+    await new Promise((r) => setTimeout(r, 2500));
 
     const { totalWin, lines, scatterCount } = evaluateGrid(newGrid, bet);
     setWinLines(lines);
