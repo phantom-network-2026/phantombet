@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
+import phantombetLogo from "@/assets/phantombet-logo.svg";
 
 const GAME_TITLE = "Pirate Plunder";
 const GAME_SLUG = "pirate-plunder";
