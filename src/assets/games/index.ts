@@ -25,10 +25,6 @@ import marvelBetting from "./marvel-betting.jpg";
 import raceKings from "./race-kings.jpg";
 import royalDerby from "./royal-derby.jpg";
 import scatterBomb from "./scatter-bomb.jpg";
-import fishingMayhem from "./fishing-mayhem.jpg";
-import castleDefence from "./castle-defence.jpg";
-import lucky7s from "./lucky-7s.jpg";
-import jackpotjoy from "./jackpotjoy.jpg";
 
 export const gameImages: Record<string, string> = {
   "Blackjack": blackjack,
@@ -58,8 +54,4 @@ export const gameImages: Record<string, string> = {
   "Race Kings": raceKings,
   "Royal Derby": royalDerby,
   "Scatter Bomb": scatterBomb,
-  "Fishing Mayhem": fishingMayhem,
-  "Castle Defence": castleDefence,
-  "Lucky 7s": lucky7s,
-  "JackpotJoy": jackpotjoy,
 };
