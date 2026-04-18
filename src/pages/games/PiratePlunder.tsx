@@ -881,6 +881,13 @@ function PiratePlunderInner() {
         {bonusActive && <BonusMap bet={bet} onComplete={handleBonusComplete} />}
       </AnimatePresence>
 
+      {/* Per-spin floating win popup */}
+      <AnimatePresence>
+        {lastWin > 0 && !bigWin && (
+          <WinPopup amount={lastWin} bet={bet} onDone={() => { /* keep until next spin clears */ }} />
+        )}
+      </AnimatePresence>
+
       {/* Big win overlay */}
       <AnimatePresence>
         {bigWin && (
