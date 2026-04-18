@@ -811,7 +811,7 @@ function PiratePlunderInner() {
 
   const handleSpinPressStart = useCallback(() => {
     if (autoSpin) return; // tap will cancel auto-spin in pressEnd
-    if (bonusActive || freeSpins > 0) return;
+    if (spinning || bonusActive || freeSpins > 0) return;
     holdTriggeredRef.current = false;
     holdStartRef.current = Date.now();
     const tick = () => {
@@ -826,7 +826,7 @@ function PiratePlunderInner() {
       setHoldProgress(0);
       toast({ title: "🔁 Auto Spin Started", description: "Tap SPIN once to cancel." });
     }, 3000);
-  }, [autoSpin, bonusActive, freeSpins]);
+  }, [autoSpin, spinning, bonusActive, freeSpins]);
 
   const handleSpinPressEnd = useCallback(() => {
     const wasTriggered = holdTriggeredRef.current;
@@ -1111,7 +1111,7 @@ function PiratePlunderInner() {
             onPointerLeave={clearHold}
             onPointerCancel={clearHold}
             onContextMenu={(e) => e.preventDefault()}
-            disabled={bonusActive || freeSpins > 0}
+            disabled={spinning || bonusActive || freeSpins > 0}
             className="relative w-16 h-16 rounded-full bg-gradient-to-b from-yellow-300 via-amber-500 to-amber-800 border-4 border-yellow-200 shadow-[0_0_25px_rgba(255,200,60,0.7),inset_0_2px_4px_rgba(255,255,255,0.4)] flex items-center justify-center disabled:opacity-60 select-none touch-none"
             whileTap={{ scale: 0.92 }}
             animate={spinning ? { rotate: 360 } : {}}
