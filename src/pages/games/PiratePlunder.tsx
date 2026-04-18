@@ -897,40 +897,44 @@ function PiratePlunderInner() {
         <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="relative z-10 text-white h-8 px-2 text-xs gap-1 hover:bg-white/10">
           <ArrowLeft className="h-4 w-4" /> Exit
         </Button>
-        <div className="relative z-10 flex items-center gap-1.5">
-          <motion.span
-            className="text-base"
-            animate={{ rotate: [-12, 12, -12], y: [0, -1, 0] }}
-            transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
-          >
-            🏴‍☠️
-          </motion.span>
-          <motion.span
-            className="font-display font-black text-sm tracking-wider"
-            style={{
-              backgroundImage: "linear-gradient(90deg, #fde047, #fff7c2, #fbbf24, #fde047)",
-              backgroundSize: "200% 100%",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.8))",
-            }}
-            animate={{ backgroundPositionX: ["0%", "200%"] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-          >
-            {GAME_TITLE}
-          </motion.span>
-          <motion.span
-            className="text-base"
-            animate={{ rotate: [12, -12, 12], y: [0, -1, 0] }}
-            transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
-          >
-            ⚔️
-          </motion.span>
-          <span className="ml-1 px-1.5 py-[1px] rounded-full border border-yellow-400/80 bg-gradient-to-r from-amber-700 via-yellow-600 to-amber-700 shadow-[0_1px_3px_rgba(0,0,0,0.7)]">
-            <span className="font-display font-black text-[7px] tracking-[0.2em] text-yellow-100 drop-shadow">
+        <div className="relative z-10 flex flex-col items-center leading-none">
+          <div className="flex items-center gap-1.5">
+            <motion.span
+              className="text-base"
+              animate={{ rotate: [-12, 12, -12], y: [0, -1, 0] }}
+              transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+            >
+              🏴‍☠️
+            </motion.span>
+            <motion.span
+              className="font-display font-black text-sm tracking-wider"
+              style={{
+                backgroundImage: "linear-gradient(90deg, #fde047, #fff7c2, #fbbf24, #fde047)",
+                backgroundSize: "200% 100%",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.8))",
+              }}
+              animate={{ backgroundPositionX: ["0%", "200%"] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+            >
+              {GAME_TITLE}
+            </motion.span>
+            <motion.span
+              className="text-base"
+              animate={{ rotate: [12, -12, 12], y: [0, -1, 0] }}
+              transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+            >
+              ⚔️
+            </motion.span>
+          </div>
+          <div className="flex items-center gap-1 mt-0.5">
+            <span className="h-px w-3 bg-gradient-to-r from-transparent to-yellow-400/70" />
+            <span className="font-display font-bold text-[7px] tracking-[0.35em] text-yellow-300/90">
               PHANTOMBET EXCLUSIVE
             </span>
-          </span>
+            <span className="h-px w-3 bg-gradient-to-l from-transparent to-yellow-400/70" />
+          </div>
         </div>
         <Button variant="ghost" size="sm" onClick={() => setShowChat((v) => !v)} className="relative z-10 text-white h-8 px-2 text-xs gap-1 hover:bg-white/10">
           <MessageSquare className="h-4 w-4" />
