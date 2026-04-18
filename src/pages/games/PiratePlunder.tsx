@@ -306,7 +306,8 @@ function BonusMap({
 }
 
 // ---- Big Win overlay ----
-function BigWinOverlay({ amount, label, onDone }: { amount: number; label: string; onDone: () => void }) {
+const BigWinOverlay = React.forwardRef<HTMLDivElement, { amount: number; label: string; onDone: () => void }>(
+  ({ amount, label, onDone }, ref) => {
   useEffect(() => {
     const t = setTimeout(onDone, 3500);
     return () => clearTimeout(t);
