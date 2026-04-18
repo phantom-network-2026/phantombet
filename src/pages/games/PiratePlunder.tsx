@@ -926,6 +926,11 @@ function PiratePlunderInner() {
           >
             ⚔️
           </motion.span>
+          <span className="ml-1 px-1.5 py-[1px] rounded-full border border-yellow-400/80 bg-gradient-to-r from-amber-700 via-yellow-600 to-amber-700 shadow-[0_1px_3px_rgba(0,0,0,0.7)]">
+            <span className="font-display font-black text-[7px] tracking-[0.2em] text-yellow-100 drop-shadow">
+              PHANTOMBET EXCLUSIVE
+            </span>
+          </span>
         </div>
         <Button variant="ghost" size="sm" onClick={() => setShowChat((v) => !v)} className="relative z-10 text-white h-8 px-2 text-xs gap-1 hover:bg-white/10">
           <MessageSquare className="h-4 w-4" />
