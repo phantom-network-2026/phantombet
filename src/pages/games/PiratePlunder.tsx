@@ -793,7 +793,7 @@ function PiratePlunderInner() {
     setLastWin(0);
     sfx.spinStart();
 
-    const spinWindow = new Promise((resolve) => setTimeout(resolve, 2500));
+    const spinWindow = new Promise((resolve) => setTimeout(resolve, MIN_SPIN_LOOP_MS));
     let spinDirective: ProbabilityDirective = "normal";
 
     // Deduct bet first (free spins skip this)
@@ -816,17 +816,16 @@ function PiratePlunderInner() {
           ? generateBonusGrid()
           : generateGrid();
 
+    setGrid(newGrid);
+    await spinWindow;
+
     // Reels stop in sequence — play a thud per column
     for (let i = 0; i < REELS; i++) {
-      setTimeout(() => sfx.reelStop(i), 800 + i * 180);
+      setTimeout(() => sfx.reelStop(i), i * REEL_STOP_DELAY_MS);
     }
 
-    setGrid(newGrid);
-
-    // Wait for ALL reels to visually finish stopping (~2.5s total from spin start)
-    await spinWindow;
     setSpinning(false);
-    await new Promise((r) => setTimeout(r, 250));
+    await new Promise((r) => setTimeout(r, FINAL_REEL_SETTLE_MS + 120));
 
     const { totalWin, lines, scatterCount } = evaluateGrid(newGrid, bet);
     setWinLines(lines);

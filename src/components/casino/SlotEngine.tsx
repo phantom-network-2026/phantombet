@@ -618,7 +618,7 @@ function SlotEngineInner({ theme }: { theme: SlotTheme }) {
     setLastWin(0);
     sfx.spinStart();
 
-    const spinWindow = new Promise((resolve) => setTimeout(resolve, 2500));
+    const spinWindow = new Promise((resolve) => setTimeout(resolve, MIN_SPIN_LOOP_MS));
     let spinDirective: ProbabilityDirective = "normal";
 
     if (!isFree) {
@@ -643,12 +643,15 @@ function SlotEngineInner({ theme }: { theme: SlotTheme }) {
           ? generateBonusGrid(rand, theme.scatterId)
           : generateGrid(rand);
 
-    for (let i = 0; i < REELS; i++) setTimeout(() => sfx.reelStop(i), 800 + i * 180);
-
     setGrid(newGrid);
     await spinWindow;
+
+    for (let i = 0; i < REELS; i++) {
+      setTimeout(() => sfx.reelStop(i), i * REEL_STOP_DELAY_MS);
+    }
+
     setSpinning(false);
-    await new Promise((r) => setTimeout(r, 250));
+    await new Promise((r) => setTimeout(r, FINAL_REEL_SETTLE_MS + 120));
 
     const { totalWin, lines, scatterCount } = evaluateGrid(newGrid, bet, symMap, theme.wildId, theme.scatterId);
     setWinLines(lines);
