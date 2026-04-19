@@ -17,6 +17,10 @@ const NATIVE_ROUTES: Record<string, string> = {
   "prize-reel": "/prize-reel",
   "royal-rumble": "/royal-rumble",
   "pirate-plunder": "/pirate-plunder",
+  "fishing-mayhem": "/fishing-mayhem",
+  "castle-defence": "/castle-defence",
+  "lucky-7s": "/lucky-7s",
+  "jackpotjoy": "/jackpotjoy",
 };
 
 interface GameRow {
