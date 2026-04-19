@@ -7,6 +7,7 @@ import { BottomNav } from "@/components/casino/BottomNav";
 import { HeroBanner } from "@/components/casino/HeroBanner";
 import { CategoryTabs } from "@/components/casino/CategoryTabs";
 import { GameCard } from "@/components/casino/GameCard";
+import { HomeCarousels } from "@/components/casino/HomeCarousels";
 
 // Default game images for when DB is empty
 import slotsImg from "@/assets/game-slots.jpg";
@@ -75,6 +76,7 @@ export default function Index() {
   const [category, setCategory] = useState("all");
   const [announcement, setAnnouncement] = useState<{ active: boolean; text: string } | null>(null);
   const [maintenanceMode, setMaintenanceMode] = useState<{ enabled: boolean; message: string } | null>(null);
+  const [homeCarousels, setHomeCarousels] = useState<any[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
@@ -100,11 +102,17 @@ export default function Index() {
 
     // Fetch announcement & maintenance via public settings endpoint
     supabase.functions.invoke("get-public-settings", {
-      body: { keys: ["announcement", "maintenance_mode"] },
+      body: { keys: ["announcement", "maintenance_mode", "home_carousels"] },
     }).then(({ data }) => {
       if (data?.settings) {
         if (data.settings.announcement) setAnnouncement(data.settings.announcement);
         if (data.settings.maintenance_mode) setMaintenanceMode(data.settings.maintenance_mode);
+        const hc = data.settings.home_carousels;
+        if (hc) {
+          // Accept either { carousels: [...] } or a raw array
+          const arr = Array.isArray(hc) ? hc : Array.isArray(hc.carousels) ? hc.carousels : [];
+          setHomeCarousels(arr);
+        }
       }
     });
   }, []);
@@ -176,6 +184,11 @@ export default function Index() {
       <PrizeReelBanner />
 
       <CategoryTabs activeCategory={category} onCategoryChange={setCategory} />
+
+      {/* Admin-managed carousels (e.g. EXCLUSIVE GAMES, NEW RELEASES) */}
+      {category === "all" && (
+        <HomeCarousels carousels={homeCarousels} games={games as any} />
+      )}
 
       {/* Featured Games */}
       {category === "all" && featured.length > 0 && (
