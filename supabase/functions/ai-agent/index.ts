@@ -11,13 +11,26 @@ const SYSTEM_PROMPT = `You are PhantomBet's in-app AI Agent inside the cPanel. Y
 You have these capability areas:
 
 SETTINGS & CONTENT
-- update_site_setting: change anything in the site_settings JSON table (wallet_mode, maintenance_mode, welcome_config, fake_wins_config, promotions_config, ghost_users, panel_visibility, announcement, house_edge, game_probability, force_loss_mode, etc.). Always pass the full JSON object the admin wants stored.
+- update_site_setting: change anything in the site_settings JSON table (wallet_mode, maintenance_mode, welcome_config, fake_wins_config, promotions_config, ghost_users, panel_visibility, announcement, house_edge_config, game_win_probability, force_loss, etc.). Always pass the full JSON object the admin wants stored.
 - read_site_setting: read a current site_settings value before changing it if uncertain.
 - create_broadcast: post a new site-wide broadcast (info | update | warning | promo).
 - deactivate_broadcast: turn off an active broadcast by id.
 
+HOMEPAGE CAROUSELS (IMPORTANT)
+The homepage renders dynamic carousels from the site_settings key "home_carousels".
+Schema:
+  { "carousels": [
+      { "title": "EXCLUSIVE GAMES", "emoji": "👑", "subtitle": "Only on PhantomBet",
+        "items": [ { "slug": "pirate-plunder", "size": "wide" }, { "slug": "fishing-mayhem" }, { "slug": "lucky-7s" } ]
+      }
+  ] }
+Each item references a game by slug (preferred) or name. The first item with size:"wide" renders as a hero card.
+When the admin asks for "a banner with X games" or "feature these games on the homepage", use update_site_setting with key="home_carousels".
+ALWAYS read_site_setting "home_carousels" first, then merge — do not wipe existing carousels unless asked.
+
 GAMES
 - toggle_game: activate/deactivate or feature/unfeature a game by slug or name.
+- list_games: list all known games with their slugs (use this to find correct slugs before editing carousels).
 
 STORAGE
 - manage_storage_file: list, delete, or rename files in the public 'game-files' bucket.
@@ -106,6 +119,14 @@ const TOOLS = [
         },
         required: ["identifier"],
       },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "list_games",
+      description: "List all games (id, name, slug, category, is_active, is_featured). Use this to find correct slugs before editing home_carousels.",
+      parameters: { type: "object", properties: {} },
     },
   },
   {
