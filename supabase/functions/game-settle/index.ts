@@ -130,19 +130,9 @@ Deno.serve(async (req) => {
             probabilityDirective = "force_win";
           } else if (winProbability <= 0) {
             probabilityDirective = "force_loss";
-          } else if (amount > 0) {
+          } else if (amount <= 0) {
             const roll = Math.random() * 100;
-            if (roll >= winProbability) {
-              const { data: currentProfile } = await admin
-                .from("profiles")
-                .select(`${balanceField}`)
-                .eq("user_id", userId)
-                .single();
-              const currentBal = Number(currentProfile?.[balanceField]) || 0;
-              return new Response(JSON.stringify({ success: true, balance: currentBal, forced_loss: true, probabilityDirective: "force_loss" }), {
-                headers: { ...corsHeaders, "Content-Type": "application/json" },
-              });
-            }
+            probabilityDirective = roll < winProbability ? "force_win" : "force_loss";
           }
         }
       }
@@ -232,7 +222,7 @@ Deno.serve(async (req) => {
       description: `${gameType} - ${outcome}`,
     });
 
-    return new Response(JSON.stringify({ success: true, balance: newBalance }), {
+    return new Response(JSON.stringify({ success: true, balance: newBalance, probabilityDirective }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
