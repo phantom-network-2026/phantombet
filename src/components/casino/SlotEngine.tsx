@@ -215,8 +215,8 @@ function Reel({
 
   const strip = stripRef.current.length ? stripRef.current : finalSymbols;
   const restingPercent = -(SPIN_LEN / strip.length) * 100;
-  const stopDelay = colIndex * 0.18;
-  const spinDuration = 0.8 + stopDelay;
+  const stopDelay = (colIndex * REEL_STOP_DELAY_MS) / 1000;
+  const spinDuration = REEL_STOP_DURATION_MS / 1000;
 
   return (
     <div className="relative overflow-hidden rounded-md bg-black/40" style={{ aspectRatio: `1 / ${ROWS}` }}>

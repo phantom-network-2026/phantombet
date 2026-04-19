@@ -500,8 +500,8 @@ function Reel({
   // Resting position translateY = -(SPIN_LEN cells) so the last ROWS cells are visible.
   const restingPercent = -(SPIN_LEN / strip.length) * 100;
   const startPercent = 0; // start showing the random symbols at the top
-  const stopDelay = colIndex * 0.18; // sequential stop per reel
-  const spinDuration = 0.8 + stopDelay; // total spin time for this column
+  const stopDelay = (colIndex * REEL_STOP_DELAY_MS) / 1000; // sequential stop per reel
+  const spinDuration = REEL_STOP_DURATION_MS / 1000; // total stop animation per column
 
   return (
     <div
