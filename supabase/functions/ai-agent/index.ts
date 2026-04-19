@@ -381,6 +381,15 @@ async function runTool(name: string, args: any, admin: any): Promise<any> {
       return { ok: true, message: `Updated ${game.name}`, game: { ...game, ...patch } };
     }
 
+    if (name === "list_games") {
+      const { data, error } = await admin
+        .from("games")
+        .select("id,name,slug,category,is_active,is_featured")
+        .order("name");
+      if (error) return { ok: false, message: error.message };
+      return { ok: true, count: data?.length || 0, games: data || [] };
+    }
+
     if (name === "manage_storage_file") {
       const bucket = "game-files";
       if (args.action === "list") {
