@@ -54,6 +54,11 @@ export type SlotTheme = {
 const REELS = 6;
 const ROWS = 4;
 const BET_TIERS = [0.1, 0.2, 0.5, 1, 2, 5];
+const TARGET_SPIN_MS = 2500;
+const REEL_STOP_DELAY_MS = 120;
+const REEL_STOP_DURATION_MS = 700;
+const FINAL_REEL_SETTLE_MS = REEL_STOP_DURATION_MS + REEL_STOP_DELAY_MS * (REELS - 1);
+const MIN_SPIN_LOOP_MS = Math.max(0, TARGET_SPIN_MS - FINAL_REEL_SETTLE_MS);
 
 const PAYLINES: number[][] = [
   [0, 0, 0, 0, 0, 0],

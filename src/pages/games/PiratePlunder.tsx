@@ -52,6 +52,11 @@ const SYMBOL_BY_ID = Object.fromEntries(SYMBOLS.map((s) => [s.id, s]));
 
 const REELS = 6;
 const ROWS = 4;
+const TARGET_SPIN_MS = 2500;
+const REEL_STOP_DELAY_MS = 120;
+const REEL_STOP_DURATION_MS = 700;
+const FINAL_REEL_SETTLE_MS = REEL_STOP_DURATION_MS + REEL_STOP_DELAY_MS * (REELS - 1);
+const MIN_SPIN_LOOP_MS = Math.max(0, TARGET_SPIN_MS - FINAL_REEL_SETTLE_MS);
 
 // Pre-compute weighted pool for spins (excludes wild from spin pool — wild appears via "scatter trigger" or dropped randomly)
 const SPIN_POOL: string[] = (() => {

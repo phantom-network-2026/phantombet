@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
     }
 
     const authenticatedUserId = claimsData.claims.sub;
-    const { userId, amount, gameType, outcome } = await req.json();
+    const { userId, amount, gameType, outcome, probabilityDirective: requestedProbabilityDirective } = await req.json();
 
     if (userId !== authenticatedUserId) {
       return new Response(JSON.stringify({ error: "Forbidden" }), {
