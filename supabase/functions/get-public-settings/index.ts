@@ -11,6 +11,7 @@ const PUBLIC_KEYS = [
   "welcome_config",
   "ghost_users",
   "panel_visibility",
+  "home_carousels",
 ];
 
 Deno.serve(async (req) => {

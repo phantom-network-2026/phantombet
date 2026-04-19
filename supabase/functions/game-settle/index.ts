@@ -145,21 +145,23 @@ Deno.serve(async (req) => {
 
       if (edgeSetting?.value) {
         const cfg = edgeSetting.value as any;
-        if (cfg.globalEnabled) {
-          let edgePercent = cfg.globalEdge ?? 0;
+        const perGame = (cfg.perGame || []) as any[];
+        const gameOverride = perGame.find(
+          (g: any) => g.enabled && g.name?.toLowerCase() === (gameType || "").toLowerCase()
+        );
 
-          const perGame = (cfg.perGame || []) as any[];
-          const gameOverride = perGame.find(
-            (g: any) => g.enabled && g.name?.toLowerCase() === (gameType || "").toLowerCase()
-          );
-          if (gameOverride) {
-            edgePercent = gameOverride.edge;
-          }
+        // Per-game override applies regardless of global toggle.
+        // Global edge only applies when globalEnabled is true AND no per-game override.
+        let edgePercent: number | null = null;
+        if (gameOverride) {
+          edgePercent = Number(gameOverride.edge) || 0;
+        } else if (cfg.globalEnabled) {
+          edgePercent = Number(cfg.globalEdge) || 0;
+        }
 
-          if (edgePercent !== 0) {
-            const multiplier = 1 - edgePercent / 100;
-            adjustedAmount = Math.max(0.01, Math.round(amount * multiplier * 100) / 100);
-          }
+        if (edgePercent !== null && edgePercent !== 0) {
+          const multiplier = Math.max(0, 1 - edgePercent / 100);
+          adjustedAmount = Math.max(0.01, Math.round(amount * multiplier * 100) / 100);
         }
       }
     }
