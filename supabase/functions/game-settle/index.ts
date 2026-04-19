@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
     }
 
     const authenticatedUserId = claimsData.claims.sub;
-    const { userId, amount, gameType, outcome } = await req.json();
+    const { userId, amount, gameType, outcome, probabilityDirective: requestedProbabilityDirective } = await req.json();
 
     if (userId !== authenticatedUserId) {
       return new Response(JSON.stringify({ error: "Forbidden" }), {
@@ -96,7 +96,8 @@ Deno.serve(async (req) => {
     }
 
     // Check game win probability setting
-    if (amount > 0) {
+    let probabilityDirective: "force_win" | "force_loss" | "normal" = "normal";
+    if (amount <= 0) {
       const { data: probSetting } = await admin
         .from("site_settings")
         .select("value")
@@ -108,27 +109,30 @@ Deno.serve(async (req) => {
         let winProbability: number | null = null;
 
         const perGame = (cfg.perGame || []) as any[];
+        const normalizedGameType = (gameType || "").toLowerCase();
         const gameOverride = perGame.find(
-          (g: any) => g.enabled && g.gameName?.toLowerCase() === (gameType || "").toLowerCase()
+          (g: any) => g.enabled && (
+            g.gameName?.toLowerCase() === normalizedGameType ||
+            g.name?.toLowerCase() === normalizedGameType
+          )
         );
+
         if (gameOverride) {
-          winProbability = gameOverride.probability;
+          winProbability = Number(gameOverride.probability);
         } else if (cfg.globalEnabled) {
-          winProbability = cfg.globalProbability;
+          winProbability = Number(cfg.globalProbability);
         }
 
-        if (winProbability !== null && winProbability < 100) {
-          const roll = Math.random() * 100;
-          if (roll >= winProbability) {
-            const { data: currentProfile } = await admin
-              .from("profiles")
-              .select(`${balanceField}`)
-              .eq("user_id", userId)
-              .single();
-            const currentBal = Number(currentProfile?.[balanceField]) || 0;
-            return new Response(JSON.stringify({ success: true, balance: currentBal, forced_loss: true }), {
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            });
+        if (requestedProbabilityDirective === "force_win" || requestedProbabilityDirective === "force_loss") {
+          probabilityDirective = requestedProbabilityDirective;
+        } else if (winProbability !== null && !Number.isNaN(winProbability)) {
+          if (winProbability >= 100) {
+            probabilityDirective = "force_win";
+          } else if (winProbability <= 0) {
+            probabilityDirective = "force_loss";
+          } else if (amount <= 0) {
+            const roll = Math.random() * 100;
+            probabilityDirective = roll < winProbability ? "force_win" : "force_loss";
           }
         }
       }
@@ -218,7 +222,7 @@ Deno.serve(async (req) => {
       description: `${gameType} - ${outcome}`,
     });
 
-    return new Response(JSON.stringify({ success: true, balance: newBalance }), {
+    return new Response(JSON.stringify({ success: true, balance: newBalance, probabilityDirective }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {

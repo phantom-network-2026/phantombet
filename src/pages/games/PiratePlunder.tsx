@@ -52,6 +52,11 @@ const SYMBOL_BY_ID = Object.fromEntries(SYMBOLS.map((s) => [s.id, s]));
 
 const REELS = 6;
 const ROWS = 4;
+const TARGET_SPIN_MS = 2500;
+const REEL_STOP_DELAY_MS = 120;
+const REEL_STOP_DURATION_MS = 700;
+const FINAL_REEL_SETTLE_MS = REEL_STOP_DURATION_MS + REEL_STOP_DELAY_MS * (REELS - 1);
+const MIN_SPIN_LOOP_MS = Math.max(0, TARGET_SPIN_MS - FINAL_REEL_SETTLE_MS);
 
 // Pre-compute weighted pool for spins (excludes wild from spin pool — wild appears via "scatter trigger" or dropped randomly)
 const SPIN_POOL: string[] = (() => {
@@ -73,6 +78,36 @@ function generateGrid(forceLoss = false): string[][] {
   return Array.from({ length: REELS }, () =>
     Array.from({ length: ROWS }, () => randomSymbol(forceLoss))
   );
+}
+
+function generateLosingGrid(): string[][] {
+  for (let attempt = 0; attempt < 200; attempt++) {
+    const grid = generateGrid(true);
+    const { totalWin, scatterCount } = evaluateGrid(grid, 1);
+    if (totalWin === 0 && scatterCount < 5) return grid;
+  }
+  return generateGrid(true);
+}
+
+function generateWinningGrid(): string[][] {
+  const candidates = SYMBOLS.filter((symbol) => symbol.id !== "key" && symbol.id !== "chest");
+  const fallbackId = candidates[0]?.id ?? "doubloon";
+
+  for (let attempt = 0; attempt < 200; attempt++) {
+    const grid = generateLosingGrid();
+    const winId = candidates[attempt % Math.max(candidates.length, 1)]?.id ?? fallbackId;
+    const blockerId = candidates[(attempt + 1) % Math.max(candidates.length, 1)]?.id ?? fallbackId;
+
+    grid[0][0] = winId;
+    grid[1][0] = winId;
+    grid[2][0] = winId;
+    if (REELS > 3) grid[3][0] = blockerId === winId ? fallbackId : blockerId;
+
+    const { totalWin, scatterCount } = evaluateGrid(grid, 1);
+    if (totalWin > 0 && scatterCount < 4) return grid;
+  }
+
+  return generateBonusGrid();
 }
 
 // Force a guaranteed bonus map drop (4+ chests on the bonus map row)
@@ -465,8 +500,8 @@ function Reel({
   // Resting position translateY = -(SPIN_LEN cells) so the last ROWS cells are visible.
   const restingPercent = -(SPIN_LEN / strip.length) * 100;
   const startPercent = 0; // start showing the random symbols at the top
-  const stopDelay = colIndex * 0.18; // sequential stop per reel
-  const spinDuration = 0.8 + stopDelay; // total spin time for this column
+  const stopDelay = (colIndex * REEL_STOP_DELAY_MS) / 1000; // sequential stop per reel
+  const spinDuration = REEL_STOP_DURATION_MS / 1000; // total stop animation per column
 
   return (
     <div
@@ -658,8 +693,16 @@ function PiratePlunderInner() {
     return () => clearInterval(iv);
   }, []);
 
+  type ProbabilityDirective = "force_win" | "force_loss" | "normal";
+  const lastProbabilityDirectiveRef = useRef<ProbabilityDirective>("normal");
+
   // Settle bet/win server-side
-  const settle = useCallback(async (amount: number, outcome: string) => {
+  const settle = useCallback(async (
+    amount: number,
+    outcome: string,
+    probabilityDirective: ProbabilityDirective = "normal",
+    refresh = true,
+  ) => {
     const u = userRef.current;
     if (!u || amount === 0) return null;
 
@@ -676,13 +719,14 @@ function PiratePlunderInner() {
     }
 
     const { data, error } = await supabase.functions.invoke("game-settle", {
-      body: { userId: u.id, amount, gameType: GAME_TITLE, outcome },
+      body: { userId: u.id, amount, gameType: GAME_TITLE, outcome, probabilityDirective },
     });
     if (error) {
       console.error("Pirate Plunder settle error:", error);
       return null;
     }
-    await refreshProfile();
+    if (refresh) await refreshProfile();
+    else void refreshProfile();
     return data;
   }, [refreshProfile]);
 
@@ -749,26 +793,39 @@ function PiratePlunderInner() {
     setLastWin(0);
     sfx.spinStart();
 
+    const spinWindow = new Promise((resolve) => setTimeout(resolve, MIN_SPIN_LOOP_MS));
+    let spinDirective: ProbabilityDirective = "normal";
+
     // Deduct bet first (free spins skip this)
     if (!isFree) {
-      const r = await settle(-bet, "Pirate Plunder bet");
+      const r = await settle(-bet, "Pirate Plunder bet", "normal", false);
       if (!r) { setSpinning(false); return; }
+      spinDirective = r.probabilityDirective === "force_win" || r.probabilityDirective === "force_loss"
+        ? r.probabilityDirective
+        : "normal";
     }
 
-    const triggerBonus = Math.random() < 0.06;
-    const newGrid = triggerBonus ? generateBonusGrid() : generateGrid();
+    lastProbabilityDirectiveRef.current = spinDirective;
+
+    const triggerBonus = spinDirective === "normal" && Math.random() < 0.06;
+    const newGrid = spinDirective === "force_win"
+      ? generateWinningGrid()
+      : spinDirective === "force_loss"
+        ? generateLosingGrid()
+        : triggerBonus
+          ? generateBonusGrid()
+          : generateGrid();
+
+    setGrid(newGrid);
+    await spinWindow;
 
     // Reels stop in sequence — play a thud per column
     for (let i = 0; i < REELS; i++) {
-      setTimeout(() => sfx.reelStop(i), 800 + i * 180);
+      setTimeout(() => sfx.reelStop(i), i * REEL_STOP_DELAY_MS);
     }
 
-    setGrid(newGrid);
-
-    // Wait for ALL reels to visually finish stopping (~2.5s)
-    await new Promise((r) => setTimeout(r, 2500));
     setSpinning(false);
-    await new Promise((r) => setTimeout(r, 250));
+    await new Promise((r) => setTimeout(r, FINAL_REEL_SETTLE_MS + 120));
 
     const { totalWin, lines, scatterCount } = evaluateGrid(newGrid, bet);
     setWinLines(lines);
@@ -776,7 +833,7 @@ function PiratePlunderInner() {
     if (totalWin > 0) {
       setLastWin(totalWin);
       lines.forEach((_, i) => setTimeout(() => sfx.coin(i), i * 110));
-      await settle(totalWin, "Pirate Plunder win");
+      await settle(totalWin, "Pirate Plunder win", lastProbabilityDirectiveRef.current);
       const ratio = totalWin / bet;
       if (ratio >= 10) {
         setTimeout(() => sfx.bigWin(), 200);

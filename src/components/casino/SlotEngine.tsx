@@ -54,6 +54,11 @@ export type SlotTheme = {
 const REELS = 6;
 const ROWS = 4;
 const BET_TIERS = [0.1, 0.2, 0.5, 1, 2, 5];
+const TARGET_SPIN_MS = 2500;
+const REEL_STOP_DELAY_MS = 120;
+const REEL_STOP_DURATION_MS = 700;
+const FINAL_REEL_SETTLE_MS = REEL_STOP_DURATION_MS + REEL_STOP_DELAY_MS * (REELS - 1);
+const MIN_SPIN_LOOP_MS = Math.max(0, TARGET_SPIN_MS - FINAL_REEL_SETTLE_MS);
 
 const PAYLINES: number[][] = [
   [0, 0, 0, 0, 0, 0],
@@ -86,8 +91,51 @@ function makeRandomSymbol(pool: string[], wildId: string) {
   };
 }
 
+
 function generateGrid(rand: (force?: boolean) => string, force = false): string[][] {
   return Array.from({ length: REELS }, () => Array.from({ length: ROWS }, () => rand(force)));
+}
+
+function generateLosingGrid(
+  rand: (force?: boolean) => string,
+  symMap: Record<string, SlotSymbol>,
+  symbols: SlotSymbol[],
+  wildId: string,
+  scatterId: string,
+): string[][] {
+  for (let attempt = 0; attempt < 200; attempt++) {
+    const grid = generateGrid(rand, true);
+    const { totalWin, scatterCount } = evaluateGrid(grid, 1, symMap, wildId, scatterId);
+    if (totalWin === 0 && scatterCount < 5) return grid;
+  }
+  return generateGrid(rand, true);
+}
+
+function generateWinningGrid(
+  rand: (force?: boolean) => string,
+  symMap: Record<string, SlotSymbol>,
+  symbols: SlotSymbol[],
+  wildId: string,
+  scatterId: string,
+): string[][] {
+  const candidates = symbols.filter((symbol) => symbol.id !== wildId && symbol.id !== scatterId);
+  const fallbackId = candidates[0]?.id ?? symbols[0]?.id ?? scatterId;
+
+  for (let attempt = 0; attempt < 200; attempt++) {
+    const grid = generateLosingGrid(rand, symMap, symbols, wildId, scatterId);
+    const winId = candidates[attempt % Math.max(candidates.length, 1)]?.id ?? fallbackId;
+    const blockerId = candidates[(attempt + 1) % Math.max(candidates.length, 1)]?.id ?? fallbackId;
+
+    grid[0][0] = winId;
+    grid[1][0] = winId;
+    grid[2][0] = winId;
+    if (REELS > 3) grid[3][0] = blockerId === winId ? fallbackId : blockerId;
+
+    const { totalWin, scatterCount } = evaluateGrid(grid, 1, symMap, wildId, scatterId);
+    if (totalWin > 0 && scatterCount < 5) return grid;
+  }
+
+  return generateBonusGrid(rand, scatterId);
 }
 
 function generateBonusGrid(rand: (force?: boolean) => string, scatterId: string): string[][] {
@@ -167,8 +215,8 @@ function Reel({
 
   const strip = stripRef.current.length ? stripRef.current : finalSymbols;
   const restingPercent = -(SPIN_LEN / strip.length) * 100;
-  const stopDelay = colIndex * 0.18;
-  const spinDuration = 0.8 + stopDelay;
+  const stopDelay = (colIndex * REEL_STOP_DELAY_MS) / 1000;
+  const spinDuration = REEL_STOP_DURATION_MS / 1000;
 
   return (
     <div className="relative overflow-hidden rounded-md bg-black/40" style={{ aspectRatio: `1 / ${ROWS}` }}>
@@ -491,7 +539,15 @@ function SlotEngineInner({ theme }: { theme: SlotTheme }) {
     return () => clearInterval(iv);
   }, []);
 
-  const settle = useCallback(async (amount: number, outcome: string) => {
+  type ProbabilityDirective = "force_win" | "force_loss" | "normal";
+  const lastProbabilityDirectiveRef = useRef<ProbabilityDirective>("normal");
+
+  const settle = useCallback(async (
+    amount: number,
+    outcome: string,
+    probabilityDirective: ProbabilityDirective = "normal",
+    refresh = true,
+  ) => {
     const u = userRef.current;
     if (!u || amount === 0) return null;
     const { data: sessionData } = await supabase.auth.getSession();
@@ -502,13 +558,14 @@ function SlotEngineInner({ theme }: { theme: SlotTheme }) {
     }
     if (!token) return null;
     const { data, error } = await supabase.functions.invoke("game-settle", {
-      body: { userId: u.id, amount, gameType: theme.title, outcome },
+      body: { userId: u.id, amount, gameType: theme.title, outcome, probabilityDirective },
     });
     if (error) {
       console.error(`${theme.title} settle error:`, error);
       return null;
     }
-    await refreshProfile();
+    if (refresh) await refreshProfile();
+    else void refreshProfile();
     return data;
   }, [refreshProfile, theme.title]);
 
@@ -555,25 +612,46 @@ function SlotEngineInner({ theme }: { theme: SlotTheme }) {
       toast({ title: "Insufficient balance", description: `You need $${bet.toFixed(2)} to spin.`, variant: "destructive" });
       return;
     }
+
     setSpinning(true);
     setWinLines([]);
     setLastWin(0);
     sfx.spinStart();
 
+    const spinWindow = new Promise((resolve) => setTimeout(resolve, MIN_SPIN_LOOP_MS));
+    let spinDirective: ProbabilityDirective = "normal";
+
     if (!isFree) {
-      const r = await settle(-bet, `${theme.title} bet`);
-      if (!r) { setSpinning(false); return; }
+      const r = await settle(-bet, `${theme.title} bet`, "normal", false);
+      if (!r) {
+        setSpinning(false);
+        return;
+      }
+      spinDirective = r.probabilityDirective === "force_win" || r.probabilityDirective === "force_loss"
+        ? r.probabilityDirective
+        : "normal";
     }
 
-    const triggerBonus = Math.random() < 0.06;
-    const newGrid = triggerBonus ? generateBonusGrid(rand, theme.scatterId) : generateGrid(rand);
+    lastProbabilityDirectiveRef.current = spinDirective;
 
-    for (let i = 0; i < REELS; i++) setTimeout(() => sfx.reelStop(i), 800 + i * 180);
+    const triggerBonus = spinDirective === "normal" && Math.random() < 0.06;
+    const newGrid = spinDirective === "force_win"
+      ? generateWinningGrid(rand, symMap, theme.symbols, theme.wildId, theme.scatterId)
+      : spinDirective === "force_loss"
+        ? generateLosingGrid(rand, symMap, theme.symbols, theme.wildId, theme.scatterId)
+        : triggerBonus
+          ? generateBonusGrid(rand, theme.scatterId)
+          : generateGrid(rand);
 
     setGrid(newGrid);
-    await new Promise((r) => setTimeout(r, 2500));
+    await spinWindow;
+
+    for (let i = 0; i < REELS; i++) {
+      setTimeout(() => sfx.reelStop(i), i * REEL_STOP_DELAY_MS);
+    }
+
     setSpinning(false);
-    await new Promise((r) => setTimeout(r, 250));
+    await new Promise((r) => setTimeout(r, FINAL_REEL_SETTLE_MS + 120));
 
     const { totalWin, lines, scatterCount } = evaluateGrid(newGrid, bet, symMap, theme.wildId, theme.scatterId);
     setWinLines(lines);
@@ -581,7 +659,7 @@ function SlotEngineInner({ theme }: { theme: SlotTheme }) {
     if (totalWin > 0) {
       setLastWin(totalWin);
       lines.forEach((_, i) => setTimeout(() => sfx.coin(i), i * 110));
-      await settle(totalWin, `${theme.title} win`);
+      await settle(totalWin, `${theme.title} win`, lastProbabilityDirectiveRef.current);
       const ratio = totalWin / bet;
       if (ratio >= 10) setTimeout(() => sfx.bigWin(), 200);
       triggerBigWin(totalWin);
@@ -592,7 +670,7 @@ function SlotEngineInner({ theme }: { theme: SlotTheme }) {
     if (scatterCount >= 5) {
       setTimeout(() => { sfx.bonusJingle(); setBonusActive(true); }, 800);
     }
-  }, [spinning, bonusActive, bet, settle, sfx, rand, symMap, theme.scatterId, theme.title, theme.wildId]);
+  }, [spinning, bonusActive, bet, settle, sfx, rand, symMap, theme.scatterId, theme.symbols, theme.title, theme.wildId]);
 
   const handleBonusComplete = useCallback(async (winAmt: number) => {
     setBonusActive(false);
