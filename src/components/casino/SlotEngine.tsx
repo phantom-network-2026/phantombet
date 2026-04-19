@@ -167,8 +167,8 @@ function Reel({
 
   const strip = stripRef.current.length ? stripRef.current : finalSymbols;
   const restingPercent = -(SPIN_LEN / strip.length) * 100;
-  const stopDelay = colIndex * 0.35;
-  const spinDuration = 1.2 + stopDelay;
+  const stopDelay = colIndex * 0.18;
+  const spinDuration = 0.8 + stopDelay;
 
   return (
     <div className="relative overflow-hidden rounded-md bg-black/40" style={{ aspectRatio: `1 / ${ROWS}` }}>
@@ -568,10 +568,10 @@ function SlotEngineInner({ theme }: { theme: SlotTheme }) {
     const triggerBonus = Math.random() < 0.06;
     const newGrid = triggerBonus ? generateBonusGrid(rand, theme.scatterId) : generateGrid(rand);
 
-    for (let i = 0; i < REELS; i++) setTimeout(() => sfx.reelStop(i), 1200 + i * 350);
+    for (let i = 0; i < REELS; i++) setTimeout(() => sfx.reelStop(i), 800 + i * 180);
 
     setGrid(newGrid);
-    await new Promise((r) => setTimeout(r, 4200));
+    await new Promise((r) => setTimeout(r, 2500));
     setSpinning(false);
     await new Promise((r) => setTimeout(r, 250));
 
