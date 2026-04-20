@@ -48,6 +48,8 @@ export type SlotTheme = {
   emojiRight: string;
   paytableTitle?: string;
   primaryHsl?: string;          // for hold ring
+  /** Which bonus mini-game to play. Defaults to "map" (Pirate Plunder pick-til-end). */
+  bonusType?: "map" | "fishing" | "siege" | "wheel" | "gifts";
 };
 
 // ==================== Constants ====================
