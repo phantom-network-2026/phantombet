@@ -359,8 +359,8 @@ function WinPopup({ amount, bet, onDone, theme }: { amount: number; bet: number;
   );
 }
 
-// ==================== Bonus Map ====================
-function BonusRound({ bet, onComplete, theme }: { bet: number; onComplete: (totalWin: number) => void; theme: SlotTheme }) {
+// ==================== Bonus: Map (default — Pirate Plunder) ====================
+function BonusMap({ bet, onComplete, theme }: { bet: number; onComplete: (totalWin: number) => void; theme: SlotTheme }) {
   const [revealed, setRevealed] = useState<Record<number, number | "end">>({});
   const [total, setTotal] = useState(0);
   const [done, setDone] = useState(false);
