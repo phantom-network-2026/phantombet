@@ -14,7 +14,7 @@ const SLOT_GAMES: { slug: string; name: string }[] = [
   { slug: "fishing-mayhem", name: "Fishing Mayhem" },
   { slug: "castle-defence", name: "Castle Defence" },
   { slug: "lucky-7s", name: "Lucky 7s" },
-  { slug: "jackpot-joy", name: "JackpotJoy" },
+  { slug: "jackpotjoy", name: "JackpotJoy" },
 ];
 
 interface GameBonus {
