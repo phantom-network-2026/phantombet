@@ -696,6 +696,27 @@ function PiratePlunderInner() {
   type ProbabilityDirective = "force_win" | "force_loss" | "normal";
   const lastProbabilityDirectiveRef = useRef<ProbabilityDirective>("normal");
 
+  // Admin-configurable bonus chance (per game, 0..1). Default 6%.
+  const bonusChanceRef = useRef<number>(0.06);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await supabase.functions.invoke("get-public-settings", {
+          body: { keys: ["bonus_probability"] },
+        });
+        const cfg = (data as any)?.settings?.bonus_probability;
+        const list: any[] = cfg?.perGame || [];
+        const entry = list.find((g) => g.slug === "pirate-plunder" && g.enabled);
+        if (!cancelled && entry) {
+          const p = Math.max(0, Math.min(100, Number(entry.probability) || 0));
+          bonusChanceRef.current = p / 100;
+        }
+      } catch { /* keep default */ }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   // Settle bet/win server-side
   const settle = useCallback(async (
     amount: number,
@@ -807,13 +828,14 @@ function PiratePlunderInner() {
 
     lastProbabilityDirectiveRef.current = spinDirective;
 
-    const triggerBonus = spinDirective === "normal" && Math.random() < 0.06;
-    const newGrid = spinDirective === "force_win"
-      ? generateWinningGrid()
-      : spinDirective === "force_loss"
-        ? generateLosingGrid()
-        : triggerBonus
-          ? generateBonusGrid()
+    // Admin-configurable bonus chance (0..1). 0=never, 1=every paid spin.
+    const triggerBonus = !isFree && bonusChanceRef.current > 0 && Math.random() < bonusChanceRef.current;
+    const newGrid = triggerBonus
+      ? generateBonusGrid()
+      : spinDirective === "force_win"
+        ? generateWinningGrid()
+        : spinDirective === "force_loss"
+          ? generateLosingGrid()
           : generateGrid();
 
     setGrid(newGrid);

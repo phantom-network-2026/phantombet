@@ -957,6 +957,28 @@ function SlotEngineInner({ theme }: { theme: SlotTheme }) {
     return () => clearInterval(iv);
   }, []);
 
+  // Admin-configured bonus probability for this slot (per slug). Default 6%.
+  // 0 = bonus never triggers, 1 = bonus on every paid spin.
+  const bonusChanceRef = useRef<number>(0.06);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await supabase.functions.invoke("get-public-settings", {
+          body: { keys: ["bonus_probability"] },
+        });
+        const cfg = (data as any)?.settings?.bonus_probability;
+        const list: any[] = cfg?.perGame || [];
+        const entry = list.find((g) => g.slug === theme.slug && g.enabled);
+        if (!cancelled && entry) {
+          const p = Math.max(0, Math.min(100, Number(entry.probability) || 0));
+          bonusChanceRef.current = p / 100;
+        }
+      } catch { /* keep default */ }
+    })();
+    return () => { cancelled = true; };
+  }, [theme.slug]);
+
   type ProbabilityDirective = "force_win" | "force_loss" | "normal";
   const lastProbabilityDirectiveRef = useRef<ProbabilityDirective>("normal");
 
@@ -1052,13 +1074,15 @@ function SlotEngineInner({ theme }: { theme: SlotTheme }) {
 
     lastProbabilityDirectiveRef.current = spinDirective;
 
-    const triggerBonus = spinDirective === "normal" && Math.random() < 0.06;
-    const newGrid = spinDirective === "force_win"
-      ? generateWinningGrid(rand, symMap, theme.symbols, theme.wildId, theme.scatterId)
-      : spinDirective === "force_loss"
-        ? generateLosingGrid(rand, symMap, theme.symbols, theme.wildId, theme.scatterId)
-        : triggerBonus
-          ? generateBonusGrid(rand, theme.scatterId)
+    // Admin-configurable bonus chance (per game, 0..1). Bonus grid takes precedence
+    // over force_win/force_loss so 100% bonus reliably plays the bonus mini-game.
+    const triggerBonus = !isFree && bonusChanceRef.current > 0 && Math.random() < bonusChanceRef.current;
+    const newGrid = triggerBonus
+      ? generateBonusGrid(rand, theme.scatterId)
+      : spinDirective === "force_win"
+        ? generateWinningGrid(rand, symMap, theme.symbols, theme.wildId, theme.scatterId)
+        : spinDirective === "force_loss"
+          ? generateLosingGrid(rand, symMap, theme.symbols, theme.wildId, theme.scatterId)
           : generateGrid(rand);
 
     setGrid(newGrid);

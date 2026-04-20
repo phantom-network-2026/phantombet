@@ -12,6 +12,7 @@ import { Header } from "@/components/casino/Header";
 import { toast } from "sonner";
 import { HouseEdgePanel } from "@/components/casino/HouseEdgePanel";
 import { GameProbabilityPanel } from "@/components/casino/GameProbabilityPanel";
+import { BonusProbabilityPanel } from "@/components/casino/BonusProbabilityPanel";
 import { PromotionsManager } from "@/components/casino/PromotionsManager";
 import DevConsole from "@/components/casino/DevConsole";
 import AiAgentPanel from "@/components/casino/AiAgentPanel";
@@ -699,6 +700,15 @@ function GameProbabilityWrapper({ onBack }: { onBack: () => void }) {
   return (
     <PanelView title="Game Win Probability" onBack={onBack}>
       <GameProbabilityPanel />
+    </PanelView>
+  );
+}
+
+// ── Bonus Probability Wrapper ───────────────────────────────────
+function BonusProbabilityWrapper({ onBack }: { onBack: () => void }) {
+  return (
+    <PanelView title="Slot Bonus Probability" onBack={onBack}>
+      <BonusProbabilityPanel />
     </PanelView>
   );
 }
@@ -2132,7 +2142,7 @@ function BroadcastPanel({ onBack }: { onBack: () => void }) {
 }
 
 // ── Main cPanel Page ────────────────────────────────────────────
-type ActivePanel = null | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "promotions" | "wallet-mode" | "deposits-withdrawals" | "welcome-config" | "ghost-users" | "broadcasts" | "dev-console" | "ai-agent";
+type ActivePanel = null | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "bonus-probability" | "promotions" | "wallet-mode" | "deposits-withdrawals" | "welcome-config" | "ghost-users" | "broadcasts" | "dev-console" | "ai-agent";
 
 export default function CPanel() {
   const { isAdmin, isOwner, loading, profile } = useAuth();
@@ -2180,6 +2190,7 @@ export default function CPanel() {
           {activePanel === "logs" && <ErrorLogs onBack={back} />}
           {activePanel === "house-edge" && <HouseEdgeWrapper onBack={back} />}
           {activePanel === "game-probability" && <GameProbabilityWrapper onBack={back} />}
+          {activePanel === "bonus-probability" && <BonusProbabilityWrapper onBack={back} />}
           {activePanel === "promotions" && <PromotionsWrapper onBack={back} />}
           {activePanel === "wallet-mode" && <WalletModePanel onBack={back} />}
           {activePanel === "deposits-withdrawals" && <DepositsWithdrawalsPanel onBack={back} />}
@@ -2273,6 +2284,7 @@ export default function CPanel() {
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1">
                 {sec("slot_house_edge") && <ToolCard icon={<Percent className="h-6 w-6" />} label="House Edge" onClick={() => setActivePanel("house-edge")} />}
                 {sec("slot_probability") && <ToolCard icon={<LayoutGrid className="h-6 w-6" />} label="Win Probability" onClick={() => setActivePanel("game-probability")} />}
+                {sec("slot_probability") && <ToolCard icon={<Gift className="h-6 w-6" />} label="Bonus Probability" onClick={() => setActivePanel("bonus-probability")} />}
                 {sec("slot_game_manager") && <ToolCard icon={<Gamepad2 className="h-6 w-6" />} label="Game Manager" onClick={() => setActivePanel("database")} />}
                 {sec("slot_transactions") && <ToolCard icon={<CreditCard className="h-6 w-6" />} label="Transactions" onClick={() => setActivePanel("logs")} />}
                 {sec("slot_prizes") && <ToolCard icon={<Trophy className="h-6 w-6" />} label="Prize Spins" onClick={() => setActivePanel("database")} />}
