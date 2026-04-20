@@ -48,6 +48,8 @@ export type SlotTheme = {
   emojiRight: string;
   paytableTitle?: string;
   primaryHsl?: string;          // for hold ring
+  /** Which bonus mini-game to play. Defaults to "map" (Pirate Plunder pick-til-end). */
+  bonusType?: "map" | "fishing" | "siege" | "wheel" | "gifts";
 };
 
 // ==================== Constants ====================
@@ -357,8 +359,8 @@ function WinPopup({ amount, bet, onDone, theme }: { amount: number; bet: number;
   );
 }
 
-// ==================== Bonus Map ====================
-function BonusRound({ bet, onComplete, theme }: { bet: number; onComplete: (totalWin: number) => void; theme: SlotTheme }) {
+// ==================== Bonus: Map (default — Pirate Plunder) ====================
+function BonusMap({ bet, onComplete, theme }: { bet: number; onComplete: (totalWin: number) => void; theme: SlotTheme }) {
   const [revealed, setRevealed] = useState<Record<number, number | "end">>({});
   const [total, setTotal] = useState(0);
   const [done, setDone] = useState(false);
@@ -441,7 +443,423 @@ function BonusRound({ bet, onComplete, theme }: { bet: number; onComplete: (tota
   );
 }
 
-// ==================== Paytable ====================
+// ==================== Bonus: Fishing (Fishing Mayhem) ====================
+function BonusFishing({ bet, onComplete, theme }: { bet: number; onComplete: (totalWin: number) => void; theme: SlotTheme }) {
+  const [casts, setCasts] = useState(0);
+  const [total, setTotal] = useState(0);
+  const [done, setDone] = useState(false);
+  const [reveal, setReveal] = useState<{ emoji: string; amt: number | "end" } | null>(null);
+  const [casting, setCasting] = useState(false);
+
+  const cast = () => {
+    if (done || casting) return;
+    setCasting(true);
+    setReveal(null);
+    setTimeout(() => {
+      const roll = Math.random();
+      // 18% to hook a shark/boot (end)
+      if (roll < 0.18 && casts >= 1) {
+        setReveal({ emoji: theme.bonusEndEmoji, amt: "end" });
+        setDone(true);
+        setTimeout(() => onComplete(total), 2200);
+      } else {
+        const fishes = ["🐟", "🐠", "🦐", "🦞", "🦀", "🐡", "🐙"];
+        const tier = roll < 0.04 ? 25 : roll < 0.12 ? 10 : roll < 0.3 ? 5 : roll < 0.6 ? 2 : 1;
+        const amt = bet * tier * (0.5 + Math.random() * 0.5);
+        setReveal({ emoji: fishes[Math.floor(Math.random() * fishes.length)], amt });
+        setTotal((t) => t + amt);
+        setCasts((c) => c + 1);
+      }
+      setCasting(false);
+    }, 1200);
+  };
+
+  return (
+    <div className={`absolute inset-0 z-40 bg-gradient-to-b ${theme.bonusBgGradient} flex flex-col items-center justify-center p-4 overflow-hidden`}>
+      {/* water ripples */}
+      {Array.from({ length: 6 }).map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute rounded-full border-2 border-cyan-300/40"
+          style={{ left: "50%", top: "60%", width: 40, height: 40, marginLeft: -20, marginTop: -20 }}
+          animate={{ scale: [1, 4, 6], opacity: [0.6, 0.2, 0] }}
+          transition={{ duration: 3, repeat: Infinity, delay: i * 0.5, ease: "easeOut" }}
+        />
+      ))}
+      <h2 className="font-display text-3xl font-black bg-gradient-to-b from-cyan-200 to-blue-500 bg-clip-text text-transparent drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] mb-1 text-center relative z-10">
+        🎣 {theme.bonusTitle} 🎣
+      </h2>
+      <p className="text-cyan-200/80 text-xs uppercase tracking-widest mb-6 text-center relative z-10">{theme.bonusSubtitle}</p>
+
+      <div className="relative w-64 h-64 flex items-center justify-center">
+        <motion.div
+          className="absolute text-7xl"
+          animate={casting ? { y: [0, 80, 80, 0], rotate: [0, 20, -20, 0] } : { y: [0, -8, 0] }}
+          transition={casting ? { duration: 1.2 } : { duration: 2, repeat: Infinity }}
+        >
+          🎣
+        </motion.div>
+        <AnimatePresence>
+          {reveal && (
+            <motion.div
+              initial={{ scale: 0, y: 50 }}
+              animate={{ scale: [0, 1.4, 1], y: [50, -20, -40] }}
+              exit={{ opacity: 0, y: -100 }}
+              className="absolute flex flex-col items-center"
+            >
+              <span className="text-6xl">{reveal.emoji}</span>
+              {reveal.amt !== "end" && (
+                <span className="text-yellow-300 font-mono font-black text-lg drop-shadow-[0_2px_3px_rgba(0,0,0,0.8)]">+${(reveal.amt as number).toFixed(2)}</span>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      <button
+        onClick={cast}
+        disabled={done || casting}
+        className="mt-4 px-8 py-3 rounded-full bg-gradient-to-b from-cyan-300 via-cyan-500 to-blue-700 border-2 border-cyan-100 shadow-[0_0_20px_rgba(80,200,255,0.6)] text-white font-display font-black uppercase tracking-wider disabled:opacity-50 relative z-10"
+      >
+        {casting ? "Reeling…" : done ? "Done" : "Cast Line"}
+      </button>
+
+      <div className="mt-4 px-6 py-2 rounded-full bg-gradient-to-r from-blue-700 via-cyan-500 to-blue-700 border-2 border-cyan-200/70 shadow-[0_0_20px_rgba(80,200,255,0.6)] relative z-10">
+        <span className="text-black font-display font-black text-lg">CATCH: ${total.toFixed(2)}</span>
+      </div>
+
+      {done && (
+        <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-3 text-red-400 font-display font-bold uppercase tracking-wider text-center relative z-10">
+          {theme.bonusEndMessage}
+        </motion.p>
+      )}
+    </div>
+  );
+}
+
+// ==================== Bonus: Siege (Castle Defence) ====================
+function BonusSiege({ bet, onComplete, theme }: { bet: number; onComplete: (totalWin: number) => void; theme: SlotTheme }) {
+  const [wave, setWave] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [picks, setPicks] = useState<Record<number, "shield" | "sword" | "dragon" | undefined>>({});
+  const [done, setDone] = useState(false);
+  const multiplier = wave; // wave 1=1x, 2=2x, 3=3x
+
+  const layout = useMemo(() => {
+    // 6 attackers per wave, deterministic per wave: 1 dragon (end), some swords (multipliers), some shields (skip)
+    const arr: ("shield" | "sword" | "dragon")[] = ["sword", "sword", "shield", "shield", "dragon", "sword"];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wave]);
+
+  const pick = (i: number) => {
+    if (done || picks[i] !== undefined) return;
+    const kind = layout[i];
+    setPicks((p) => ({ ...p, [i]: kind }));
+    if (kind === "dragon") {
+      setDone(true);
+      setTimeout(() => onComplete(total), 2200);
+    } else if (kind === "sword") {
+      const amt = bet * (1 + Math.random() * 4) * multiplier;
+      setTotal((t) => t + amt);
+    }
+    // count picks; advance wave after 3 picks
+    const next = { ...picks, [i]: kind };
+    const picked = Object.keys(next).length;
+    if (picked >= 3 && kind !== "dragon" && wave < 3) {
+      setTimeout(() => {
+        setWave((w) => w + 1);
+        setPicks({});
+      }, 900);
+    } else if (picked >= 3 && wave === 3 && kind !== "dragon") {
+      setTimeout(() => onComplete(total + (kind === "sword" ? bet * 2 * multiplier : 0)), 1500);
+      setDone(true);
+    }
+  };
+
+  return (
+    <div className={`absolute inset-0 z-40 bg-gradient-to-b ${theme.bonusBgGradient} flex flex-col items-center justify-center p-4 overflow-hidden`}>
+      {/* embers */}
+      {Array.from({ length: 18 }).map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute w-1 h-1 rounded-full bg-orange-300 shadow-[0_0_6px_rgba(255,140,40,0.9)]"
+          style={{ left: `${(i * 11) % 100}%`, bottom: -10 }}
+          animate={{ y: [0, -500], opacity: [0, 1, 0] }}
+          transition={{ duration: 4 + (i % 3), repeat: Infinity, delay: i * 0.2, ease: "linear" }}
+        />
+      ))}
+      <h2 className="font-display text-3xl font-black bg-gradient-to-b from-orange-200 to-red-600 bg-clip-text text-transparent drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] mb-1 text-center relative z-10">
+        ⚔️ {theme.bonusTitle} ⚔️
+      </h2>
+      <p className="text-orange-200/80 text-xs uppercase tracking-widest mb-2 text-center relative z-10">
+        Wave {wave}/3 — {multiplier}x multiplier
+      </p>
+      <div className="text-5xl mb-3">🏰</div>
+
+      <div className="grid grid-cols-3 gap-3 w-full max-w-sm relative z-10">
+        {layout.map((_, i) => {
+          const r = picks[i];
+          return (
+            <motion.button
+              key={`${wave}-${i}`}
+              onClick={() => pick(i)}
+              disabled={done || r !== undefined}
+              className="aspect-square rounded-lg border-2 border-orange-700/60 bg-gradient-to-br from-stone-700 to-stone-900 flex items-center justify-center overflow-hidden"
+              whileHover={r === undefined && !done ? { scale: 1.05 } : {}}
+              whileTap={r === undefined && !done ? { scale: 0.95 } : {}}
+            >
+              {r === undefined ? (
+                <motion.span animate={{ rotate: [0, 5, -5, 0] }} transition={{ duration: 2, repeat: Infinity, delay: i * 0.1 }} className="text-4xl">
+                  ⚔️
+                </motion.span>
+              ) : r === "dragon" ? (
+                <motion.span initial={{ scale: 0, rotate: -180 }} animate={{ scale: 1, rotate: 0 }} className="text-5xl">{theme.bonusEndEmoji}</motion.span>
+              ) : r === "shield" ? (
+                <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-4xl">🛡️</motion.span>
+              ) : (
+                <motion.div initial={{ scale: 0 }} animate={{ scale: [0, 1.3, 1] }} className="flex flex-col items-center">
+                  <span className="text-3xl">⚔️</span>
+                  <span className="text-yellow-300 text-[10px] font-bold font-mono">+{multiplier}x</span>
+                </motion.div>
+              )}
+            </motion.button>
+          );
+        })}
+      </div>
+
+      <div className="mt-4 px-6 py-2 rounded-full bg-gradient-to-r from-red-800 via-orange-500 to-red-800 border-2 border-orange-200/70 shadow-[0_0_20px_rgba(255,120,40,0.6)] relative z-10">
+        <span className="text-black font-display font-black text-lg">PLUNDER: ${total.toFixed(2)}</span>
+      </div>
+
+      {done && (
+        <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-3 text-red-400 font-display font-bold uppercase tracking-wider text-center relative z-10">
+          {theme.bonusEndMessage}
+        </motion.p>
+      )}
+    </div>
+  );
+}
+
+// ==================== Bonus: Wheel (Lucky 7s) ====================
+function BonusWheel({ bet, onComplete, theme }: { bet: number; onComplete: (totalWin: number) => void; theme: SlotTheme }) {
+  const segments = useMemo(() => [1, 2, 5, 10, 3, 25, 1, 50], []);
+  const colors = ["bg-rose-500", "bg-amber-400", "bg-emerald-500", "bg-sky-500", "bg-violet-500", "bg-yellow-300", "bg-pink-500", "bg-orange-500"];
+  const [spinsLeft, setSpinsLeft] = useState(3);
+  const [angle, setAngle] = useState(0);
+  const [total, setTotal] = useState(0);
+  const [spinning, setSpinning] = useState(false);
+  const [lastWin, setLastWin] = useState<number | null>(null);
+
+  const spin = () => {
+    if (spinning || spinsLeft <= 0) return;
+    setSpinning(true);
+    setLastWin(null);
+    const seg = Math.floor(Math.random() * segments.length);
+    const segAngle = 360 / segments.length;
+    const target = 360 * 6 + (360 - seg * segAngle - segAngle / 2);
+    setAngle((a) => a + target);
+    setTimeout(() => {
+      const mult = segments[seg];
+      const win = bet * mult;
+      setTotal((t) => t + win);
+      setLastWin(win);
+      setSpinsLeft((s) => s - 1);
+      setSpinning(false);
+      if (spinsLeft - 1 <= 0) setTimeout(() => onComplete(total + win), 2200);
+    }, 3200);
+  };
+
+  return (
+    <div className={`absolute inset-0 z-40 bg-gradient-to-b ${theme.bonusBgGradient} flex flex-col items-center justify-center p-4 overflow-hidden`}>
+      {/* sparkles */}
+      {Array.from({ length: 20 }).map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute text-yellow-200 text-xl"
+          style={{ left: `${(i * 13) % 100}%`, top: `${(i * 7) % 100}%` }}
+          animate={{ opacity: [0, 1, 0], scale: [0.5, 1, 0.5] }}
+          transition={{ duration: 2 + (i % 3), repeat: Infinity, delay: i * 0.15 }}
+        >
+          ✨
+        </motion.div>
+      ))}
+      <h2 className="font-display text-3xl font-black bg-gradient-to-b from-yellow-200 to-red-600 bg-clip-text text-transparent drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] mb-1 text-center relative z-10">
+        7️⃣ {theme.bonusTitle} 7️⃣
+      </h2>
+      <p className="text-yellow-200/80 text-xs uppercase tracking-widest mb-4 text-center relative z-10">Spins left: {spinsLeft}</p>
+
+      <div className="relative w-64 h-64">
+        {/* pointer */}
+        <div className="absolute left-1/2 -top-2 -translate-x-1/2 z-20 text-3xl drop-shadow-[0_2px_3px_rgba(0,0,0,0.8)]">▼</div>
+        <motion.div
+          className="absolute inset-0 rounded-full border-8 border-yellow-300 shadow-[0_0_30px_rgba(255,220,80,0.8)] overflow-hidden"
+          animate={{ rotate: angle }}
+          transition={{ duration: 3.2, ease: [0.2, 0.8, 0.2, 1] }}
+        >
+          {segments.map((mult, i) => {
+            const segAngle = 360 / segments.length;
+            return (
+              <div
+                key={i}
+                className={`absolute inset-0 ${colors[i % colors.length]} flex items-start justify-center pt-3 text-black font-display font-black text-lg`}
+                style={{
+                  clipPath: `polygon(50% 50%, ${50 + 50 * Math.sin((segAngle * Math.PI) / 180)}% ${50 - 50 * Math.cos((segAngle * Math.PI) / 180)}%, 50% 0%)`,
+                  transform: `rotate(${i * segAngle}deg)`,
+                }}
+              >
+                <span style={{ transform: `rotate(${segAngle / 2}deg)` }}>{mult}x</span>
+              </div>
+            );
+          })}
+        </motion.div>
+        <div className="absolute inset-1/3 rounded-full bg-gradient-to-br from-yellow-300 to-amber-700 border-4 border-yellow-100 flex items-center justify-center text-3xl shadow-inner z-10">
+          7️⃣
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {lastWin !== null && (
+          <motion.div initial={{ scale: 0, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ opacity: 0 }} className="mt-3 text-yellow-300 font-mono font-black text-2xl drop-shadow-[0_2px_3px_rgba(0,0,0,0.8)] relative z-10">
+            +${lastWin.toFixed(2)}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <button
+        onClick={spin}
+        disabled={spinning || spinsLeft <= 0}
+        className="mt-3 px-8 py-3 rounded-full bg-gradient-to-b from-yellow-300 via-amber-500 to-red-700 border-2 border-yellow-100 shadow-[0_0_20px_rgba(255,220,80,0.7)] text-black font-display font-black uppercase tracking-wider disabled:opacity-50 relative z-10"
+      >
+        {spinning ? "Spinning…" : spinsLeft > 0 ? "Spin Wheel" : "Done"}
+      </button>
+
+      <div className="mt-3 px-6 py-2 rounded-full bg-gradient-to-r from-amber-700 via-yellow-400 to-amber-700 border-2 border-yellow-200/70 shadow-[0_0_20px_rgba(255,220,80,0.6)] relative z-10">
+        <span className="text-black font-display font-black text-lg">TOTAL: ${total.toFixed(2)}</span>
+      </div>
+    </div>
+  );
+}
+
+// ==================== Bonus: Gifts (JackpotJoy) ====================
+function BonusGifts({ bet, onComplete, theme }: { bet: number; onComplete: (totalWin: number) => void; theme: SlotTheme }) {
+  const [revealed, setRevealed] = useState<Record<number, number | "empty">>({});
+  const [empties, setEmpties] = useState(0);
+  const [total, setTotal] = useState(0);
+  const [multiplier, setMultiplier] = useState(1);
+  const [done, setDone] = useState(false);
+
+  const prizes = useMemo(() => {
+    const arr: (number | "empty")[] = [
+      bet * 0.5, bet * 1, bet * 2, "empty",
+      bet * 5, bet * 1.5, bet * 3, "empty",
+      bet * 10, bet * 0.75, bet * 25, "empty",
+    ];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }, [bet]);
+
+  const pick = (i: number) => {
+    if (done || revealed[i] !== undefined) return;
+    const prize = prizes[i];
+    setRevealed((r) => ({ ...r, [i]: prize }));
+    if (prize === "empty") {
+      const ne = empties + 1;
+      setEmpties(ne);
+      if (ne >= 3) {
+        setDone(true);
+        setTimeout(() => onComplete(total), 2200);
+      }
+    } else {
+      const win = (prize as number) * multiplier;
+      setTotal((t) => t + win);
+      // each non-empty pick after the first bumps multiplier by +1
+      setMultiplier((m) => m + 1);
+    }
+  };
+
+  return (
+    <div className={`absolute inset-0 z-40 bg-gradient-to-b ${theme.bonusBgGradient} flex flex-col items-center justify-center p-4 overflow-hidden`}>
+      {/* confetti */}
+      {Array.from({ length: 24 }).map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute text-2xl"
+          style={{ left: `${(i * 7) % 100}%`, top: -20 }}
+          animate={{ y: [0, 700], rotate: [0, 720], opacity: [1, 1, 0] }}
+          transition={{ duration: 5 + (i % 4), repeat: Infinity, delay: i * 0.2, ease: "linear" }}
+        >
+          {["🎉", "🎊", "✨", "💖", "💎"][i % 5]}
+        </motion.div>
+      ))}
+      <h2 className="font-display text-3xl font-black bg-gradient-to-b from-pink-200 to-fuchsia-600 bg-clip-text text-transparent drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] mb-1 text-center relative z-10">
+        🎁 {theme.bonusTitle} 🎁
+      </h2>
+      <p className="text-pink-200/90 text-xs uppercase tracking-widest mb-1 text-center relative z-10">{theme.bonusSubtitle}</p>
+      <p className="text-yellow-200 text-sm font-display font-black uppercase tracking-wider mb-3 text-center relative z-10">
+        Multiplier: {multiplier}x · Empties: {empties}/3
+      </p>
+
+      <div className="grid grid-cols-4 gap-2 w-full max-w-md relative z-10">
+        {prizes.map((p, i) => {
+          const r = revealed[i];
+          return (
+            <motion.button
+              key={i}
+              onClick={() => pick(i)}
+              disabled={done || r !== undefined}
+              className="aspect-square rounded-lg border-2 border-pink-400/60 bg-gradient-to-br from-fuchsia-700 to-purple-900 flex items-center justify-center overflow-hidden"
+              whileHover={r === undefined && !done ? { scale: 1.05, rotate: 3 } : {}}
+              whileTap={r === undefined && !done ? { scale: 0.95 } : {}}
+            >
+              {r === undefined ? (
+                <motion.span animate={{ y: [0, -3, 0] }} transition={{ duration: 1.6, repeat: Infinity, delay: i * 0.1 }} className="text-3xl">
+                  🎁
+                </motion.span>
+              ) : r === "empty" ? (
+                <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-3xl opacity-60">📭</motion.span>
+              ) : (
+                <motion.div initial={{ scale: 0, rotate: -90 }} animate={{ scale: [0, 1.3, 1], rotate: 0 }} className="flex flex-col items-center">
+                  <span className="text-2xl">💎</span>
+                  <span className="text-yellow-300 text-[10px] font-bold font-mono">${((r as number) * multiplier / multiplier).toFixed(2)}</span>
+                </motion.div>
+              )}
+            </motion.button>
+          );
+        })}
+      </div>
+
+      <div className="mt-4 px-6 py-2 rounded-full bg-gradient-to-r from-pink-600 via-fuchsia-400 to-pink-600 border-2 border-pink-200/70 shadow-[0_0_20px_rgba(255,80,200,0.6)] relative z-10">
+        <span className="text-black font-display font-black text-lg">JOY: ${total.toFixed(2)}</span>
+      </div>
+
+      {done && (
+        <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-3 text-red-300 font-display font-bold uppercase tracking-wider text-center relative z-10">
+          {theme.bonusEndMessage}
+        </motion.p>
+      )}
+    </div>
+  );
+}
+
+// ==================== Bonus Dispatcher ====================
+function BonusRound(props: { bet: number; onComplete: (totalWin: number) => void; theme: SlotTheme }) {
+  switch (props.theme.bonusType) {
+    case "fishing": return <BonusFishing {...props} />;
+    case "siege":   return <BonusSiege {...props} />;
+    case "wheel":   return <BonusWheel {...props} />;
+    case "gifts":   return <BonusGifts {...props} />;
+    case "map":
+    default:        return <BonusMap {...props} />;
+  }
+}
 function Paytable({ onClose, theme }: { onClose: () => void; theme: SlotTheme }) {
   const order: SlotSymbol["tier"][] = ["wild", "premium", "high", "mid", "low"];
   const rows = [...theme.symbols].sort((a, b) => order.indexOf(a.tier) - order.indexOf(b.tier));
