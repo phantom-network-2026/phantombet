@@ -705,7 +705,7 @@ function PiratePlunderInner() {
         const { data } = await supabase.functions.invoke("get-public-settings", {
           body: { keys: ["bonus_probability"] },
         });
-        const cfg = (data as any)?.bonus_probability;
+        const cfg = (data as any)?.settings?.bonus_probability;
         const list: any[] = cfg?.perGame || [];
         const entry = list.find((g) => g.slug === "pirate-plunder" && g.enabled);
         if (!cancelled && entry) {
