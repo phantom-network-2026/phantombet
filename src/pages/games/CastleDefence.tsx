@@ -92,6 +92,7 @@ const theme: SlotTheme = {
   emojiLeft: "⚔️",
   emojiRight: "🛡️",
   primaryHsl: "20 90% 55%",
+  bonusType: "siege",
 };
 
 export default function CastleDefence() {
