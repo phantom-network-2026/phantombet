@@ -807,13 +807,14 @@ function PiratePlunderInner() {
 
     lastProbabilityDirectiveRef.current = spinDirective;
 
-    const triggerBonus = spinDirective === "normal" && Math.random() < 0.06;
-    const newGrid = spinDirective === "force_win"
-      ? generateWinningGrid()
-      : spinDirective === "force_loss"
-        ? generateLosingGrid()
-        : triggerBonus
-          ? generateBonusGrid()
+    // Admin-configurable bonus chance (0..1). 0=never, 1=every paid spin.
+    const triggerBonus = !isFree && bonusChanceRef.current > 0 && Math.random() < bonusChanceRef.current;
+    const newGrid = triggerBonus
+      ? generateBonusGrid()
+      : spinDirective === "force_win"
+        ? generateWinningGrid()
+        : spinDirective === "force_loss"
+          ? generateLosingGrid()
           : generateGrid();
 
     setGrid(newGrid);
