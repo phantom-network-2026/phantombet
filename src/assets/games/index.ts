@@ -29,6 +29,10 @@ import fishingMayhem from "./fishing-mayhem.jpg";
 import castleDefence from "./castle-defence.jpg";
 import lucky7s from "./lucky-7s.jpg";
 import jackpotjoy from "./jackpotjoy.jpg";
+import royalFlush from "./royal-flush.jpg";
+import aztecGold from "./aztec-gold.jpg";
+import galacticSpins from "./galactic-spins.jpg";
+import sweetBonanza from "./sweet-bonanza.jpg";
 
 export const gameImages: Record<string, string> = {
   "Blackjack": blackjack,
@@ -62,4 +66,8 @@ export const gameImages: Record<string, string> = {
   "Castle Defence": castleDefence,
   "Lucky 7s": lucky7s,
   "JackpotJoy": jackpotjoy,
+  "Royal Flush": royalFlush,
+  "Aztec Gold": aztecGold,
+  "Galactic Spins": galacticSpins,
+  "Sweet Bonanza": sweetBonanza,
 };
