@@ -29,7 +29,7 @@ const BORDER_STYLES = [
 
 const ANIMATED_AVATAR_PRICE = 10;
 const USERNAME_CHANGE_PRICE = 5;
-const HIGH_ROLLER_PRICE = 50;
+const HIGH_ROLLER_PRICE = 500;
 
 export default function Profile() {
   const { user, profile, refreshProfile } = useAuth();
