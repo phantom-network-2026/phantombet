@@ -2284,7 +2284,7 @@ export default function CPanel() {
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1">
                 {sec("slot_house_edge") && <ToolCard icon={<Percent className="h-6 w-6" />} label="House Edge" onClick={() => setActivePanel("house-edge")} />}
                 {sec("slot_probability") && <ToolCard icon={<LayoutGrid className="h-6 w-6" />} label="Win Probability" onClick={() => setActivePanel("game-probability")} />}
-                {sec("slot_probability") && <ToolCard icon={<Gift className="h-6 w-6" />} label="Bonus Probability" onClick={() => setActivePanel("bonus-probability")} />}
+                <ToolCard icon={<Gift className="h-6 w-6" />} label="Bonus Probability" onClick={() => setActivePanel("bonus-probability")} />
                 {sec("slot_game_manager") && <ToolCard icon={<Gamepad2 className="h-6 w-6" />} label="Game Manager" onClick={() => setActivePanel("database")} />}
                 {sec("slot_transactions") && <ToolCard icon={<CreditCard className="h-6 w-6" />} label="Transactions" onClick={() => setActivePanel("logs")} />}
                 {sec("slot_prizes") && <ToolCard icon={<Trophy className="h-6 w-6" />} label="Prize Spins" onClick={() => setActivePanel("database")} />}
