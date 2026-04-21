@@ -15,6 +15,10 @@ const SLOT_GAMES: { slug: string; name: string }[] = [
   { slug: "castle-defence", name: "Castle Defence" },
   { slug: "lucky-7s", name: "Lucky 7s" },
   { slug: "jackpotjoy", name: "JackpotJoy" },
+  { slug: "royal-flush", name: "Royal Flush" },
+  { slug: "aztec-gold", name: "Aztec Gold" },
+  { slug: "galactic-spins", name: "Galactic Spins" },
+  { slug: "sweet-bonanza", name: "Sweet Bonanza" },
 ];
 
 interface GameBonus {

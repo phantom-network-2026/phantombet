@@ -66,6 +66,10 @@ import FishingMayhem from "./pages/games/FishingMayhem.tsx";
 import CastleDefence from "./pages/games/CastleDefence.tsx";
 import Lucky7s from "./pages/games/Lucky7s.tsx";
 import JackpotJoy from "./pages/games/JackpotJoy.tsx";
+import RoyalFlush from "./pages/games/RoyalFlush.tsx";
+import AztecGold from "./pages/games/AztecGold.tsx";
+import GalacticSpins from "./pages/games/GalacticSpins.tsx";
+import SweetBonanza from "./pages/games/SweetBonanza.tsx";
 
 const queryClient = new QueryClient();
 
@@ -142,6 +146,10 @@ const App = () => (
               <Route path="/castle-defence" element={<CastleDefence />} />
               <Route path="/lucky-7s" element={<Lucky7s />} />
               <Route path="/jackpotjoy" element={<JackpotJoy />} />
+              <Route path="/royal-flush" element={<RoyalFlush />} />
+              <Route path="/aztec-gold" element={<AztecGold />} />
+              <Route path="/galactic-spins" element={<GalacticSpins />} />
+              <Route path="/sweet-bonanza" element={<SweetBonanza />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </PresenceTracker>
