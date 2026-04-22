@@ -93,6 +93,7 @@ const theme: SlotTheme = {
   emojiRight: "🛡️",
   primaryHsl: "20 90% 55%",
   bonusType: "siege",
+  skin: "fortress",
 };
 
 export default function CastleDefence() {

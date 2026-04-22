@@ -101,6 +101,7 @@ const theme: SlotTheme = {
   emojiRight: "♥️",
   primaryHsl: "0 80% 55%",
   bonusType: "wheel",
+  skin: "casino-felt",
 };
 
 export default function RoyalFlush() {

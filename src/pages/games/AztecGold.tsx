@@ -104,6 +104,7 @@ const theme: SlotTheme = {
   emojiRight: "👑",
   primaryHsl: "40 90% 55%",
   bonusType: "map",
+  skin: "tablet",
 };
 
 export default function AztecGold() {

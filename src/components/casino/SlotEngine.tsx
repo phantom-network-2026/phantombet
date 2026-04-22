@@ -50,7 +50,24 @@ export type SlotTheme = {
   primaryHsl?: string;          // for hold ring
   /** Which bonus mini-game to play. Defaults to "map" (Pirate Plunder pick-til-end). */
   bonusType?: "map" | "fishing" | "siege" | "wheel" | "gifts";
+  /**
+   * Visual chrome variant. Each skin produces a different layout shell
+   * (background fx, jackpot strip style, frame ornaments, side decorations,
+   * win label). Defaults to "classic".
+   */
+  skin?: SlotSkin;
 };
+
+export type SlotSkin =
+  | "classic"      // default
+  | "tablet"       // stone tablet (Aztec)
+  | "aquarium"     // glassy aquarium with bubbles (Fishing)
+  | "neon-arcade"  // 80s arcade neon (Lucky7s)
+  | "carnival"     // confetti & marquee (JackpotJoy)
+  | "cosmic"       // starfield + nebula (Galactic)
+  | "casino-felt"  // poker felt + chips (RoyalFlush)
+  | "candy"        // glossy candy panels (SweetBonanza)
+  | "fortress";    // medieval banners (Castle)
 
 // ==================== Constants ====================
 const REELS = 6;
@@ -916,6 +933,372 @@ function Paytable({ onClose, theme }: { onClose: () => void; theme: SlotTheme })
 }
 
 // ==================== Main Engine ====================
+
+// ==================== Skin: Background FX ====================
+function SkinBackground({ skin }: { skin: SlotSkin }) {
+  if (skin === "aquarium") {
+    return (
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 50% 0%, rgba(120,200,255,0.25), transparent 60%)" }} />
+        {Array.from({ length: 18 }).map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute rounded-full bg-cyan-200/40 border border-cyan-100/60"
+            style={{ left: `${(i * 6.1) % 100}%`, bottom: -10, width: 6 + (i % 4) * 3, height: 6 + (i % 4) * 3 }}
+            animate={{ y: [0, -700], opacity: [0, 0.8, 0], x: [0, (i % 2 ? 25 : -25)] }}
+            transition={{ duration: 6 + (i % 4), repeat: Infinity, delay: i * 0.4, ease: "linear" }}
+          />
+        ))}
+      </div>
+    );
+  }
+  if (skin === "cosmic") {
+    return (
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 30% 30%, rgba(180,90,255,0.35), transparent 50%), radial-gradient(ellipse at 70% 70%, rgba(80,200,255,0.25), transparent 50%)" }} />
+        {Array.from({ length: 60 }).map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute rounded-full bg-white"
+            style={{ left: `${(i * 13.7) % 100}%`, top: `${(i * 7.3) % 100}%`, width: 1 + (i % 3), height: 1 + (i % 3) }}
+            animate={{ opacity: [0.2, 1, 0.2] }}
+            transition={{ duration: 1.5 + (i % 4), repeat: Infinity, delay: i * 0.05 }}
+          />
+        ))}
+      </div>
+    );
+  }
+  if (skin === "neon-arcade") {
+    return (
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute inset-0" style={{
+          backgroundImage: "linear-gradient(rgba(255,0,128,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,255,0.08) 1px, transparent 1px)",
+          backgroundSize: "30px 30px",
+        }} />
+        <motion.div
+          className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-fuchsia-400 to-transparent shadow-[0_0_15px_rgba(255,80,200,0.9)]"
+          animate={{ top: ["0%", "100%"] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+        />
+      </div>
+    );
+  }
+  if (skin === "carnival") {
+    return (
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {Array.from({ length: 22 }).map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute text-xl"
+            style={{ left: `${(i * 7) % 100}%`, top: -20 }}
+            animate={{ y: [0, 700], rotate: [0, 720], opacity: [1, 1, 0] }}
+            transition={{ duration: 5 + (i % 4), repeat: Infinity, delay: i * 0.25, ease: "linear" }}
+          >
+            {["🎉", "🎊", "✨", "🎈"][i % 4]}
+          </motion.div>
+        ))}
+      </div>
+    );
+  }
+  if (skin === "casino-felt") {
+    return (
+      <div className="absolute inset-0 pointer-events-none" style={{
+        backgroundImage: "radial-gradient(circle at 20% 20%, rgba(0,0,0,0.5), transparent 60%), radial-gradient(circle at 80% 80%, rgba(0,0,0,0.5), transparent 60%)",
+      }} />
+    );
+  }
+  if (skin === "candy") {
+    return (
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {Array.from({ length: 16 }).map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute text-2xl"
+            style={{ left: `${(i * 8) % 100}%`, bottom: -20 }}
+            animate={{ y: [0, -700], rotate: [0, 360], opacity: [0, 1, 0] }}
+            transition={{ duration: 8 + (i % 3), repeat: Infinity, delay: i * 0.5, ease: "linear" }}
+          >
+            {["🍭", "🍬", "🧁", "🍩"][i % 4]}
+          </motion.div>
+        ))}
+      </div>
+    );
+  }
+  if (skin === "tablet") {
+    return (
+      <div className="absolute inset-0 pointer-events-none" style={{
+        backgroundImage: "repeating-linear-gradient(45deg, rgba(0,0,0,0.05) 0 2px, transparent 2px 6px), radial-gradient(circle at 50% 30%, rgba(255,180,40,0.15), transparent 60%)",
+      }} />
+    );
+  }
+  if (skin === "fortress") {
+    return (
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {Array.from({ length: 14 }).map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 rounded-full bg-orange-300 shadow-[0_0_6px_rgba(255,140,40,0.9)]"
+            style={{ left: `${(i * 7.3) % 100}%`, bottom: -10 }}
+            animate={{ y: [0, -500], opacity: [0, 1, 0], x: [0, (i % 2 ? 20 : -20)] }}
+            transition={{ duration: 5 + (i % 4), repeat: Infinity, delay: i * 0.45, ease: "linear" }}
+          />
+        ))}
+      </div>
+    );
+  }
+  return null;
+}
+
+// ==================== Skin: Jackpot Strip ====================
+function SkinJackpotStrip({ skin, theme }: { skin: SlotSkin; theme: SlotTheme }) {
+  // Carnival: marquee bulb-edged strip
+  if (skin === "carnival") {
+    return (
+      <div className="relative z-10 px-2 pt-2">
+        <div className="relative rounded-full border-2 border-pink-300/70 bg-gradient-to-r from-fuchsia-700 via-pink-500 to-fuchsia-700 py-1 px-2 flex justify-around shadow-[0_0_20px_rgba(255,80,200,0.5)]">
+          {JACKPOT_LABELS.map((l, i) => (
+            <div key={l} className="flex items-baseline gap-1">
+              <motion.span animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.15 }} className="w-1.5 h-1.5 rounded-full bg-yellow-200 shadow-[0_0_6px_rgba(255,230,80,1)]" />
+              <span className="font-display font-black text-[10px] text-white tracking-wider drop-shadow">{l}</span>
+              <span className="font-mono font-bold text-[10px] text-yellow-200">${JACKPOT_VALUES[i]}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  // Cosmic: glowing orbs
+  if (skin === "cosmic") {
+    return (
+      <div className="relative z-10 px-2 pt-2 grid grid-cols-4 gap-1.5">
+        {JACKPOT_LABELS.map((l, i) => (
+          <div key={l} className={`relative rounded-full border border-fuchsia-300/60 bg-gradient-to-br ${theme.jackpotColors[i]} px-1.5 py-1 text-center shadow-[0_0_15px_rgba(180,80,255,0.5)]`}>
+            <div className="font-display font-black text-[9px] text-white tracking-widest drop-shadow">{l}</div>
+            <div className="font-mono font-bold text-[10px] text-white/95">${JACKPOT_VALUES[i]}</div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  // Neon arcade: pixel chips
+  if (skin === "neon-arcade") {
+    return (
+      <div className="relative z-10 px-2 pt-2 grid grid-cols-4 gap-1">
+        {JACKPOT_LABELS.map((l, i) => (
+          <div key={l} className="rounded-none border-2 border-fuchsia-400 bg-black/70 px-1 py-0.5 text-center shadow-[0_0_10px_rgba(255,80,200,0.7),inset_0_0_8px_rgba(0,255,255,0.3)]">
+            <div className="font-mono font-black text-[10px] text-cyan-300 tracking-wider drop-shadow-[0_0_6px_rgba(0,255,255,0.9)]">{l}</div>
+            <div className="font-mono font-black text-[11px] text-fuchsia-300 drop-shadow-[0_0_6px_rgba(255,80,200,0.9)]">${JACKPOT_VALUES[i]}</div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  // Casino felt: poker-chip jackpots
+  if (skin === "casino-felt") {
+    const chipCols = ["bg-red-700", "bg-blue-700", "bg-emerald-700", "bg-yellow-600"];
+    return (
+      <div className="relative z-10 px-2 pt-2 flex justify-around">
+        {JACKPOT_LABELS.map((l, i) => (
+          <div key={l} className={`relative w-14 h-14 rounded-full ${chipCols[i]} border-4 border-dashed border-white/80 flex flex-col items-center justify-center shadow-[0_4px_8px_rgba(0,0,0,0.6),inset_0_0_8px_rgba(0,0,0,0.4)]`}>
+            <span className="font-display font-black text-[8px] text-white tracking-wider">{l}</span>
+            <span className="font-mono font-black text-[9px] text-white">${JACKPOT_VALUES[i]}</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  // Candy: round candy buttons
+  if (skin === "candy") {
+    return (
+      <div className="relative z-10 px-2 pt-2 grid grid-cols-4 gap-1.5">
+        {JACKPOT_LABELS.map((l, i) => (
+          <div key={l} className={`relative rounded-2xl border-2 border-white/80 bg-gradient-to-b ${theme.jackpotColors[i]} px-1 py-1 text-center shadow-[0_4px_0_rgba(0,0,0,0.3),inset_0_2px_4px_rgba(255,255,255,0.6)]`}>
+            <div className="font-display font-black text-[10px] text-white drop-shadow tracking-wider">{l}</div>
+            <div className="font-mono font-black text-[10px] text-white">${JACKPOT_VALUES[i]}</div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  // Aquarium: glassy bubbles
+  if (skin === "aquarium") {
+    return (
+      <div className="relative z-10 px-2 pt-2 flex justify-around gap-1">
+        {JACKPOT_LABELS.map((l, i) => (
+          <div key={l} className="relative flex-1 rounded-full border border-cyan-200/70 bg-gradient-to-b from-cyan-400/30 to-blue-700/40 backdrop-blur px-1 py-0.5 text-center shadow-[inset_0_1px_3px_rgba(255,255,255,0.4),0_0_10px_rgba(80,200,255,0.4)]">
+            <div className="font-display font-black text-[9px] text-cyan-50 tracking-widest">{l}</div>
+            <div className="font-mono font-bold text-[10px] text-yellow-200">${JACKPOT_VALUES[i]}</div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  // Tablet: carved stone
+  if (skin === "tablet") {
+    return (
+      <div className="relative z-10 px-2 pt-2 grid grid-cols-4 gap-1">
+        {JACKPOT_LABELS.map((l, i) => (
+          <div key={l} className="relative rounded-sm border border-amber-900 bg-gradient-to-b from-amber-700 to-amber-900 px-1 py-0.5 text-center shadow-[inset_0_-2px_0_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.2)]">
+            <div className="font-display font-black text-[10px] text-amber-100 tracking-widest drop-shadow-[0_1px_0_rgba(0,0,0,0.8)]">{l}</div>
+            <div className="font-mono font-bold text-[10px] text-yellow-300">${JACKPOT_VALUES[i]}</div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  // Fortress: shield jackpots
+  if (skin === "fortress") {
+    return (
+      <div className="relative z-10 px-2 pt-2 grid grid-cols-4 gap-1">
+        {JACKPOT_LABELS.map((l, i) => (
+          <div key={l} className={`relative border-2 border-orange-300 bg-gradient-to-b ${theme.jackpotColors[i]} px-1 py-0.5 text-center shadow-[0_2px_4px_rgba(0,0,0,0.6)]`}
+            style={{ clipPath: "polygon(0 0, 100% 0, 100% 70%, 50% 100%, 0 70%)" }}>
+            <div className="font-display font-black text-[10px] text-white tracking-wider drop-shadow-[0_1px_1px_rgba(0,0,0,0.9)]">{l}</div>
+            <div className="font-mono font-bold text-[10px] text-white">${JACKPOT_VALUES[i]}</div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  // Classic fallback
+  return (
+    <div className="relative z-10 px-2 pt-2 grid grid-cols-4 gap-1">
+      {JACKPOT_LABELS.map((label, i) => (
+        <div key={label} className={`relative rounded-md border-2 border-yellow-600/70 bg-gradient-to-b ${theme.jackpotColors[i]} px-1 py-0.5 text-center shadow-[0_2px_4px_rgba(0,0,0,0.6)]`}>
+          <div className="font-display font-black text-[10px] text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.9)] tracking-wider">{label}</div>
+          <div className="font-mono font-bold text-[11px] text-black bg-black/20 rounded">${JACKPOT_VALUES[i].toFixed(2)}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ==================== Skin: Frame ornaments ====================
+function SkinFrameClasses(skin: SlotSkin, theme: SlotTheme): { wrapper: string; inner: string } {
+  switch (skin) {
+    case "aquarium":
+      return {
+        wrapper: `relative z-10 mx-2 mt-2 rounded-3xl border-[3px] ${theme.frameBorder} bg-gradient-to-br ${theme.frameBg} shadow-[inset_0_0_30px_rgba(80,200,255,0.4),0_0_30px_rgba(80,200,255,0.4)] p-2`,
+        inner: "grid grid-cols-6 gap-0.5 bg-blue-950/60 rounded-2xl p-1 backdrop-blur",
+      };
+    case "cosmic":
+      return {
+        wrapper: `relative z-10 mx-2 mt-2 rounded-xl border-2 border-fuchsia-400/80 bg-gradient-to-br ${theme.frameBg} shadow-[0_0_40px_rgba(180,80,255,0.5),inset_0_0_20px_rgba(0,0,0,0.7)] p-1.5`,
+        inner: "grid grid-cols-6 gap-0.5 bg-black/70 rounded-lg p-1 ring-1 ring-fuchsia-500/40",
+      };
+    case "neon-arcade":
+      return {
+        wrapper: `relative z-10 mx-2 mt-2 border-4 border-cyan-300 bg-black shadow-[0_0_20px_rgba(0,255,255,0.7),inset_0_0_20px_rgba(255,0,200,0.3)] p-1`,
+        inner: "grid grid-cols-6 gap-0.5 bg-black p-1 border border-fuchsia-500",
+      };
+    case "carnival":
+      return {
+        wrapper: `relative z-10 mx-2 mt-2 rounded-2xl border-[5px] border-pink-300 bg-gradient-to-br ${theme.frameBg} shadow-[0_0_25px_rgba(255,80,200,0.5)] p-1.5`,
+        inner: "grid grid-cols-6 gap-0.5 bg-black/40 rounded-xl p-1",
+      };
+    case "casino-felt":
+      return {
+        wrapper: `relative z-10 mx-2 mt-2 rounded-2xl border-[6px] border-amber-900 bg-gradient-to-br from-emerald-900 via-emerald-800 to-emerald-950 shadow-[inset_0_0_30px_rgba(0,0,0,0.7),0_0_15px_rgba(0,0,0,0.6)] p-2`,
+        inner: "grid grid-cols-6 gap-0.5 bg-emerald-950/70 rounded-xl p-1 ring-1 ring-yellow-700/50",
+      };
+    case "candy":
+      return {
+        wrapper: `relative z-10 mx-2 mt-2 rounded-[2rem] border-[5px] border-white/90 bg-gradient-to-br ${theme.frameBg} shadow-[0_8px_0_rgba(0,0,0,0.3),inset_0_2px_8px_rgba(255,255,255,0.5)] p-2`,
+        inner: "grid grid-cols-6 gap-0.5 bg-pink-950/40 rounded-2xl p-1",
+      };
+    case "tablet":
+      return {
+        wrapper: `relative z-10 mx-2 mt-2 rounded-md border-[4px] border-amber-800 bg-gradient-to-br from-stone-700 via-stone-600 to-stone-800 shadow-[inset_0_0_30px_rgba(0,0,0,0.7),0_0_15px_rgba(255,180,60,0.3)] p-2`,
+        inner: "grid grid-cols-6 gap-0.5 bg-stone-900/70 rounded p-1 ring-1 ring-amber-700/40",
+      };
+    case "fortress":
+      return {
+        wrapper: `relative z-10 mx-2 mt-2 border-[4px] border-orange-700 bg-gradient-to-br ${theme.frameBg} shadow-[inset_0_0_25px_rgba(0,0,0,0.7),0_0_20px_rgba(255,80,20,0.3)] p-1.5`,
+        inner: "grid grid-cols-6 gap-0.5 bg-black/50 p-1 ring-1 ring-orange-600/40",
+      };
+    default:
+      return {
+        wrapper: `relative z-10 mx-2 mt-2 rounded-xl border-[3px] ${theme.frameBorder} bg-gradient-to-br ${theme.frameBg} shadow-[inset_0_0_20px_rgba(0,0,0,0.8),0_0_25px_rgba(255,180,60,0.2)] p-1.5`,
+        inner: "grid grid-cols-6 gap-0.5 bg-black/40 rounded-lg p-1",
+      };
+  }
+}
+
+// ==================== Skin: Side decorations (around frame) ====================
+function SkinSideDecor({ skin }: { skin: SlotSkin }) {
+  if (skin === "tablet") {
+    return (
+      <>
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 text-3xl opacity-70 pointer-events-none select-none">𓂀</div>
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 text-3xl opacity-70 pointer-events-none select-none">𓋹</div>
+      </>
+    );
+  }
+  if (skin === "casino-felt") {
+    return (
+      <>
+        <div className="absolute left-1 top-1/2 -translate-y-1/2 flex flex-col gap-1 pointer-events-none">
+          {["♠", "♥", "♦", "♣"].map((s, i) => (
+            <span key={i} className={`text-2xl ${i % 2 ? "text-red-500" : "text-white"} drop-shadow`}>{s}</span>
+          ))}
+        </div>
+        <div className="absolute right-1 top-1/2 -translate-y-1/2 flex flex-col gap-1 pointer-events-none">
+          {["♣", "♦", "♥", "♠"].map((s, i) => (
+            <span key={i} className={`text-2xl ${i % 2 ? "text-red-500" : "text-white"} drop-shadow`}>{s}</span>
+          ))}
+        </div>
+      </>
+    );
+  }
+  if (skin === "fortress") {
+    return (
+      <>
+        <motion.div className="absolute left-1 top-12 text-3xl pointer-events-none" animate={{ rotate: [-8, 8, -8] }} transition={{ duration: 2.5, repeat: Infinity }}>🔥</motion.div>
+        <motion.div className="absolute right-1 top-12 text-3xl pointer-events-none" animate={{ rotate: [8, -8, 8] }} transition={{ duration: 2.5, repeat: Infinity }}>🔥</motion.div>
+      </>
+    );
+  }
+  if (skin === "candy") {
+    return (
+      <>
+        <motion.div className="absolute left-1 top-16 text-2xl pointer-events-none" animate={{ y: [0, -6, 0], rotate: [-10, 10, -10] }} transition={{ duration: 3, repeat: Infinity }}>🍭</motion.div>
+        <motion.div className="absolute right-1 top-20 text-2xl pointer-events-none" animate={{ y: [0, -6, 0], rotate: [10, -10, 10] }} transition={{ duration: 3, repeat: Infinity }}>🍬</motion.div>
+      </>
+    );
+  }
+  return null;
+}
+
+// ==================== Skin: Win banner ====================
+function SkinWinBanner({ skin, lastWin, freeSpins, spinning }: { skin: SlotSkin; lastWin: number; freeSpins: number; spinning: boolean }) {
+  if (lastWin > 0) {
+    const variants: Record<SlotSkin, string> = {
+      "neon-arcade":  "font-mono text-cyan-300 drop-shadow-[0_0_10px_rgba(0,255,255,0.9)]",
+      "casino-felt":  "font-display text-yellow-200",
+      "candy":        "font-display text-pink-200",
+      "cosmic":       "font-display text-fuchsia-200 drop-shadow-[0_0_10px_rgba(255,80,200,0.7)]",
+      "tablet":       "font-display text-amber-200",
+      "carnival":     "font-display text-yellow-200",
+      "aquarium":     "font-display text-cyan-100",
+      "fortress":     "font-display text-orange-200",
+      "classic":      "font-display text-yellow-300",
+    };
+    return (
+      <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className={`font-black text-base drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] ${variants[skin]}`}>
+        💰 WIN ${lastWin.toFixed(2)}
+      </motion.div>
+    );
+  }
+  if (freeSpins > 0) {
+    return (
+      <motion.div animate={{ opacity: [0.6, 1, 0.6] }} transition={{ duration: 1, repeat: Infinity }} className="font-display font-black text-amber-300 text-xs">
+        🎁 FREE SPINS: {freeSpins}
+      </motion.div>
+    );
+  }
+  return null;
+}
+
 function SlotEngineInner({ theme }: { theme: SlotTheme }) {
   const navigate = useNavigate();
   const { user, profile, refreshProfile } = useAuth();
@@ -1183,6 +1566,8 @@ function SlotEngineInner({ theme }: { theme: SlotTheme }) {
 
   const balance = profile?.balance ?? 0;
   const Loading = theme.loadingScreen;
+  const skin: SlotSkin = theme.skin || "classic";
+  const frameCls = SkinFrameClasses(skin, theme);
 
   return (
     <div className="fixed inset-0 z-50 bg-black flex flex-col overflow-hidden font-sans">
@@ -1214,19 +1599,16 @@ function SlotEngineInner({ theme }: { theme: SlotTheme }) {
 
       {/* Game area */}
       <div className={`flex-1 min-h-0 relative bg-gradient-to-b ${theme.bgGradient} overflow-hidden`}>
-        {/* Jackpot ladder */}
-        <div className="relative z-10 px-2 pt-2 grid grid-cols-4 gap-1">
-          {JACKPOT_LABELS.map((label, i) => (
-            <div key={label} className={`relative rounded-md border-2 border-yellow-600/70 bg-gradient-to-b ${theme.jackpotColors[i]} px-1 py-0.5 text-center shadow-[0_2px_4px_rgba(0,0,0,0.6)]`}>
-              <div className="font-display font-black text-[10px] text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.9)] tracking-wider">{label}</div>
-              <div className="font-mono font-bold text-[11px] text-black bg-black/20 rounded">${JACKPOT_VALUES[i].toFixed(2)}</div>
-            </div>
-          ))}
-        </div>
+        {/* Skin background fx */}
+        <SkinBackground skin={skin} />
 
-        {/* Reels frame */}
-        <div className={`relative z-10 mx-2 mt-2 rounded-xl border-[3px] ${theme.frameBorder} bg-gradient-to-br ${theme.frameBg} shadow-[inset_0_0_20px_rgba(0,0,0,0.8),0_0_25px_rgba(255,180,60,0.2)] p-1.5`}>
-          <div className="grid grid-cols-6 gap-0.5 bg-black/40 rounded-lg p-1">
+        {/* Jackpot strip — varies per skin */}
+        <SkinJackpotStrip skin={skin} theme={theme} />
+
+        {/* Reels frame — frame style varies per skin */}
+        <div className={frameCls.wrapper}>
+          <SkinSideDecor skin={skin} />
+          <div className={frameCls.inner}>
             {grid.map((reel, ci) => (
               <Reel
                 key={ci}
@@ -1242,16 +1624,7 @@ function SlotEngineInner({ theme }: { theme: SlotTheme }) {
         </div>
 
         <div className="relative z-10 text-center mt-2 h-5">
-          {lastWin > 0 && (
-            <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="font-display font-black text-yellow-300 text-base drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
-              💰 WIN ${lastWin.toFixed(2)}
-            </motion.div>
-          )}
-          {freeSpins > 0 && (
-            <motion.div animate={{ opacity: [0.6, 1, 0.6] }} transition={{ duration: 1, repeat: Infinity }} className="font-display font-black text-amber-300 text-xs">
-              🎁 FREE SPINS: {freeSpins}
-            </motion.div>
-          )}
+          <SkinWinBanner skin={skin} lastWin={lastWin} freeSpins={freeSpins} spinning={spinning} />
         </div>
         {!spinning && !lastWin && !freeSpins && (
           <motion.div className="relative z-10 text-center font-display font-black text-white/80 text-sm tracking-widest mt-1" animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity }}>

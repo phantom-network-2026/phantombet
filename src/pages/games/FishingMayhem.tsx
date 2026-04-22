@@ -100,6 +100,7 @@ const theme: SlotTheme = {
   emojiRight: "🐟",
   primaryHsl: "190 90% 55%",
   bonusType: "fishing",
+  skin: "aquarium",
 };
 
 export default function FishingMayhem() {

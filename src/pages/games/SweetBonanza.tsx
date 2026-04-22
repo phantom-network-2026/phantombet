@@ -100,6 +100,7 @@ const theme: SlotTheme = {
   emojiRight: "🧁",
   primaryHsl: "320 90% 70%",
   bonusType: "gifts",
+  skin: "candy",
 };
 
 export default function SweetBonanza() {

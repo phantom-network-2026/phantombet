@@ -101,6 +101,7 @@ const theme: SlotTheme = {
   emojiRight: "💎",
   primaryHsl: "0 90% 55%",
   bonusType: "wheel",
+  skin: "neon-arcade",
 };
 
 export default function Lucky7s() {

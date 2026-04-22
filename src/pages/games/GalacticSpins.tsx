@@ -113,6 +113,7 @@ const theme: SlotTheme = {
   emojiRight: "🪐",
   primaryHsl: "190 90% 55%",
   bonusType: "siege",
+  skin: "cosmic",
 };
 
 export default function GalacticSpins() {
