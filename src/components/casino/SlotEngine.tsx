@@ -50,7 +50,24 @@ export type SlotTheme = {
   primaryHsl?: string;          // for hold ring
   /** Which bonus mini-game to play. Defaults to "map" (Pirate Plunder pick-til-end). */
   bonusType?: "map" | "fishing" | "siege" | "wheel" | "gifts";
+  /**
+   * Visual chrome variant. Each skin produces a different layout shell
+   * (background fx, jackpot strip style, frame ornaments, side decorations,
+   * win label). Defaults to "classic".
+   */
+  skin?: SlotSkin;
 };
+
+export type SlotSkin =
+  | "classic"      // default
+  | "tablet"       // stone tablet (Aztec)
+  | "aquarium"     // glassy aquarium with bubbles (Fishing)
+  | "neon-arcade"  // 80s arcade neon (Lucky7s)
+  | "carnival"     // confetti & marquee (JackpotJoy)
+  | "cosmic"       // starfield + nebula (Galactic)
+  | "casino-felt"  // poker felt + chips (RoyalFlush)
+  | "candy"        // glossy candy panels (SweetBonanza)
+  | "fortress";    // medieval banners (Castle)
 
 // ==================== Constants ====================
 const REELS = 6;
