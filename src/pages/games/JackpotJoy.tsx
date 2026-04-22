@@ -113,6 +113,7 @@ const theme: SlotTheme = {
   emojiRight: "🎊",
   primaryHsl: "320 90% 65%",
   bonusType: "gifts",
+  skin: "carnival",
 };
 
 export default function JackpotJoy() {
