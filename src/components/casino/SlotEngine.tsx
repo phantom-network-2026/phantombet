@@ -1566,6 +1566,8 @@ function SlotEngineInner({ theme }: { theme: SlotTheme }) {
 
   const balance = profile?.balance ?? 0;
   const Loading = theme.loadingScreen;
+  const skin: SlotSkin = theme.skin || "classic";
+  const frameCls = SkinFrameClasses(skin, theme);
 
   return (
     <div className="fixed inset-0 z-50 bg-black flex flex-col overflow-hidden font-sans">
@@ -1597,19 +1599,16 @@ function SlotEngineInner({ theme }: { theme: SlotTheme }) {
 
       {/* Game area */}
       <div className={`flex-1 min-h-0 relative bg-gradient-to-b ${theme.bgGradient} overflow-hidden`}>
-        {/* Jackpot ladder */}
-        <div className="relative z-10 px-2 pt-2 grid grid-cols-4 gap-1">
-          {JACKPOT_LABELS.map((label, i) => (
-            <div key={label} className={`relative rounded-md border-2 border-yellow-600/70 bg-gradient-to-b ${theme.jackpotColors[i]} px-1 py-0.5 text-center shadow-[0_2px_4px_rgba(0,0,0,0.6)]`}>
-              <div className="font-display font-black text-[10px] text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.9)] tracking-wider">{label}</div>
-              <div className="font-mono font-bold text-[11px] text-black bg-black/20 rounded">${JACKPOT_VALUES[i].toFixed(2)}</div>
-            </div>
-          ))}
-        </div>
+        {/* Skin background fx */}
+        <SkinBackground skin={skin} />
 
-        {/* Reels frame */}
-        <div className={`relative z-10 mx-2 mt-2 rounded-xl border-[3px] ${theme.frameBorder} bg-gradient-to-br ${theme.frameBg} shadow-[inset_0_0_20px_rgba(0,0,0,0.8),0_0_25px_rgba(255,180,60,0.2)] p-1.5`}>
-          <div className="grid grid-cols-6 gap-0.5 bg-black/40 rounded-lg p-1">
+        {/* Jackpot strip — varies per skin */}
+        <SkinJackpotStrip skin={skin} theme={theme} />
+
+        {/* Reels frame — frame style varies per skin */}
+        <div className={frameCls.wrapper}>
+          <SkinSideDecor skin={skin} />
+          <div className={frameCls.inner}>
             {grid.map((reel, ci) => (
               <Reel
                 key={ci}
@@ -1625,16 +1624,7 @@ function SlotEngineInner({ theme }: { theme: SlotTheme }) {
         </div>
 
         <div className="relative z-10 text-center mt-2 h-5">
-          {lastWin > 0 && (
-            <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="font-display font-black text-yellow-300 text-base drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
-              💰 WIN ${lastWin.toFixed(2)}
-            </motion.div>
-          )}
-          {freeSpins > 0 && (
-            <motion.div animate={{ opacity: [0.6, 1, 0.6] }} transition={{ duration: 1, repeat: Infinity }} className="font-display font-black text-amber-300 text-xs">
-              🎁 FREE SPINS: {freeSpins}
-            </motion.div>
-          )}
+          <SkinWinBanner skin={skin} lastWin={lastWin} freeSpins={freeSpins} spinning={spinning} />
         </div>
         {!spinning && !lastWin && !freeSpins && (
           <motion.div className="relative z-10 text-center font-display font-black text-white/80 text-sm tracking-widest mt-1" animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity }}>
