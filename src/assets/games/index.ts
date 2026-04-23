@@ -34,6 +34,10 @@ import aztecGold from "./aztec-gold.jpg";
 import galacticSpins from "./galactic-spins.jpg";
 import sweetBonanza from "./sweet-bonanza.jpg";
 import pirateBay from "./pirate-bay.jpg";
+import aztecTreasure from "./aztec-treasure.jpg";
+import vikingVoyage from "./viking-voyage.jpg";
+import egyptianRiches from "./egyptian-riches.jpg";
+import wildWestGold from "./wild-west-gold.jpg";
 
 export const gameImages: Record<string, string> = {
   "Blackjack": blackjack,
@@ -72,4 +76,8 @@ export const gameImages: Record<string, string> = {
   "Galactic Spins": galacticSpins,
   "Sweet Bonanza": sweetBonanza,
   "Pirate Bay": pirateBay,
+  "Aztec Treasure": aztecTreasure,
+  "Viking Voyage": vikingVoyage,
+  "Egyptian Riches": egyptianRiches,
+  "Wild West Gold": wildWestGold,
 };
