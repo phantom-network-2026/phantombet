@@ -6,7 +6,7 @@
  * - Display still uses in-game coins for visuals; the real balance is shown in the parent header.
  */
 (function () {
-  const GAME_TYPE = 'Pirate Bay';
+  const GAME_TYPE = window.__PB_CLONE_TITLE__ || 'Pirate Bay';
   // Display scale: how many in-game coins represent $1 visually
   const COINS_PER_USD = 1000;
   // Default real-money bet per spin (USD). Capped at $5 by server.
