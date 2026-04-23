@@ -33,6 +33,7 @@ import royalFlush from "./royal-flush.jpg";
 import aztecGold from "./aztec-gold.jpg";
 import galacticSpins from "./galactic-spins.jpg";
 import sweetBonanza from "./sweet-bonanza.jpg";
+import pirateBay from "./pirate-bay.jpg";
 
 export const gameImages: Record<string, string> = {
   "Blackjack": blackjack,
@@ -70,4 +71,5 @@ export const gameImages: Record<string, string> = {
   "Aztec Gold": aztecGold,
   "Galactic Spins": galacticSpins,
   "Sweet Bonanza": sweetBonanza,
+  "Pirate Bay": pirateBay,
 };

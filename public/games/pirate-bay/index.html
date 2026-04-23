@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Pirate Bay Slot</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+<style type="text/css">
+  body {
+    background-image: url("png/Background_1.png");
+    background-color: #0a0a0a;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    padding: 0; margin: 0;
+    overflow: hidden;
+  }
+  canvas {
+    display: block;
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+</style>
+<script src="js/phaser.js"></script>
+<script src="../bridge.js"></script>
+</head>
+<body>
+  <script src="js/slotConfig3x5.js"></script>
+  <script src="js/mkutils.js"></script>
+  <script src="js/popups.js"></script>
+  <script src="js/state_machine.js"></script>
+  <script src="js/slot_classes.js"></script>
+  <script src="js/slotGame.js"></script>
+  <!-- PhantomBet bridge integration: loaded last so classes exist -->
+  <script src="phantom-bridge-integration.js"></script>
+</body>
+</html>
