@@ -87,7 +87,7 @@
     waitForClass('SlotGame', () => {
       // Phaser scene wires player → store reference
       const observer = setInterval(() => {
-        const game = window.game;
+        const game = window.slotGame;
         if (game && game.scene && game.scene.scenes && game.scene.scenes[0]) {
           const sc = game.scene.scenes[0];
           if (sc.slotPlayer) {
