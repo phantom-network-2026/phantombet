@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<base href="/games/pirate-bay/">
+<title>Aztec Treasure</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+<style>
+  body {
+    background-image: url("png/Background_1.png");
+    background-color: #3a1e0a;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    padding: 0; margin: 0;
+    overflow: hidden;
+    position: relative;
+  }
+  /* Color-tint overlay so each clone feels distinct */
+  body::before {
+    content: "";
+    position: fixed; inset: 0;
+    background: #3a1e0a;
+    mix-blend-mode: color;
+    opacity: 0.55;
+    pointer-events: none;
+    z-index: 1;
+  }
+  canvas {
+    display: block;
+    margin: 0;
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    filter: hue-rotate(25deg) saturate(1.1);
+    z-index: 2;
+  }
+  #clone-banner {
+    position: fixed;
+    top: 8px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    font-family: "Trebuchet MS", sans-serif;
+    font-weight: 900;
+    font-size: 22px;
+    letter-spacing: 4px;
+    color: #ffb800;
+    text-shadow: 0 0 12px #ffb800, 0 0 4px #000, 2px 2px 0 #000;
+    pointer-events: none;
+    text-transform: uppercase;
+  }
+</style>
+<script src="js/phaser.js"></script>
+<script src="../bridge.js"></script>
+<script>window.__PB_CLONE_TITLE__ = "Aztec Treasure";</script>
+</head>
+<body>
+  <div id="clone-banner">Aztec Treasure</div>
+  <script src="js/slotConfig3x5.js"></script>
+  <script src="js/mkutils.js"></script>
+  <script src="js/popups.js"></script>
+  <script src="js/state_machine.js"></script>
+  <script src="js/slot_classes.js"></script>
+  <script src="js/slotGame.js"></script>
+  <script src="phantom-bridge-integration.js"></script>
+</body>
+</html>
