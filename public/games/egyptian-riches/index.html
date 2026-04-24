@@ -11,15 +11,12 @@
     padding: 0; margin: 0;
     overflow: hidden;
     position: relative;
-    background: radial-gradient(ellipse at center, #5a3a08 0%, #170c02 100%);
+    background: #000 url("/games/egyptian-riches/background.jpg") center/cover no-repeat fixed;
   }
   body::before {
     content: "";
     position: fixed; inset: 0;
-    background:
-      radial-gradient(circle at 20% 10%, rgba(253,224,71,0.22), transparent 40%),
-      radial-gradient(circle at 80% 90%, rgba(180,120,40,0.20), transparent 45%),
-      repeating-linear-gradient(45deg, rgba(253,224,71,0.22) 0 2px, transparent 2px 14px);
+    background: linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.35));
     pointer-events: none;
     z-index: 3;
   }
