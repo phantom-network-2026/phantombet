@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Save, Sliders, LayoutTemplate, Percent, Check } from "lucide-react";
+import { Save, Sliders, LayoutTemplate, Percent, Check, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 // ── Option catalog ────────────────────────────────────────────
@@ -30,6 +30,14 @@ type SlotsConfig = {
   paylines: string;
   layouts: string;
   rtp: string;
+};
+
+type SlotGame = {
+  id: string;
+  name: string;
+  slug: string | null;
+  source: string;
+  is_active: boolean;
 };
 
 const DEFAULTS: SlotsConfig = { paylines: "8", layouts: "theme", rtp: "global" };
@@ -105,22 +113,26 @@ export function SlotsConfigPanel() {
   const [config, setConfig] = useState<SlotsConfig>(DEFAULTS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [slotGames, setSlotGames] = useState<SlotGame[]>([]);
+  const [uninstallingId, setUninstallingId] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from("site_settings")
-        .select("value")
-        .eq("key", "slots_config")
-        .maybeSingle();
-      if (data?.value) {
-        const v = data.value as Partial<SlotsConfig>;
+      const [{ data: settingsData }, { data: gamesData }] = await Promise.all([
+        supabase.from("site_settings").select("value").eq("key", "slots_config").maybeSingle(),
+        supabase.from("games").select("id, name, slug, source, is_active").eq("category", "slots").order("name"),
+      ]);
+
+      if (settingsData?.value) {
+        const v = settingsData.value as Partial<SlotsConfig>;
         setConfig({
           paylines: v.paylines ?? DEFAULTS.paylines,
           layouts:  v.layouts  ?? DEFAULTS.layouts,
           rtp:      v.rtp      ?? DEFAULTS.rtp,
         });
       }
+
+      setSlotGames((gamesData as SlotGame[] | null) ?? []);
       setLoading(false);
     })();
   }, []);
@@ -141,6 +153,46 @@ export function SlotsConfigPanel() {
     setSaving(false);
     if (ok) toast.success("Slots configuration saved");
     else toast.error("Failed to save — admin permission required");
+  };
+
+  const uninstallGame = async (game: SlotGame) => {
+    const confirmed = window.confirm(`Uninstall ${game.name}? This removes it from the slot library${game.source === "storage" ? " and deletes its uploaded game files" : ""}.`);
+    if (!confirmed) return;
+
+    setUninstallingId(game.id);
+    try {
+      if (game.source === "storage" && game.slug) {
+        const queue = [game.slug];
+        while (queue.length > 0) {
+          const current = queue.shift()!;
+          const { data, error } = await supabase.storage.from("game-files").list(current, { limit: 500 });
+          if (error) throw error;
+
+          const filePaths: string[] = [];
+          for (const entry of data || []) {
+            const entryPath = `${current}/${entry.name}`;
+            const isFolder = !entry.metadata?.mimetype && !entry.id;
+            if (isFolder) queue.push(entryPath);
+            else filePaths.push(entryPath);
+          }
+
+          if (filePaths.length) {
+            const { error: removeError } = await supabase.storage.from("game-files").remove(filePaths);
+            if (removeError) throw removeError;
+          }
+        }
+      }
+
+      const { error } = await supabase.from("games").delete().eq("id", game.id);
+      if (error) throw error;
+
+      setSlotGames((prev) => prev.filter((entry) => entry.id !== game.id));
+      toast.success(`${game.name} uninstalled`);
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to uninstall game");
+    } finally {
+      setUninstallingId(null);
+    }
   };
 
   if (loading) return <p className="text-sm text-muted-foreground">Loading slots configuration…</p>;
@@ -197,6 +249,42 @@ export function SlotsConfigPanel() {
             </li>
           ))}
         </ul>
+      </div>
+
+      <div className="rounded-xl border border-border bg-card overflow-hidden">
+        <div className="flex items-center gap-3 px-4 py-3 bg-secondary/60 border-b border-border">
+          <div className="h-9 w-9 rounded-lg bg-destructive/10 flex items-center justify-center text-destructive">
+            <Trash2 className="h-4 w-4" />
+          </div>
+          <div>
+            <h3 className="font-display text-sm font-bold tracking-wide">Installed Slot Games</h3>
+            <p className="text-[11px] text-muted-foreground">Delete or uninstall slot clones directly from this panel.</p>
+          </div>
+        </div>
+        <div className="p-3 grid gap-2">
+          {slotGames.length === 0 ? (
+            <p className="text-xs text-muted-foreground">No slot games found.</p>
+          ) : slotGames.map((game) => (
+            <div key={game.id} className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2.5">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground truncate">{game.name}</p>
+                <p className="text-[11px] text-muted-foreground truncate">
+                  {game.slug || "no-slug"} • {game.source === "storage" ? "Uploaded game" : "Built-in game"} • {game.is_active ? "Live" : "Hidden"}
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0"
+                onClick={() => uninstallGame(game)}
+                disabled={uninstallingId === game.id}
+              >
+                {uninstallingId === game.id ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Trash2 className="h-3.5 w-3.5 mr-1" />}
+                Uninstall
+              </Button>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="sticky bottom-0 pt-3 bg-gradient-to-t from-background to-transparent">
