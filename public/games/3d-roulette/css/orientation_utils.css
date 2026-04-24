@@ -36,3 +36,8 @@
         font-size: 30px;  
     }
 }
+/* PhantomBet override: never show rotate-device overlay */
+.orientation-msg-container,
+.orientation-msg-container[data-orientation]{
+    display: none !important;
+}
