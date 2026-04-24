@@ -10,14 +10,10 @@
   const GAME_TYPE = window.__PB_CLONE_TITLE__ || 'Pirate Bay';
   const BET_TIERS = [0.10, 0.20, 0.50, 1.00, 2.00, 5.00];
   const MAX_BET_USD = 5.00;
-  let tierIndex = 3; // default $1.00
+  let tierIndex = 0; // default $0.10
 
   function currentUsdBet() { return BET_TIERS[tierIndex]; }
   function formatUsd(v) { return '$' + Number(v).toFixed(2); }
-
-  // Map the internal getTotalBet() → USD for display, scaled by the chosen tier.
-  // baseTotalBet captures the engine's "1x" total bet so we can build a ratio.
-  let baseTotalBet = null;
 
   function getCtrls() {
     try {
@@ -28,15 +24,7 @@
   }
 
   function currentDisplayedUsd() {
-    const ctrls = getCtrls();
-    if (!ctrls || typeof ctrls.getTotalBet !== 'function') return currentUsdBet();
-    const internal = ctrls.getTotalBet();
-    if (!baseTotalBet || baseTotalBet <= 0) baseTotalBet = internal || 1;
-    const ratio = internal / baseTotalBet;
-    let usd = currentUsdBet() * ratio;
-    if (usd > MAX_BET_USD) usd = MAX_BET_USD;
-    if (usd < 0.01) usd = 0.01;
-    return Math.round(usd * 100) / 100;
+    return currentUsdBet();
   }
 
   function syncBetDisplay() {
@@ -98,6 +86,25 @@
       const origMax   = SlotControls.prototype.maxBet_Click;
       const origLoop  = SlotControls.prototype.lineBetLoop_Click;
       const origApply = SlotControls.prototype.applyBet;
+      const origRefreshBetLines = SlotControls.prototype.refreshBetLines;
+      const origChangeTotal = SlotControls.prototype.changeTotalBetHandler;
+      const origChangeLine = SlotControls.prototype.changeLineBetHandler;
+
+      SlotControls.prototype.refreshBetLines = function () {
+        const result = origRefreshBetLines ? origRefreshBetLines.call(this) : undefined;
+        syncBetDisplay();
+        return result;
+      };
+      SlotControls.prototype.changeTotalBetHandler = function () {
+        const result = origChangeTotal ? origChangeTotal.call(this, formatUsd(currentUsdBet())) : undefined;
+        syncBetDisplay();
+        return result;
+      };
+      SlotControls.prototype.changeLineBetHandler = function () {
+        const result = origChangeLine ? origChangeLine.call(this, formatUsd(currentUsdBet())) : undefined;
+        syncBetDisplay();
+        return result;
+      };
 
       // The +/- buttons cycle the USD tier; we ALSO call the original so the
       // engine's internal bet display events fire (then we overwrite with USD).
@@ -158,11 +165,6 @@
           const sc = game.scene.scenes[0];
           if (sc.slotPlayer) {
             sc.slotPlayer._scene = sc;
-            // Capture engine's base total bet at startup
-            try {
-              const c = sc.slotControls;
-              if (c && typeof c.getTotalBet === 'function') baseTotalBet = c.getTotalBet() || 1;
-            } catch (e) {}
             syncBetDisplay();
             clearInterval(observer);
           }
