@@ -70,6 +70,14 @@ import RoyalFlush from "./pages/games/RoyalFlush.tsx";
 import AztecGold from "./pages/games/AztecGold.tsx";
 import GalacticSpins from "./pages/games/GalacticSpins.tsx";
 import SweetBonanza from "./pages/games/SweetBonanza.tsx";
+import OlympusRiches from "./pages/games/OlympusRiches.tsx";
+import FrozenCrown from "./pages/games/FrozenCrown.tsx";
+import SamuraiSpins from "./pages/games/SamuraiSpins.tsx";
+import VoodooNights from "./pages/games/VoodooNights.tsx";
+import DragonHoard from "./pages/games/DragonHoard.tsx";
+import CyberVault from "./pages/games/CyberVault.tsx";
+import MardiGrasMega from "./pages/games/MardiGrasMega.tsx";
+import SunkenTemple from "./pages/games/SunkenTemple.tsx";
 
 const queryClient = new QueryClient();
 
@@ -150,6 +158,14 @@ const App = () => (
               <Route path="/aztec-gold" element={<AztecGold />} />
               <Route path="/galactic-spins" element={<GalacticSpins />} />
               <Route path="/sweet-bonanza" element={<SweetBonanza />} />
+              <Route path="/olympus-riches" element={<OlympusRiches />} />
+              <Route path="/frozen-crown" element={<FrozenCrown />} />
+              <Route path="/samurai-spins" element={<SamuraiSpins />} />
+              <Route path="/voodoo-nights" element={<VoodooNights />} />
+              <Route path="/dragon-hoard" element={<DragonHoard />} />
+              <Route path="/cyber-vault" element={<CyberVault />} />
+              <Route path="/mardi-gras-mega" element={<MardiGrasMega />} />
+              <Route path="/sunken-temple" element={<SunkenTemple />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </PresenceTracker>

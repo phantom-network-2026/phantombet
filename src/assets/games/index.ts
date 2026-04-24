@@ -38,6 +38,14 @@ import aztecTreasure from "./aztec-treasure.jpg";
 import vikingVoyage from "./viking-voyage.jpg";
 import egyptianRiches from "./egyptian-riches.jpg";
 import wildWestGold from "./wild-west-gold.jpg";
+import olympusRiches from "./olympus-riches.jpg";
+import frozenCrown from "./frozen-crown.jpg";
+import samuraiSpins from "./samurai-spins.jpg";
+import voodooNights from "./voodoo-nights.jpg";
+import dragonHoard from "./dragon-hoard.jpg";
+import cyberVault from "./cyber-vault.jpg";
+import mardiGrasMega from "./mardi-gras-mega.jpg";
+import sunkenTemple from "./sunken-temple.jpg";
 
 export const gameImages: Record<string, string> = {
   "Blackjack": blackjack,
@@ -80,4 +88,12 @@ export const gameImages: Record<string, string> = {
   "Viking Voyage": vikingVoyage,
   "Egyptian Riches": egyptianRiches,
   "Wild West Gold": wildWestGold,
+  "Olympus Riches": olympusRiches,
+  "Frozen Crown": frozenCrown,
+  "Samurai Spins": samuraiSpins,
+  "Voodoo Nights": voodooNights,
+  "Dragon Hoard": dragonHoard,
+  "Cyber Vault": cyberVault,
+  "Mardi Gras Mega": mardiGrasMega,
+  "Sunken Temple": sunkenTemple,
 };
