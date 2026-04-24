@@ -2162,14 +2162,16 @@ function BroadcastPanel({ onBack }: { onBack: () => void }) {
 }
 
 // ── Main cPanel Page ────────────────────────────────────────────
-type ActivePanel = null | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "bonus-probability" | "slots-config" | "promotions" | "wallet-mode" | "deposits-withdrawals" | "welcome-config" | "ghost-users" | "broadcasts" | "dev-console" | "ai-agent";
+type ActivePanel = null | "users" | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "bonus-probability" | "slots-config" | "promotions" | "wallet-mode" | "deposits-withdrawals" | "welcome-config" | "ghost-users" | "broadcasts" | "dev-console" | "ai-agent";
 
 export default function CPanel() {
   const { isAdmin, isOwner, loading, profile } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get("tab");
-  const initialPanel: ActivePanel = tabParam === "games" ? "game-probability" : null;
+  const initialPanel: ActivePanel =
+    tabParam === "games" ? "game-probability" :
+    tabParam === "users" ? "users" : null;
   const [activePanel, setActivePanel] = useState<ActivePanel>(initialPanel);
   const { stats, loading: analyticsLoading } = useAnalytics();
 
@@ -2177,6 +2179,8 @@ export default function CPanel() {
   useEffect(() => {
     if (tabParam === "games") {
       setActivePanel("game-probability");
+    } else if (tabParam === "users") {
+      setActivePanel("users");
     }
   }, [tabParam]);
 
@@ -2202,6 +2206,7 @@ export default function CPanel() {
       <div className="min-h-screen gradient-casino-bg">
         <Header />
         <div className="container max-w-6xl py-6 px-4">
+          {activePanel === "users" && <UsersWrapper onBack={back} />}
           {activePanel === "files" && <FileManager onBack={back} />}
           {activePanel === "database" && <DatabaseManager onBack={back} />}
           {activePanel === "config" && <SiteConfiguration onBack={back} />}
