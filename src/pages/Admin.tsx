@@ -34,6 +34,11 @@ const ROLE_LABELS: Record<string, { label: string; emoji: string; color: string 
 };
 
 export default function Admin() {
+  return <AdminInner />;
+}
+
+/** User management UI — usable standalone OR embedded inside CPanel. */
+export function AdminInner({ embedded = false }: { embedded?: boolean }) {
   const { isAdmin, isOwner, hasStaffAccess, loading } = useAuth();
   const navigate = useNavigate();
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -192,15 +197,16 @@ export default function Admin() {
   if (loading) return <div className="min-h-screen gradient-casino-bg flex items-center justify-center"><p>Loading...</p></div>;
 
   return (
-    <div className="min-h-screen gradient-casino-bg">
-      <Header />
-      <div className="container max-w-4xl py-6 px-4">
+    <div className={embedded ? "" : "min-h-screen gradient-casino-bg"}>
+      {!embedded && <Header />}
+      <div className={embedded ? "" : "container max-w-4xl py-6 px-4"}>
+        {!embedded && (
         <div className="flex items-center gap-3 mb-6">
           <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="font-display text-2xl font-black text-gold flex items-center gap-2">
-            <Users className="h-6 w-6" /> Admin Panel
+            <Users className="h-6 w-6" /> User Management
           </h1>
           {isAdmin && (
             <Button variant="outline" size="sm" className="ml-auto" onClick={() => navigate("/cpanel")}>
@@ -208,6 +214,7 @@ export default function Admin() {
             </Button>
           )}
         </div>
+        )}
 
         {/* Stats */}
         {sec("admin_stats") && (
