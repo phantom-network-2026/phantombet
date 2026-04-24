@@ -25,14 +25,6 @@ const NATIVE_ROUTES: Record<string, string> = {
   "aztec-gold": "/aztec-gold",
   "galactic-spins": "/galactic-spins",
   "sweet-bonanza": "/sweet-bonanza",
-  "olympus-riches": "/olympus-riches",
-  "frozen-crown": "/frozen-crown",
-  "samurai-spins": "/samurai-spins",
-  "voodoo-nights": "/voodoo-nights",
-  "dragon-hoard": "/dragon-hoard",
-  "cyber-vault": "/cyber-vault",
-  "mardi-gras-mega": "/mardi-gras-mega",
-  "sunken-temple": "/sunken-temple",
 };
 
 interface GameRow {
