@@ -24,6 +24,25 @@
     return tierIndex;
   }
 
+  function usdBetForInternalLineBet(lineBet) {
+    const numeric = Number(lineBet);
+    const resolvedTierIndex = Number.isFinite(numeric)
+      ? clampTierIndex(Math.round(numeric) - 1)
+      : tierIndex;
+    return BET_TIERS[resolvedTierIndex];
+  }
+
+  function usdBetForControls(ctrls) {
+    return usdBetForInternalLineBet(ctrls && ctrls.lineBet);
+  }
+
+  function currentInternalTotalBet(ctrls) {
+    const selectedLinesCount = Number(ctrls && ctrls.selectedLinesCount) || 0;
+    const lineBet = Number(ctrls && ctrls.lineBet) || 0;
+    const holdMultiplier = Number(ctrls && ctrls.holdMultiplier) || 1;
+    return selectedLinesCount * lineBet * holdMultiplier;
+  }
+
   function currentUsdBet() { return BET_TIERS[tierIndex]; }
   function formatUsd(v) { return '$' + Number(v).toFixed(2); }
 
@@ -37,7 +56,7 @@
 
   function currentDisplayedUsd() {
     const ctrls = getCtrls();
-    if (ctrls) setTierIndexFromInternal(ctrls.lineBet);
+    if (ctrls) return usdBetForControls(ctrls);
     return currentUsdBet();
   }
 
@@ -46,7 +65,7 @@
     if (!ctrls) return;
     ctrls.maxLineBet = BET_TIERS.length;
     setTierIndexFromInternal(ctrls.lineBet);
-    const usd = currentUsdBet();
+    const usd = usdBetForControls(ctrls);
     const txt = formatUsd(usd);
     try { if (ctrls.totalBetSumText) ctrls.totalBetSumText.text = txt; } catch (e) {}
     try { if (ctrls.lineBetAmountText) ctrls.lineBetAmountText.text = txt; } catch (e) {}
@@ -102,7 +121,7 @@
           let usdWin = 0;
           try {
             const ctrls = this._scene && this._scene.slotControls;
-            const internalBet = ctrls && typeof ctrls.getTotalBet === 'function' ? ctrls.getTotalBet() : null;
+            const internalBet = currentInternalTotalBet(ctrls);
             if (internalBet && internalBet > 0) {
               usdWin = (count / internalBet) * lastUsdBetCharged;
             } else {
@@ -131,6 +150,10 @@
       const origChangeTotal = SlotControls.prototype.changeTotalBetHandler;
       const origChangeLine = SlotControls.prototype.changeLineBetHandler;
 
+      SlotControls.prototype.getTotalBet = function () {
+        return usdBetForControls(this);
+      };
+
       SlotControls.prototype.setLineBet = function (count) {
         const normalized = clampTierIndex(Math.round(Number(count) || 1) - 1) + 1;
         this.maxLineBet = BET_TIERS.length;
@@ -153,12 +176,12 @@
         return result;
       };
       SlotControls.prototype.changeTotalBetHandler = function () {
-        const result = origChangeTotal ? origChangeTotal.call(this, formatUsd(currentUsdBet())) : undefined;
+        const result = origChangeTotal ? origChangeTotal.call(this, formatUsd(usdBetForControls(this))) : undefined;
         syncBetDisplay();
         return result;
       };
       SlotControls.prototype.changeLineBetHandler = function () {
-        const result = origChangeLine ? origChangeLine.call(this, formatUsd(currentUsdBet())) : undefined;
+        const result = origChangeLine ? origChangeLine.call(this, formatUsd(usdBetForControls(this))) : undefined;
         syncBetDisplay();
         return result;
       };
@@ -195,7 +218,7 @@
       };
 
       SlotControls.prototype.applyBet = function () {
-        const usdBet = Math.min(currentDisplayedUsd(), MAX_BET_USD);
+        const usdBet = Math.min(usdBetForControls(this), MAX_BET_USD);
         if (PhantomBridge.getBalance() < usdBet) {
           lastBetAccepted = false;
           lastUsdBetCharged = 0;
