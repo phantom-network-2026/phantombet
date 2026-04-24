@@ -7,45 +7,28 @@
  */
 (function () {
   const GAME_TYPE = window.__PB_CLONE_TITLE__ || 'Pirate Bay';
-  // Display scale: how many in-game coins represent $1 visually
-  const COINS_PER_USD = 1000;
-  // Standard platform bet tiers (USD). Max bet is $5, matching the rest of the slots.
+  // Standard platform USD bet tiers, capped at $5 (parity with rest of platform).
   const BET_TIERS = [0.10, 0.20, 0.50, 1.00, 2.00, 5.00];
   const MAX_BET_USD = 5.00;
 
-  // Map the in-game coin bet to one of the standard USD tiers.
-  // The game's internal bet ladder typically has 6+ steps; we pick the tier
-  // by index when possible, otherwise fall back to a proportional mapping.
-  function resolveUsdBet() {
+  // Player-facing tier index drives the actual USD bet.
+  let tierIndex = 3; // default $1.00
+  function currentUsdBet() { return BET_TIERS[tierIndex]; }
+  function formatUsd(v) { return '$' + v.toFixed(2); }
+
+  // Push the current USD bet into the in-game total bet display.
+  function syncBetDisplay() {
     try {
       const game = window.slotGame;
       const sc = game && game.scene && game.scene.scenes && game.scene.scenes[0];
       const ctrls = sc && sc.slotControls;
-      if (ctrls) {
-        // Try to read the current bet step / index if exposed
-        const idx = (typeof ctrls.getBetIndex === 'function') ? ctrls.getBetIndex()
-                  : (typeof ctrls._betIndex === 'number') ? ctrls._betIndex
-                  : null;
-        if (idx !== null && idx >= 0) {
-          return BET_TIERS[Math.min(idx, BET_TIERS.length - 1)];
-        }
-        // Fall back: derive tier from total in-game bet relative to its min
-        const totalBet = (typeof ctrls.getTotalBet === 'function') ? ctrls.getTotalBet() : null;
-        const minBet   = (typeof ctrls.getMinBet === 'function')   ? ctrls.getMinBet()   : null;
-        if (totalBet && minBet && minBet > 0) {
-          const ratio = totalBet / minBet; // 1, 2, 5, 10, 20, 50…
-          // Map ratio to nearest tier index
-          const ladder = [1, 2, 5, 10, 20, 50];
-          let bestIdx = 0, bestDiff = Infinity;
-          ladder.forEach((v, i) => {
-            const d = Math.abs(v - ratio);
-            if (d < bestDiff) { bestDiff = d; bestIdx = i; }
-          });
-          return BET_TIERS[bestIdx];
-        }
+      if (ctrls && ctrls.totalBetSumText) {
+        ctrls.totalBetSumText.text = formatUsd(currentUsdBet());
+      }
+      if (ctrls && ctrls.lineBetAmountText) {
+        ctrls.lineBetAmountText.text = formatUsd(currentUsdBet());
       }
     } catch (e) {}
-    return 1.00; // safe default
   }
 
   PhantomBridge.init(GAME_TYPE);
@@ -68,27 +51,44 @@
   PhantomBridge.whenReady().then((bal) => {
     console.log('[PhantomBridge] Ready. Balance:', bal);
 
-    // Patch SlotControls.applyBet to use real money
+    // Patch SlotControls: bet adjustment cycles tier index; applyBet uses USD.
     waitForClass('SlotControls', (SlotControls) => {
       const origApply = SlotControls.prototype.applyBet;
+      const origPlus  = SlotControls.prototype.lineBetPlus_Click;
+      const origMinus = SlotControls.prototype.lineBetMinus_Click;
+      const origMax   = SlotControls.prototype.maxBet_Click;
+
+      SlotControls.prototype.lineBetPlus_Click = function () {
+        if (tierIndex < BET_TIERS.length - 1) tierIndex++;
+        try { this.scene.soundController.playClip('button_click'); } catch (e) {}
+        syncBetDisplay();
+      };
+      SlotControls.prototype.lineBetMinus_Click = function () {
+        if (tierIndex > 0) tierIndex--;
+        try { this.scene.soundController.playClip('button_click'); } catch (e) {}
+        syncBetDisplay();
+      };
+      SlotControls.prototype.maxBet_Click = function () {
+        tierIndex = BET_TIERS.length - 1; // $5 max
+        try { this.scene.soundController.playClip('button_click'); } catch (e) {}
+        syncBetDisplay();
+      };
+
       SlotControls.prototype.applyBet = function () {
-        // Determine the USD bet for this spin from the player's selected level (capped at $5).
-        const usdBet = Math.min(resolveUsdBet(), MAX_BET_USD);
+        const usdBet = Math.min(currentUsdBet(), MAX_BET_USD);
         lastUsdBet = usdBet;
-        // Synchronous contract: original returns true/false. We use cached result.
         if (PhantomBridge.getBalance() < usdBet) {
           lastBetAccepted = false;
           return false;
         }
-        // Fire deduct asynchronously; assume success optimistically (server enforces).
         PhantomBridge.deductBet(usdBet).then((res) => {
           if (!res.success) {
             console.warn('[PhantomBridge] Bet deduction failed:', res.error);
           }
         });
         lastBetAccepted = true;
-        // Still call original to update internal coin display
         try { origApply.call(this); } catch (e) {}
+        syncBetDisplay();
         return true;
       };
     });
@@ -98,8 +98,6 @@
       const origAdd = SlotPlayer.prototype.addCoins;
       SlotPlayer.prototype.addCoins = function (count) {
         if (typeof count === 'number' && count > 0 && lastBetAccepted) {
-          // Convert in-game coin win → USD using the player's current bet ratio.
-          // Game's totalBet (in-game coins) corresponds to lastUsdBet real dollars.
           let usdWin = 0;
           try {
             const ctrls = this._scene && this._scene.slotControls;
@@ -107,13 +105,12 @@
             if (inGameBet && inGameBet > 0) {
               usdWin = (count / inGameBet) * lastUsdBet;
             } else {
-              usdWin = count / COINS_PER_USD;
+              usdWin = count / 1000;
             }
           } catch (e) {
-            usdWin = count / COINS_PER_USD;
+            usdWin = count / 1000;
           }
           usdWin = Math.max(0.01, Math.round(usdWin * 100) / 100);
-          // Cap absurd payouts
           usdWin = Math.min(usdWin, 5000);
           PhantomBridge.creditWin(usdWin, 'Spin Win').then((res) => {
             if (res.success) console.log('[PhantomBridge] Win credited:', usdWin);
@@ -123,20 +120,23 @@
       };
     });
 
-    // Capture the scene for SlotPlayer.addCoins ratio calc
+    // Capture the scene for SlotPlayer.addCoins ratio calc + initial display sync.
     waitForClass('SlotGame', () => {
-      // Phaser scene wires player → store reference
       const observer = setInterval(() => {
         const game = window.slotGame;
         if (game && game.scene && game.scene.scenes && game.scene.scenes[0]) {
           const sc = game.scene.scenes[0];
           if (sc.slotPlayer) {
             sc.slotPlayer._scene = sc;
+            syncBetDisplay();
             clearInterval(observer);
           }
         }
       }, 200);
       setTimeout(() => clearInterval(observer), 30000);
     });
+
+    // Keep the USD bet visible even if the game refreshes the display.
+    setInterval(syncBetDisplay, 1000);
   });
 })();
