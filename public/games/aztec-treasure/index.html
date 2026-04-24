@@ -7,8 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
 <style>
   body {
-    background-image: url("png/Background_1.png");
-    background-color: #3a1e0a;
+    background: radial-gradient(ellipse at center, #5a2a0a 0%, #1a0a02 100%);
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
@@ -16,38 +15,60 @@
     overflow: hidden;
     position: relative;
   }
-  /* Color-tint overlay so each clone feels distinct */
   body::before {
     content: "";
     position: fixed; inset: 0;
-    background: #3a1e0a;
-    mix-blend-mode: color;
-    opacity: 0.55;
+    background:
+      radial-gradient(circle at 20% 10%, rgba(255,184,0,0.18), transparent 40%),
+      radial-gradient(circle at 80% 90%, rgba(20,120,80,0.22), transparent 45%),
+      repeating-linear-gradient(45deg, rgba(255,184,0,0.04) 0 2px, transparent 2px 14px);
     pointer-events: none;
-    z-index: 1;
+    z-index: 3;
   }
+  /* Heavy themed recolor of canvas symbols */
   canvas {
     display: block;
     margin: 0;
     position: absolute;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    filter: hue-rotate(25deg) saturate(1.1);
+    filter: hue-rotate(35deg) saturate(1.6) sepia(0.35) contrast(1.05);
     z-index: 2;
+  }
+  /* Themed corner ornaments */
+  .corner {
+    position: fixed; width: 90px; height: 90px;
+    background: url("/games/aztec-treasure/emblem.png") center/contain no-repeat;
+    opacity: 0.85;
+    filter: drop-shadow(0 0 10px #ffb800);
+    z-index: 5; pointer-events: none;
+  }
+  .corner.tl { top: 60px; left: 8px; }
+  .corner.tr { top: 60px; right: 8px; transform: scaleX(-1); }
+  .corner.bl { bottom: 8px; left: 8px; opacity: 0.5; }
+  .corner.br { bottom: 8px; right: 8px; opacity: 0.5; transform: scaleX(-1); }
+  /* Large faint emblem watermark behind reels */
+  .watermark {
+    position: fixed; inset: 0;
+    background: url("/games/aztec-treasure/emblem.png") center/40% no-repeat;
+    opacity: 0.07; z-index: 1; pointer-events: none;
   }
   #clone-banner {
     position: fixed;
-    top: 8px; left: 50%;
-    transform: translateX(-50%);
+    top: 0; left: 0; right: 0;
+    height: 50px;
+    display: flex; align-items: center; justify-content: center;
     z-index: 10;
-    font-family: "Trebuchet MS", sans-serif;
+    font-family: "Trajan Pro", "Trebuchet MS", serif;
     font-weight: 900;
-    font-size: 22px;
-    letter-spacing: 4px;
-    color: #ffb800;
-    text-shadow: 0 0 12px #ffb800, 0 0 4px #000, 2px 2px 0 #000;
+    font-size: 24px;
+    letter-spacing: 6px;
+    color: #ffd24a;
+    text-shadow: 0 0 14px #ffb800, 0 0 4px #000, 2px 2px 0 #4a1a00;
     pointer-events: none;
     text-transform: uppercase;
+    background: linear-gradient(180deg, rgba(60,20,5,0.85), rgba(60,20,5,0));
+    border-bottom: 2px solid rgba(255,184,0,0.4);
   }
 </style>
 <script src="js/phaser.js"></script>
@@ -55,6 +76,11 @@
 <script>window.__PB_CLONE_TITLE__ = "Aztec Treasure";</script>
 </head>
 <body>
+  <div class="watermark"></div>
+  <div class="corner tl"></div>
+  <div class="corner tr"></div>
+  <div class="corner bl"></div>
+  <div class="corner br"></div>
   <div id="clone-banner">Aztec Treasure</div>
   <script src="js/slotConfig3x5.js"></script>
   <script src="js/mkutils.js"></script>
