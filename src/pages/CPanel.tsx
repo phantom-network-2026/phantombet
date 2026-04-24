@@ -2440,7 +2440,7 @@ export default function CPanel() {
                 <h3 className="font-display text-sm font-bold">Quick Actions</h3>
               </div>
               <div className="p-3 space-y-1.5">
-                <Button variant="outline" size="sm" className="w-full justify-start text-xs" onClick={() => navigate("/admin")}>
+                <Button variant="outline" size="sm" className="w-full justify-start text-xs" onClick={() => setActivePanel("users")}>
                   <Users className="h-3 w-3 mr-2" /> User Management
                 </Button>
                 <Button variant="outline" size="sm" className="w-full justify-start text-xs" onClick={() => setActivePanel("house-edge")}>
