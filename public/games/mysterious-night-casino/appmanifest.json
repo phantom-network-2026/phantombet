@@ -1,0 +1,16 @@
+{
+	"name": "Mysterious Night Casino",
+	"short_name": "Mysterious Night Casino",
+	"description": "Mysterious Night Casino",
+	"start_url": "index.html",
+	"display": "fullscreen",
+	"orientation": "landscape",
+	"background_color": "#ffffff",
+	"icons": [
+		{
+			"src": "icons/loading-logo.png",
+			"sizes": "64x64",
+			"type": "image/png"
+		}
+	]
+}
