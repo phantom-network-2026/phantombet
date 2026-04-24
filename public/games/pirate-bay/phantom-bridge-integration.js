@@ -42,12 +42,8 @@
     tierIndex = normalizedIndex;
     ctrls.maxLineBet = BET_TIERS.length;
     ctrls.lineBet = normalizedIndex + 1;
-    if (!ctrls.selectedLinesCount || Number(ctrls.selectedLinesCount) < 1) {
-      ctrls.selectedLinesCount = 1;
-    }
-    if (!ctrls.holdMultiplier || Number(ctrls.holdMultiplier) < 1) {
-      ctrls.holdMultiplier = 1;
-    }
+    ctrls.selectedLinesCount = 1;
+    ctrls.holdMultiplier = 1;
   }
 
   function currentInternalTotalBet(ctrls) {
@@ -78,6 +74,8 @@
     const ctrls = getCtrls();
     if (!ctrls) return;
     ctrls.maxLineBet = BET_TIERS.length;
+    ctrls.selectedLinesCount = 1;
+    ctrls.holdMultiplier = 1;
     setTierIndexFromInternal(ctrls.lineBet);
     const usd = usdBetForControls(ctrls);
     const txt = formatUsd(usd);
