@@ -68,9 +68,9 @@ export function Header() {
               <Button variant="pink" size="sm" onClick={() => navigate("/withdraw")}>
                 <ArrowDownToLine className="h-4 w-4 mr-1" /> {t("withdraw")}
               </Button>
-              {hasStaffAccess && showAdminLink && (
-                <Button variant="ghost" size="sm" onClick={() => navigate("/admin")} className="text-casino-pink">
-                  <Shield className="h-4 w-4 mr-1" /> Admin
+              {hasStaffAccess && showCpanelLink && (
+                <Button variant="ghost" size="sm" onClick={() => navigate("/cpanel")} className="text-casino-pink">
+                  <Shield className="h-4 w-4 mr-1" /> cPanel
                 </Button>
               )}
               <NotificationBell />
@@ -169,11 +169,6 @@ export function Header() {
                   </Button>
                   {adminExpanded && (
                     <div className="ml-6 space-y-1 border-l border-border pl-3">
-                      {showAdminLink && (
-                        <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground" onClick={() => { navigate("/admin"); setMenuOpen(false); }}>
-                          <Shield className="h-3.5 w-3.5 mr-2" /> {t("admin")}
-                        </Button>
-                      )}
                       {showCpanelLink && (
                         <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground" onClick={() => { navigate("/cpanel"); setMenuOpen(false); }}>
                           <Settings className="h-3.5 w-3.5 mr-2" /> cPanel
@@ -181,7 +176,7 @@ export function Header() {
                       )}
                       {showSlotLink && (
                         <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground" onClick={() => { navigate("/cpanel?tab=games"); setMenuOpen(false); }}>
-                          <Gamepad2 className="h-3.5 w-3.5 mr-2" /> Slot Panel
+                          <Gamepad2 className="h-3.5 w-3.5 mr-2" /> Game Panel
                         </Button>
                       )}
                       <Button variant="ghost" size="sm" className="w-full justify-start text-sky-400" onClick={() => { navigate("/staff-panel"); setMenuOpen(false); }}>

@@ -40,8 +40,8 @@ const PANEL_TOGGLES = [
   { key: "admin_panel_access", label: "Admin Panel accessible", default: true },
   { key: "cpanel_visible", label: "cPanel visible in menu", default: true },
   { key: "cpanel_access", label: "cPanel accessible", default: true },
-  { key: "slot_panel_visible", label: "Slot Panel visible in menu", default: true },
-  { key: "slot_panel_access", label: "Slot Panel accessible", default: true },
+  { key: "slot_panel_visible", label: "Game Panel visible in menu", default: true },
+  { key: "slot_panel_access", label: "Game Panel accessible", default: true },
 ];
 
 const ADMIN_SECTION_TOGGLES = [
@@ -375,7 +375,7 @@ export default function OwnerPanel() {
 
             <div className="rounded-xl bg-card border border-border p-4">
               <h3 className="font-display font-bold text-sm mb-3 flex items-center gap-2 text-casino-gold">
-                <Gamepad2 className="h-4 w-4" /> Slot Panel — Feature Toggles
+                <Gamepad2 className="h-4 w-4" /> Game Panel — Feature Toggles
               </h3>
               <div className="space-y-2">
                 {SLOT_SECTION_TOGGLES.map(t => (

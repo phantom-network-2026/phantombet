@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,7 +12,7 @@ import Login from "./pages/Login.tsx";
 import Signup from "./pages/Signup.tsx";
 import ForgotPassword from "./pages/ForgotPassword.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
-import Admin from "./pages/Admin.tsx";
+// Admin merged into CPanel — route now redirects
 import GameDetail from "./pages/GameDetail.tsx";
 import Promotions from "./pages/Promotions.tsx";
 import Deposit from "./pages/Deposit.tsx";
@@ -92,7 +92,7 @@ const App = () => (
               <Route path="/signup" element={<Signup />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/admin" element={<Admin />} />
+              <Route path="/admin" element={<Navigate to="/cpanel?tab=users" replace />} />
               <Route path="/game/:id" element={<GameDetail />} />
               <Route path="/play/:id" element={<PlayGame />} />
               <Route path="/promotions" element={<Promotions />} />

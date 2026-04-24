@@ -17,6 +17,7 @@ import { SlotsConfigPanel } from "@/components/casino/SlotsConfigPanel";
 import { PromotionsManager } from "@/components/casino/PromotionsManager";
 import DevConsole from "@/components/casino/DevConsole";
 import AiAgentPanel from "@/components/casino/AiAgentPanel";
+import { AdminInner } from "./Admin";
 import {
   ArrowLeft, FolderOpen, Database, Settings, Upload, Trash2, Download,
   RefreshCw, Search, Table, FileText, Eye, EyeOff, ChevronRight, ChevronDown, ChevronUp,
@@ -728,6 +729,15 @@ function PromotionsWrapper({ onBack }: { onBack: () => void }) {
   return (
     <PanelView title="Promotions Manager" onBack={onBack}>
       <PromotionsManager />
+    </PanelView>
+  );
+}
+
+// ── Users Wrapper (embeds the former Admin Panel UI) ────────────
+function UsersWrapper({ onBack }: { onBack: () => void }) {
+  return (
+    <PanelView title="User Management" onBack={onBack}>
+      <AdminInner embedded />
     </PanelView>
   );
 }
@@ -2152,14 +2162,16 @@ function BroadcastPanel({ onBack }: { onBack: () => void }) {
 }
 
 // ── Main cPanel Page ────────────────────────────────────────────
-type ActivePanel = null | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "bonus-probability" | "slots-config" | "promotions" | "wallet-mode" | "deposits-withdrawals" | "welcome-config" | "ghost-users" | "broadcasts" | "dev-console" | "ai-agent";
+type ActivePanel = null | "users" | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "bonus-probability" | "slots-config" | "promotions" | "wallet-mode" | "deposits-withdrawals" | "welcome-config" | "ghost-users" | "broadcasts" | "dev-console" | "ai-agent";
 
 export default function CPanel() {
   const { isAdmin, isOwner, loading, profile } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get("tab");
-  const initialPanel: ActivePanel = tabParam === "games" ? "game-probability" : null;
+  const initialPanel: ActivePanel =
+    tabParam === "games" ? "game-probability" :
+    tabParam === "users" ? "users" : null;
   const [activePanel, setActivePanel] = useState<ActivePanel>(initialPanel);
   const { stats, loading: analyticsLoading } = useAnalytics();
 
@@ -2167,6 +2179,8 @@ export default function CPanel() {
   useEffect(() => {
     if (tabParam === "games") {
       setActivePanel("game-probability");
+    } else if (tabParam === "users") {
+      setActivePanel("users");
     }
   }, [tabParam]);
 
@@ -2192,6 +2206,7 @@ export default function CPanel() {
       <div className="min-h-screen gradient-casino-bg">
         <Header />
         <div className="container max-w-6xl py-6 px-4">
+          {activePanel === "users" && <UsersWrapper onBack={back} />}
           {activePanel === "files" && <FileManager onBack={back} />}
           {activePanel === "database" && <DatabaseManager onBack={back} />}
           {activePanel === "config" && <SiteConfiguration onBack={back} />}
@@ -2222,7 +2237,7 @@ export default function CPanel() {
       <div className="container max-w-6xl py-6 px-4">
         {/* Header bar */}
         <div className="flex items-center gap-3 mb-6">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/admin")}>
+          <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex items-center gap-3">
@@ -2278,10 +2293,10 @@ export default function CPanel() {
             {sec("cpanel_users") && (
             <CpanelSection title="User Management" icon={<Users className="h-5 w-5" />}>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1">
-                <ToolCard icon={<Users className="h-6 w-6" />} label="Manage Users" onClick={() => navigate("/admin")} />
-                <ToolCard icon={<Shield className="h-6 w-6" />} label="User Roles" onClick={() => navigate("/admin")} />
+                <ToolCard icon={<Users className="h-6 w-6" />} label="Manage Users" onClick={() => setActivePanel("users")} active={activePanel === "users"} />
+                <ToolCard icon={<Shield className="h-6 w-6" />} label="User Roles" onClick={() => setActivePanel("users")} />
                 <ToolCard icon={<Ban className="h-6 w-6" />} label="Ban Manager" onClick={() => setActivePanel("security")} />
-                <ToolCard icon={<Activity className="h-6 w-6" />} label="Online Users" onClick={() => navigate("/admin")} />
+                <ToolCard icon={<Activity className="h-6 w-6" />} label="Online Users" onClick={() => setActivePanel("users")} />
                 <ToolCard icon={<UserCheck className="h-6 w-6" />} label="Friendships" onClick={() => setActivePanel("database")} />
                 <ToolCard icon={<MessageSquare className="h-6 w-6" />} label="Messages" onClick={() => setActivePanel("database")} />
                 <ToolCard icon={<Users className="h-6 w-6" />} label="Ghost Users" onClick={() => setActivePanel("ghost-users")} active={activePanel === "ghost-users"} />
@@ -2425,7 +2440,7 @@ export default function CPanel() {
                 <h3 className="font-display text-sm font-bold">Quick Actions</h3>
               </div>
               <div className="p-3 space-y-1.5">
-                <Button variant="outline" size="sm" className="w-full justify-start text-xs" onClick={() => navigate("/admin")}>
+                <Button variant="outline" size="sm" className="w-full justify-start text-xs" onClick={() => setActivePanel("users")}>
                   <Users className="h-3 w-3 mr-2" /> User Management
                 </Button>
                 <Button variant="outline" size="sm" className="w-full justify-start text-xs" onClick={() => setActivePanel("house-edge")}>
