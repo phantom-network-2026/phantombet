@@ -138,6 +138,50 @@ function SlotReel({
         }}
       />
 
+      {/* Glowing pointer arrows pointing at the winning row */}
+      <motion.div
+        className="absolute z-30 pointer-events-none left-1"
+        style={{ top: reelHeight / 2 - 10 }}
+        animate={{ x: [0, 4, 0] }}
+        transition={{ repeat: Infinity, duration: 1.1, ease: "easeInOut" }}
+      >
+        <div style={{
+          width: 0, height: 0,
+          borderTop: "10px solid transparent",
+          borderBottom: "10px solid transparent",
+          borderLeft: "14px solid hsl(43,90%,60%)",
+          filter: "drop-shadow(0 0 6px hsl(43,90%,55%))",
+        }} />
+      </motion.div>
+      <motion.div
+        className="absolute z-30 pointer-events-none right-1"
+        style={{ top: reelHeight / 2 - 10 }}
+        animate={{ x: [0, -4, 0] }}
+        transition={{ repeat: Infinity, duration: 1.1, ease: "easeInOut" }}
+      >
+        <div style={{
+          width: 0, height: 0,
+          borderTop: "10px solid transparent",
+          borderBottom: "10px solid transparent",
+          borderRight: "14px solid hsl(43,90%,60%)",
+          filter: "drop-shadow(0 0 6px hsl(43,90%,55%))",
+        }} />
+      </motion.div>
+
+      {/* Idle shimmer sweep when not spinning */}
+      {!spinning && (
+        <motion.div
+          className="absolute inset-0 z-10 pointer-events-none"
+          initial={{ x: "-100%" }}
+          animate={{ x: "100%" }}
+          transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut", repeatDelay: 1.5 }}
+          style={{
+            background:
+              "linear-gradient(110deg, transparent 40%, hsl(43,90%,70%,0.12) 50%, transparent 60%)",
+          }}
+        />
+      )}
+
       <div style={{ transform: `translateY(${reelHeight / 2 - itemHeight / 2 - pixelOffset}px)` }}>
         {items.map(({ prize, key }) => (
           <div
