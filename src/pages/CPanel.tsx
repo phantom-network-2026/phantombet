@@ -17,6 +17,7 @@ import { SlotsConfigPanel } from "@/components/casino/SlotsConfigPanel";
 import { PromotionsManager } from "@/components/casino/PromotionsManager";
 import DevConsole from "@/components/casino/DevConsole";
 import AiAgentPanel from "@/components/casino/AiAgentPanel";
+import { AdminInner } from "./Admin";
 import {
   ArrowLeft, FolderOpen, Database, Settings, Upload, Trash2, Download,
   RefreshCw, Search, Table, FileText, Eye, EyeOff, ChevronRight, ChevronDown, ChevronUp,
@@ -728,6 +729,15 @@ function PromotionsWrapper({ onBack }: { onBack: () => void }) {
   return (
     <PanelView title="Promotions Manager" onBack={onBack}>
       <PromotionsManager />
+    </PanelView>
+  );
+}
+
+// ── Users Wrapper (embeds the former Admin Panel UI) ────────────
+function UsersWrapper({ onBack }: { onBack: () => void }) {
+  return (
+    <PanelView title="User Management" onBack={onBack}>
+      <AdminInner embedded />
     </PanelView>
   );
 }
