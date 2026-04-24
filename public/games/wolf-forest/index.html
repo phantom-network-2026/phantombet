@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+	<head>
+        <meta charset="UTF-8">
+        <title>Wolf Forest</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+        <style type = "text/css">
+            body{
+                background-image: url("png/Background_1.png"); /* The image used */
+                background-color: #cccccc; /* Used if the image is unavailable */  /* background: #a3a3a3; */
+                background-position: center; /* Center the image */
+                background-repeat: no-repeat; /* Do not repeat the image */
+                background-size: cover; /* Resize the background image to cover the entire container */
+                padding: 0px;
+                margin: 0px;
+                overflow: hidden;
+            }
+            #stage {
+                position: fixed; inset: 0;
+                transform-origin: center center;
+                z-index: 2;
+            }
+            canvas{
+                display:block;
+                margin: 0;
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+            }
+            /* Mobile zoom so reels and buttons are readable */
+            @media (max-width: 600px) {
+                #stage { transform: scale(1.25); }
+            }
+            @media (max-width: 420px) {
+                #stage { transform: scale(1.4); }
+            }
+        </style>
+        <script src = "js/phaser.js"></script>      
+        <script src="../bridge.js"></script>
+    </head>
+	<body>
+        <div id="stage"></div>
+            <!-- remove or comment unused configs before publish --> 
+        <script src = "js/slotConfig_3x5.js"></script>                
+        <script src = "js/mkutils.js"></script>
+        <script src = "js/popups.js"></script>
+        <script src = "js/state_machine.js"></script>
+        <script src = "js/slot_classes.js"></script>
+	    <script src = "js/slotGame.js"></script>
+        <script>
+          // Move Phaser canvas into the scalable stage for mobile zoom
+          (function(){
+            function move(){
+              var s = document.getElementById('stage');
+              var c = document.querySelector('body > canvas');
+              if (s && c) { s.appendChild(c); return true; }
+              return false;
+            }
+            var t = setInterval(function(){ if (move()) clearInterval(t); }, 100);
+            setTimeout(function(){ clearInterval(t); }, 15000);
+          })();
+          if (window.PhantomBridge) { try { window.PhantomBridge.init('Wolf Forest'); } catch(e){} }
+        </script>
+	</body>
+</html>
