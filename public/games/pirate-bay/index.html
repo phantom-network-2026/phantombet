@@ -5,6 +5,10 @@
 <title>Pirate Bay Slot</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
 <style type="text/css">
+  html, body {
+    width: 100%;
+    height: 100%;
+  }
   body {
     background-image: url("png/Background_1.png");
     background-color: #0a0a0a;
@@ -13,6 +17,12 @@
     background-size: cover;
     padding: 0; margin: 0;
     overflow: hidden;
+    position: relative;
+  }
+  #stage {
+    position: fixed;
+    inset: 0;
+    transform-origin: center center;
   }
   canvas {
     display: block;
@@ -22,6 +32,12 @@
     left: 50%;
     transform: translate(-50%, -50%);
   }
+  @media (max-width: 600px) {
+    #stage { transform: scale(1.16); }
+  }
+  @media (max-width: 420px) {
+    #stage { transform: scale(1.24); }
+  }
 </style>
 <script src="js/phaser.js"></script>
 <script src="../bridge.js"></script>
@@ -29,12 +45,25 @@
 <script src="loader.js"></script>
 </head>
 <body>
+  <div id="stage"></div>
   <script src="js/slotConfig3x5.js"></script>
   <script src="js/mkutils.js"></script>
   <script src="js/popups.js"></script>
   <script src="js/state_machine.js"></script>
   <script src="js/slot_classes.js"></script>
   <script src="js/slotGame.js"></script>
+  <script>
+    (function(){
+      function move(){
+        var stage = document.getElementById('stage');
+        var canvas = document.querySelector('body > canvas');
+        if (stage && canvas) { stage.appendChild(canvas); return true; }
+        return false;
+      }
+      var timer = setInterval(function(){ if (move()) clearInterval(timer); }, 100);
+      setTimeout(function(){ clearInterval(timer); }, 15000);
+    })();
+  </script>
   <script src="button-recolor.js"></script>
   <!-- PhantomBet bridge integration: loaded last so classes exist -->
   <script src="phantom-bridge-integration.js"></script>

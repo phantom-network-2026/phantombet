@@ -10,7 +10,7 @@ import {
   Upload, Download, RefreshCw, ChevronRight, Code, Image, Music,
   FileText, Plus, X, Copy, Eye, Undo2, Redo2, Replace,
   Terminal, Gamepad2, FolderPlus, Pencil, Check, FileCode,
-  Braces, Palette, Globe, Layers, Package
+  Braces, Palette, Globe, Layers, Package, OctagonX
 } from "lucide-react";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -470,6 +470,66 @@ export default function DevConsole({ onBack }: { onBack: () => void }) {
     setInstalling(false);
   };
 
+  const uninstallGame = async (slug: string) => {
+    const isBuiltIn = BUILTIN_GAMES.includes(slug);
+    const confirmed = window.confirm(
+      isBuiltIn
+        ? `Uninstall ${slug}? This will hide it from the casino and remove any editable override files stored for it.`
+        : `Uninstall ${slug}? This will remove the game entry and delete its uploaded files.`
+    );
+    if (!confirmed) return;
+
+    const gameFolder = slug;
+    const prefixes = [gameFolder];
+    let removedFiles = 0;
+
+    try {
+      for (const prefix of prefixes) {
+        const queue = [prefix];
+        while (queue.length > 0) {
+          const current = queue.shift()!;
+          const { data, error } = await supabase.storage.from(BUCKET).list(current, { limit: 500 });
+          if (error) continue;
+
+          const filePaths: string[] = [];
+          for (const entry of data || []) {
+            const entryPath = `${current}/${entry.name}`;
+            const isFolder = !entry.metadata?.mimetype && !entry.id;
+            if (isFolder) queue.push(entryPath);
+            else filePaths.push(entryPath);
+          }
+
+          if (filePaths.length) {
+            const { error: removeError } = await supabase.storage.from(BUCKET).remove(filePaths);
+            if (removeError) throw removeError;
+            removedFiles += filePaths.length;
+          }
+        }
+      }
+
+      const { error: deleteDbError } = await supabase.from("games").delete().eq("slug", slug);
+      if (deleteDbError) throw deleteDbError;
+
+      setStorageGames((prev) => prev.filter((game) => game !== slug));
+      setGames((prev) => prev.filter((game) => game !== slug));
+      if (selectedGame === slug) {
+        setSelectedGame("");
+        setSelectedFile("");
+        setFileContent("");
+        setOriginalContent("");
+        setFiles([]);
+        setOpenTabs([]);
+        setCurrentPath("");
+      }
+
+      await fetchStorageGames();
+      toast.success(`${slug} uninstalled${removedFiles ? ` (${removedFiles} files removed)` : ""}`);
+    } catch (error: any) {
+      console.error("Failed to uninstall game", error);
+      toast.error(error?.message || "Failed to uninstall game");
+    }
+  };
+
   return (
     <div className="space-y-4">
       <button onClick={onBack} className="flex items-center gap-2 text-sm text-casino-gold hover:underline">
@@ -552,21 +612,33 @@ export default function DevConsole({ onBack }: { onBack: () => void }) {
             <h4 className="font-bold flex items-center gap-2"><Layers className="h-4 w-4 text-casino-gold" /> Installed Games ({storageGames.length} custom + {BUILTIN_GAMES.length} built-in)</h4>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
               {games.map(g => (
-                <button
+                <div
                   key={g}
-                  onClick={() => { setMode("editor"); selectGame(g); }}
-                  className={`rounded-lg border p-3 text-left text-xs font-medium transition-all hover:border-casino-gold/40 hover:bg-secondary/50 ${
+                  className={`rounded-lg border p-3 text-left text-xs font-medium transition-all ${
                     storageGames.includes(g) ? "border-green-500/30 bg-green-500/5" : "border-border"
                   }`}
                 >
-                  <div className="flex items-center gap-2">
-                    <Gamepad2 className="h-3.5 w-3.5 text-casino-gold shrink-0" />
-                    <span className="truncate">{g}</span>
-                  </div>
-                  <span className={`text-[10px] mt-1 block ${storageGames.includes(g) ? "text-green-400" : "text-muted-foreground"}`}>
-                    {storageGames.includes(g) ? "Custom" : "Built-in"}
-                  </span>
-                </button>
+                  <button
+                    onClick={() => { setMode("editor"); selectGame(g); }}
+                    className="w-full text-left"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Gamepad2 className="h-3.5 w-3.5 text-casino-gold shrink-0" />
+                      <span className="truncate">{g}</span>
+                    </div>
+                    <span className={`text-[10px] mt-1 block ${storageGames.includes(g) ? "text-green-400" : "text-muted-foreground"}`}>
+                      {storageGames.includes(g) ? "Custom" : "Built-in"}
+                    </span>
+                  </button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-3 h-7 w-full justify-center text-[10px]"
+                    onClick={() => uninstallGame(g)}
+                  >
+                    <OctagonX className="h-3 w-3 mr-1" /> Uninstall
+                  </Button>
+                </div>
               ))}
             </div>
           </div>
