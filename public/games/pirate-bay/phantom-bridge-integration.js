@@ -161,6 +161,7 @@
       const origApply = SlotControls.prototype.applyBet;
       const origSetLineBet = SlotControls.prototype.setLineBet;
       const origSetMaxLineBet = SlotControls.prototype.setMaxLineBet;
+      const origSetSelectedLinesCount = SlotControls.prototype.setSelectedLinesCount;
       const origRefreshBetLines = SlotControls.prototype.refreshBetLines;
       const origChangeTotal = SlotControls.prototype.changeTotalBetHandler;
       const origChangeLine = SlotControls.prototype.changeLineBetHandler;
@@ -188,7 +189,7 @@
       SlotControls.prototype.setSelectedLinesCount = function (count, burn) {
         const result = this.selectedLinesCount === 1 && count === 1
           ? undefined
-          : Object.getPrototypeOf(SlotControls.prototype).setSelectedLinesCount?.call(this, 1, burn);
+          : origSetSelectedLinesCount ? origSetSelectedLinesCount.call(this, 1, burn) : undefined;
         this.selectedLinesCount = 1;
         syncBetDisplay();
         return result;
