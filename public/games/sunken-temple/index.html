@@ -11,15 +11,12 @@
     padding: 0; margin: 0;
     overflow: hidden;
     position: relative;
-    background: radial-gradient(ellipse at center, #0a3a3a 0%, #02100f 100%);
+    background: #000 url("/games/sunken-temple/background.jpg") center/cover no-repeat fixed;
   }
   body::before {
     content: "";
     position: fixed; inset: 0;
-    background:
-      radial-gradient(circle at 20% 10%, rgba(94,234,212,0.25), transparent 40%),
-      radial-gradient(circle at 80% 90%, rgba(56,189,248,0.20), transparent 45%),
-      repeating-linear-gradient(45deg, rgba(94,234,212,0.25) 0 2px, transparent 2px 14px);
+    background: linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.35));
     pointer-events: none;
     z-index: 3;
   }

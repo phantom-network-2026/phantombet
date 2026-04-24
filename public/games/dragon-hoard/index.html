@@ -11,15 +11,12 @@
     padding: 0; margin: 0;
     overflow: hidden;
     position: relative;
-    background: radial-gradient(ellipse at center, #5e1a0a 0%, #180402 100%);
+    background: #000 url("/games/dragon-hoard/background.jpg") center/cover no-repeat fixed;
   }
   body::before {
     content: "";
     position: fixed; inset: 0;
-    background:
-      radial-gradient(circle at 20% 10%, rgba(251,191,36,0.25), transparent 40%),
-      radial-gradient(circle at 80% 90%, rgba(220,38,38,0.20), transparent 45%),
-      repeating-linear-gradient(45deg, rgba(251,191,36,0.25) 0 2px, transparent 2px 14px);
+    background: linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.35));
     pointer-events: none;
     z-index: 3;
   }

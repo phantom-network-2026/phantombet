@@ -11,15 +11,12 @@
     padding: 0; margin: 0;
     overflow: hidden;
     position: relative;
-    background: radial-gradient(ellipse at center, #5e0a18 0%, #180204 100%);
+    background: #000 url("/games/samurai-spins/background.jpg") center/cover no-repeat fixed;
   }
   body::before {
     content: "";
     position: fixed; inset: 0;
-    background:
-      radial-gradient(circle at 20% 10%, rgba(255,71,87,0.22), transparent 40%),
-      radial-gradient(circle at 80% 90%, rgba(255,200,200,0.15), transparent 45%),
-      repeating-linear-gradient(45deg, rgba(255,71,87,0.22) 0 2px, transparent 2px 14px);
+    background: linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.35));
     pointer-events: none;
     z-index: 3;
   }
