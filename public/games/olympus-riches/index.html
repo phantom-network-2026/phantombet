@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <base href="/games/pirate-bay/">
-<title>Aztec Treasure</title>
+<title>Olympus Riches</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
 <style>
   html, body {
@@ -11,15 +11,15 @@
     padding: 0; margin: 0;
     overflow: hidden;
     position: relative;
-    background: radial-gradient(ellipse at center, #5a2a0a 0%, #1a0a02 100%);
+    background: radial-gradient(ellipse at center, #1a2a5a 0%, #020418 100%);
   }
   body::before {
     content: "";
     position: fixed; inset: 0;
     background:
-      radial-gradient(circle at 20% 10%, rgba(255,184,0,0.18), transparent 40%),
-      radial-gradient(circle at 80% 90%, rgba(20,120,80,0.22), transparent 45%),
-      repeating-linear-gradient(45deg, rgba(255,184,0,0.18) 0 2px, transparent 2px 14px);
+      radial-gradient(circle at 20% 10%, rgba(255,215,0,0.22), transparent 40%),
+      radial-gradient(circle at 80% 90%, rgba(125,211,252,0.18), transparent 45%),
+      repeating-linear-gradient(45deg, rgba(255,215,0,0.22) 0 2px, transparent 2px 14px);
     pointer-events: none;
     z-index: 3;
   }
@@ -35,12 +35,12 @@
     position: absolute;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    filter: hue-rotate(35deg) saturate(1.6) sepia(0.35) contrast(1.05);
+    filter: hue-rotate(210deg) saturate(1.5) brightness(1.0) contrast(1.05);
   }
   /* Themed faint emblem watermark behind reels */
   .watermark {
     position: fixed; inset: 0;
-    background: url("/games/aztec-treasure/emblem.png") center/35% no-repeat;
+    background: url("/games/olympus-riches/emblem.png") center/35% no-repeat;
     opacity: 0.08; z-index: 1; pointer-events: none;
   }
   #clone-banner {
@@ -49,16 +49,16 @@
     height: 44px;
     display: flex; align-items: center; justify-content: center;
     z-index: 10;
-    font-family: "Trajan Pro","Trebuchet MS",serif;
+    font-family: "Cinzel","Trajan Pro",serif;
     font-weight: 900;
     font-size: 22px;
     letter-spacing: 5px;
-    color: #ffd24a;
-    text-shadow: 0 0 14px #ffb800, 0 0 4px #000, 2px 2px 0 #4a1a00;
+    color: #fff3a3;
+    text-shadow: 0 0 14px #ffd700, 0 0 4px #000, 2px 2px 0 #0a1230;
     pointer-events: none;
     text-transform: uppercase;
-    background: linear-gradient(180deg, #4a1a00cc, transparent);
-    border-bottom: 2px solid #ffb80066;
+    background: linear-gradient(180deg, #0a1230cc, transparent);
+    border-bottom: 2px solid #ffd70066;
   }
   /* Mobile: scale the entire stage up so reels & buttons are bigger */
   @media (max-width: 600px) {
@@ -71,11 +71,11 @@
 </style>
 <script src="js/phaser.js"></script>
 <script src="../bridge.js"></script>
-<script>window.__PB_CLONE_TITLE__ = "Aztec Treasure";</script>
+<script>window.__PB_CLONE_TITLE__ = "Olympus Riches";</script>
 </head>
 <body>
   <div class="watermark"></div>
-  <div id="clone-banner">Aztec Treasure</div>
+  <div id="clone-banner">Olympus Riches</div>
   <div id="stage"></div>
   <script src="js/slotConfig3x5.js"></script>
   <script src="js/mkutils.js"></script>
