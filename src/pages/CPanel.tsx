@@ -2237,7 +2237,7 @@ export default function CPanel() {
       <div className="container max-w-6xl py-6 px-4">
         {/* Header bar */}
         <div className="flex items-center gap-3 mb-6">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/admin")}>
+          <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex items-center gap-3">
@@ -2293,10 +2293,10 @@ export default function CPanel() {
             {sec("cpanel_users") && (
             <CpanelSection title="User Management" icon={<Users className="h-5 w-5" />}>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1">
-                <ToolCard icon={<Users className="h-6 w-6" />} label="Manage Users" onClick={() => navigate("/admin")} />
-                <ToolCard icon={<Shield className="h-6 w-6" />} label="User Roles" onClick={() => navigate("/admin")} />
+                <ToolCard icon={<Users className="h-6 w-6" />} label="Manage Users" onClick={() => setActivePanel("users")} active={activePanel === "users"} />
+                <ToolCard icon={<Shield className="h-6 w-6" />} label="User Roles" onClick={() => setActivePanel("users")} />
                 <ToolCard icon={<Ban className="h-6 w-6" />} label="Ban Manager" onClick={() => setActivePanel("security")} />
-                <ToolCard icon={<Activity className="h-6 w-6" />} label="Online Users" onClick={() => navigate("/admin")} />
+                <ToolCard icon={<Activity className="h-6 w-6" />} label="Online Users" onClick={() => setActivePanel("users")} />
                 <ToolCard icon={<UserCheck className="h-6 w-6" />} label="Friendships" onClick={() => setActivePanel("database")} />
                 <ToolCard icon={<MessageSquare className="h-6 w-6" />} label="Messages" onClick={() => setActivePanel("database")} />
                 <ToolCard icon={<Users className="h-6 w-6" />} label="Ghost Users" onClick={() => setActivePanel("ghost-users")} active={activePanel === "ghost-users"} />
