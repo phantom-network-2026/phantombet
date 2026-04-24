@@ -1,0 +1,1 @@
+UPDATE public.games SET image_url='/games/3d-roulette/thumbnail.jpg' WHERE slug='3d-roulette';
