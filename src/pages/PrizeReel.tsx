@@ -157,6 +157,59 @@ function SlotReel({
   );
 }
 
+// ─── Confetti burst (lightweight, no deps) ─────────────────────
+function ConfettiBurst({ count = 60 }: { count?: number }) {
+  // Pre-compute particle properties so they're stable across renders
+  const particles = Array.from({ length: count }).map((_, i) => {
+    const angle = (i / count) * Math.PI * 2 + Math.random() * 0.4;
+    const distance = 140 + Math.random() * 200;
+    const size = 6 + Math.random() * 8;
+    const palette = [
+      "hsl(43,90%,60%)",   // gold
+      "hsl(43,100%,75%)",  // light gold
+      "hsl(280,75%,65%)",  // purple
+      "hsl(330,80%,65%)",  // pink
+      "hsl(0,0%,100%)",    // white
+    ];
+    return {
+      x: Math.cos(angle) * distance,
+      y: Math.sin(angle) * distance,
+      rotate: Math.random() * 720 - 360,
+      delay: Math.random() * 0.15,
+      duration: 1.6 + Math.random() * 0.9,
+      size,
+      color: palette[i % palette.length],
+      shape: i % 3,
+    };
+  });
+  return (
+    <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden">
+      {particles.map((p, i) => (
+        <motion.div
+          key={i}
+          initial={{ x: 0, y: 0, opacity: 1, scale: 0, rotate: 0 }}
+          animate={{
+            x: p.x,
+            y: p.y + 200, // gravity
+            opacity: [1, 1, 0],
+            scale: [0, 1, 0.7],
+            rotate: p.rotate,
+          }}
+          transition={{ duration: p.duration, delay: p.delay, ease: "easeOut" }}
+          className="absolute"
+          style={{
+            width: p.size,
+            height: p.shape === 1 ? p.size * 1.6 : p.size,
+            background: p.color,
+            borderRadius: p.shape === 0 ? "50%" : p.shape === 2 ? "2px" : "0",
+            boxShadow: `0 0 8px ${p.color}`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 // ─── Prize Splash ───────────────────────────────────────────────
 function PrizeSplash({
   prize,
@@ -174,28 +227,68 @@ function PrizeSplash({
 
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       onClick={onClose}
     >
+      {/* Confetti behind the card */}
+      <ConfettiBurst count={70} />
+
+      {/* Radial light burst */}
       <motion.div
-        className="text-center p-6 md:p-8 rounded-2xl min-w-[260px] max-w-[340px]"
+        className="absolute inset-0 pointer-events-none"
+        initial={{ opacity: 0, scale: 0.5 }}
+        animate={{ opacity: [0, 0.8, 0], scale: [0.5, 2, 2.5] }}
+        transition={{ duration: 1.4, ease: "easeOut" }}
         style={{
-          background: "radial-gradient(ellipse, hsl(270,40%,18%), hsl(270,30%,6%))",
-          border: "2px solid hsl(43,80%,50%)",
-          boxShadow: "0 0 80px hsl(43,80%,50%,0.3), 0 0 40px hsl(270,60%,40%,0.3)",
+          background:
+            "radial-gradient(circle at center, hsl(43,90%,60%,0.45), transparent 60%)",
         }}
-        initial={{ scale: 0.3, y: 50 }}
-        animate={{ scale: 1, y: 0 }}
-        exit={{ scale: 0.3, opacity: 0 }}
-        transition={{ type: "spring", damping: 12 }}
+      />
+
+      <motion.div
+        className="relative text-center p-6 md:p-8 rounded-3xl min-w-[280px] max-w-[360px] overflow-hidden"
+        style={{
+          background:
+            "radial-gradient(ellipse at top, hsl(280,55%,22%), hsl(270,40%,9%) 70%)",
+          border: "1px solid hsl(43,80%,55%,0.6)",
+          boxShadow:
+            "0 0 80px hsl(43,80%,55%,0.45), 0 0 40px hsl(280,70%,45%,0.4), inset 0 1px 0 hsl(43,90%,75%,0.4)",
+        }}
+        initial={{ scale: 0.4, y: 60, rotate: -3 }}
+        animate={{ scale: 1, y: 0, rotate: 0 }}
+        exit={{ scale: 0.5, opacity: 0, y: 20 }}
+        transition={{ type: "spring", damping: 14, stiffness: 220 }}
+        onClick={(e) => e.stopPropagation()}
       >
+        {/* Decorative gold corner accents */}
+        <span className="absolute top-3 left-3 w-5 h-5 border-t-2 border-l-2 border-[hsl(43,90%,65%)] rounded-tl-lg opacity-70" />
+        <span className="absolute top-3 right-3 w-5 h-5 border-t-2 border-r-2 border-[hsl(43,90%,65%)] rounded-tr-lg opacity-70" />
+        <span className="absolute bottom-3 left-3 w-5 h-5 border-b-2 border-l-2 border-[hsl(43,90%,65%)] rounded-bl-lg opacity-70" />
+        <span className="absolute bottom-3 right-3 w-5 h-5 border-b-2 border-r-2 border-[hsl(43,90%,65%)] rounded-br-lg opacity-70" />
+
+        {/* Inner light sweep */}
+        <motion.div
+          className="absolute inset-0 pointer-events-none"
+          initial={{ x: "-120%" }}
+          animate={{ x: "120%" }}
+          transition={{ duration: 1.4, delay: 0.3, ease: "easeInOut" }}
+          style={{
+            background:
+              "linear-gradient(115deg, transparent 30%, hsl(43,90%,75%,0.25) 50%, transparent 70%)",
+          }}
+        />
+
         {isLoyalty && (
           <motion.div
-            className="text-xs font-bold uppercase tracking-wider mb-2 px-3 py-1 rounded-full inline-block"
-            style={{ background: "hsl(43,80%,50%)", color: "hsl(270,40%,8%)" }}
+            className="relative text-[10px] font-bold uppercase tracking-[0.2em] mb-3 px-3 py-1 rounded-full inline-block"
+            style={{
+              background: "linear-gradient(90deg, hsl(43,90%,60%), hsl(43,75%,40%))",
+              color: "hsl(270,50%,8%)",
+              boxShadow: "0 0 16px hsl(43,90%,55%,0.6)",
+            }}
             animate={{ scale: [1, 1.05, 1] }}
             transition={{ repeat: Infinity, duration: 1.5 }}
           >
@@ -204,35 +297,72 @@ function PrizeSplash({
         )}
 
         <motion.div
-          className="relative text-5xl md:text-6xl mb-4"
-          animate={{ rotate: [0, -10, 10, -5, 5, 0], scale: [1, 1.2, 1] }}
-          transition={{ duration: 0.6, delay: 0.2 }}
+          className="relative text-6xl md:text-7xl mb-4 inline-block"
+          animate={{ rotate: [0, -12, 12, -6, 6, 0], scale: [0.5, 1.4, 1] }}
+          transition={{ duration: 0.8, delay: 0.2, ease: "backOut" }}
         >
-          <span className="absolute inset-0 blur-2xl opacity-70" style={{ color: prize.color }}>{prize.icon}</span>
-          {prize.icon}
+          <span className="absolute inset-0 blur-2xl opacity-90" style={{ color: prize.color }}>{prize.icon}</span>
+          <span className="absolute inset-0 blur-3xl opacity-60" style={{ color: "hsl(43,90%,60%)" }}>{prize.icon}</span>
+          <span className="relative drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)]">{prize.icon}</span>
         </motion.div>
 
-        <p className="text-xs text-[hsl(43,80%,60%)] font-semibold uppercase tracking-wider mb-1">
-          You won
-        </p>
+        <motion.p
+          className="relative text-[11px] text-[hsl(43,90%,70%)] font-semibold uppercase tracking-[0.4em] mb-1"
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          ✦ You Won ✦
+        </motion.p>
 
         <motion.p
-          className="text-2xl md:text-3xl font-black mb-1"
-          style={{ color: prize.color, textShadow: `0 0 20px ${prize.color}` }}
+          className="relative font-display text-3xl md:text-4xl font-black mb-2"
+          style={{
+            background: `linear-gradient(180deg, ${prize.color}, hsl(43,90%,55%))`,
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            filter: `drop-shadow(0 0 24px ${prize.color})`,
+          }}
           initial={{ scale: 0 }}
-          animate={{ scale: [0, 1.2, 1] }}
-          transition={{ delay: 0.15, duration: 0.4 }}
+          animate={{ scale: [0, 1.3, 1] }}
+          transition={{ delay: 0.25, duration: 0.55, ease: "backOut" }}
         >
           {prize.label}
         </motion.p>
 
-        <p className="text-sm text-muted-foreground">{isLoyalty ? `7-day streak reward • ${prize.detail}` : prize.detail}</p>
+        <p className="relative text-sm text-white/70">
+          {isLoyalty ? `7-day streak reward · ${prize.detail}` : prize.detail}
+        </p>
 
-        <motion.div className="mt-4 text-4xl" animate={{ y: [0, -8, 0] }} transition={{ repeat: Infinity, duration: 1.2 }}>
-          🎉
+        {/* Sparkles row */}
+        <motion.div
+          className="relative flex justify-center gap-3 mt-5 text-2xl"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+        >
+          {["✨", "🎉", "✨"].map((emoji, i) => (
+            <motion.span
+              key={i}
+              animate={{ y: [0, -10, 0], rotate: [0, 12, -12, 0] }}
+              transition={{ repeat: Infinity, duration: 1.4, delay: i * 0.15 }}
+            >
+              {emoji}
+            </motion.span>
+          ))}
         </motion.div>
 
-        <p className="text-xs text-muted-foreground mt-3">Tap to continue</p>
+        <button
+          onClick={onClose}
+          className="relative mt-5 px-6 py-2 rounded-full text-xs font-bold uppercase tracking-[0.2em] transition-transform hover:scale-105 active:scale-95"
+          style={{
+            background: "linear-gradient(135deg, hsl(43,90%,58%), hsl(43,70%,38%))",
+            color: "hsl(270,50%,8%)",
+            boxShadow: "0 4px 16px hsl(43,90%,50%,0.5), inset 0 1px 0 hsl(43,100%,80%,0.6)",
+          }}
+        >
+          Claim Reward
+        </button>
       </motion.div>
     </motion.div>
   );
