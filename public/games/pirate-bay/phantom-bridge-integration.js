@@ -36,6 +36,20 @@
     return usdBetForInternalLineBet(ctrls && ctrls.lineBet);
   }
 
+  function setInternalBetState(ctrls, nextIndex) {
+    if (!ctrls) return;
+    const normalizedIndex = clampTierIndex(nextIndex);
+    tierIndex = normalizedIndex;
+    ctrls.maxLineBet = BET_TIERS.length;
+    ctrls.lineBet = normalizedIndex + 1;
+    if (!ctrls.selectedLinesCount || Number(ctrls.selectedLinesCount) < 1) {
+      ctrls.selectedLinesCount = 1;
+    }
+    if (!ctrls.holdMultiplier || Number(ctrls.holdMultiplier) < 1) {
+      ctrls.holdMultiplier = 1;
+    }
+  }
+
   function currentInternalTotalBet(ctrls) {
     const selectedLinesCount = Number(ctrls && ctrls.selectedLinesCount) || 0;
     const lineBet = Number(ctrls && ctrls.lineBet) || 0;
@@ -69,6 +83,7 @@
     const txt = formatUsd(usd);
     try { if (ctrls.totalBetSumText) ctrls.totalBetSumText.text = txt; } catch (e) {}
     try { if (ctrls.lineBetAmountText) ctrls.lineBetAmountText.text = txt; } catch (e) {}
+    try { if (ctrls.linesCountText) ctrls.linesCountText.text = '1'; } catch (e) {}
   }
 
   function bindExistingControls() {
@@ -155,17 +170,26 @@
       };
 
       SlotControls.prototype.setLineBet = function (count) {
-        const normalized = clampTierIndex(Math.round(Number(count) || 1) - 1) + 1;
-        this.maxLineBet = BET_TIERS.length;
-        const result = origSetLineBet ? origSetLineBet.call(this, normalized) : undefined;
-        setTierIndexFromInternal(this.lineBet || normalized);
+        const normalizedIndex = clampTierIndex(Math.round(Number(count) || 1) - 1);
+        setInternalBetState(this, normalizedIndex);
+        const result = origSetLineBet ? origSetLineBet.call(this, normalizedIndex + 1) : undefined;
+        setInternalBetState(this, normalizedIndex);
         syncBetDisplay();
         return result;
       };
       SlotControls.prototype.setMaxLineBet = function () {
-        this.maxLineBet = BET_TIERS.length;
+        setInternalBetState(this, BET_TIERS.length - 1);
         const result = origSetMaxLineBet ? origSetMaxLineBet.call(this) : this.setLineBet(BET_TIERS.length);
-        setTierIndexFromInternal(this.lineBet || BET_TIERS.length);
+        setInternalBetState(this, BET_TIERS.length - 1);
+        syncBetDisplay();
+        return result;
+      };
+
+      SlotControls.prototype.setSelectedLinesCount = function (count, burn) {
+        const result = this.selectedLinesCount === 1 && count === 1
+          ? undefined
+          : Object.getPrototypeOf(SlotControls.prototype).setSelectedLinesCount?.call(this, 1, burn);
+        this.selectedLinesCount = 1;
         syncBetDisplay();
         return result;
       };
@@ -190,30 +214,38 @@
       // engine's internal bet display events fire (then we overwrite with USD).
       SlotControls.prototype.lineBetPlus_Click = function () {
         if (tierIndex < BET_TIERS.length - 1) tierIndex++;
+        setInternalBetState(this, tierIndex);
         try { origPlus && origPlus.call(this); } catch (e) {
           try { this.scene.soundController.playClip('button_click'); } catch (e2) {}
         }
+        setInternalBetState(this, tierIndex);
         syncBetDisplay();
       };
       SlotControls.prototype.lineBetMinus_Click = function () {
         if (tierIndex > 0) tierIndex--;
+        setInternalBetState(this, tierIndex);
         try { origMinus && origMinus.call(this); } catch (e) {
           try { this.scene.soundController.playClip('button_click'); } catch (e2) {}
         }
+        setInternalBetState(this, tierIndex);
         syncBetDisplay();
       };
       SlotControls.prototype.lineBetLoop_Click = function () {
         tierIndex = (tierIndex + 1) % BET_TIERS.length;
+        setInternalBetState(this, tierIndex);
         try { origLoop && origLoop.call(this); } catch (e) {
           try { this.scene.soundController.playClip('button_click'); } catch (e2) {}
         }
+        setInternalBetState(this, tierIndex);
         syncBetDisplay();
       };
       SlotControls.prototype.maxBet_Click = function () {
         tierIndex = BET_TIERS.length - 1; // $5
+        setInternalBetState(this, tierIndex);
         try { origMax && origMax.call(this); } catch (e) {
           try { this.scene.soundController.playClip('button_click'); } catch (e2) {}
         }
+        setInternalBetState(this, tierIndex);
         syncBetDisplay();
       };
 
