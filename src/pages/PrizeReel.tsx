@@ -14,7 +14,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 // ─── Prize definitions ─────────────────────────────────────────
 interface Prize {
   label: string;
-  type: "free_spin" | "scratch_card";
+  type: "free_spin";
   value: number;
   detail: string;
   icon: string;
@@ -23,24 +23,20 @@ interface Prize {
 }
 
 const PRIZES: Prize[] = [
-  { label: "1 Free Spin", type: "free_spin", value: 1, detail: "Cowboy Slots", icon: "🎰", color: "hsl(43,80%,50%)", weight: 50 },
-  { label: "3 Free Spins", type: "free_spin", value: 3, detail: "Cowboy Slots", icon: "🎰", color: "hsl(280,60%,55%)", weight: 20 },
-  { label: "5 Free Spins", type: "free_spin", value: 5, detail: "Cowboy Slots", icon: "🤠", color: "hsl(200,70%,50%)", weight: 8 },
-  { label: "$1 Scratch Card", type: "scratch_card", value: 1, detail: "Instant Win", icon: "🎟️", color: "hsl(140,60%,45%)", weight: 10 },
+  { label: "1 Free Spin", type: "free_spin", value: 1, detail: "Starter reward", icon: "✨", color: "hsl(43,80%,50%)", weight: 34 },
+  { label: "3 Free Spins", type: "free_spin", value: 3, detail: "Light streak boost", icon: "🎰", color: "hsl(330,80%,60%)", weight: 24 },
+  { label: "5 Free Spins", type: "free_spin", value: 5, detail: "Core daily hit", icon: "🎯", color: "hsl(200,70%,50%)", weight: 18 },
+  { label: "10 Free Spins", type: "free_spin", value: 10, detail: "Premium drop", icon: "💎", color: "hsl(270,70%,62%)", weight: 14 },
+  { label: "15 Free Spins", type: "free_spin", value: 15, detail: "High-value bonus", icon: "🚀", color: "hsl(145,70%,45%)", weight: 7 },
+  { label: "20 Free Spins", type: "free_spin", value: 20, detail: "Elite reward", icon: "👑", color: "hsl(28,90%,58%)", weight: 2.5 },
+  { label: "25 Free Spins", type: "free_spin", value: 25, detail: "Top-tier jackpot", icon: "🏆", color: "hsl(52,95%,62%)", weight: 0.5 },
 ];
 
 // Weighted random – only prizes with weight > 0 can be won on normal spins
 function pickPrize(isLoyalty: boolean): Prize {
-  if (isLoyalty) {
-    // Loyalty spin: can win up to 5 free spins or $1 scratch card (guaranteed)
-    const loyaltyPool = PRIZES.filter(p =>
-      (p.type === "free_spin" && p.value <= 5) ||
-      (p.type === "scratch_card" && p.value <= 1)
-    );
-    return loyaltyPool[Math.floor(Math.random() * loyaltyPool.length)];
-  }
-  // Normal spin: weighted, max 5 free spins or $1 scratch card
-  const pool = PRIZES.filter(p => p.weight > 0);
+  const pool = isLoyalty
+    ? PRIZES.filter((p) => p.value >= 5)
+    : PRIZES.filter((p) => p.weight > 0);
   const totalWeight = pool.reduce((s, p) => s + p.weight, 0);
   let r = Math.random() * totalWeight;
   for (const p of pool) {
@@ -48,6 +44,10 @@ function pickPrize(isLoyalty: boolean): Prize {
     if (r <= 0) return p;
   }
   return pool[0];
+}
+
+function getPrizePresentation(value: number): Prize {
+  return PRIZES.find((prize) => prize.value === value) || PRIZES[0];
 }
 
 // ─── Reel strip (all prizes shown on the visual reel) ──────────
@@ -199,15 +199,16 @@ function PrizeSplash({
             animate={{ scale: [1, 1.05, 1] }}
             transition={{ repeat: Infinity, duration: 1.5 }}
           >
-            🏆 Loyalty Bonus x2!
+            🏆 Loyalty Reward Pool
           </motion.div>
         )}
 
         <motion.div
-          className="text-5xl md:text-6xl mb-3"
+          className="relative text-5xl md:text-6xl mb-4"
           animate={{ rotate: [0, -10, 10, -5, 5, 0], scale: [1, 1.2, 1] }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
+          <span className="absolute inset-0 blur-2xl opacity-70" style={{ color: prize.color }}>{prize.icon}</span>
           {prize.icon}
         </motion.div>
 
@@ -222,10 +223,10 @@ function PrizeSplash({
           animate={{ scale: [0, 1.2, 1] }}
           transition={{ delay: 0.15, duration: 0.4 }}
         >
-          {isLoyalty ? `${prize.label} (x2)` : prize.label}
+          {prize.label}
         </motion.p>
 
-        <p className="text-sm text-muted-foreground">{prize.detail}</p>
+        <p className="text-sm text-muted-foreground">{isLoyalty ? `7-day streak reward • ${prize.detail}` : prize.detail}</p>
 
         <motion.div className="mt-4 text-4xl" animate={{ y: [0, -8, 0] }} transition={{ repeat: Infinity, duration: 1.2 }}>
           🎉
@@ -365,14 +366,15 @@ function PrizeReelInner() {
       }
 
       const result = Array.isArray(data) ? data[0] : data;
+      const presentation = getPrizePresentation(Number(result.prize_value));
       // Map server result to a display prize
       const displayPrize: Prize = {
-        label: result.prize_detail || "Prize",
+        label: result.prize_detail || presentation.label,
         type: "free_spin",
         value: Number(result.prize_value),
-        detail: result.prize_detail || "",
-        icon: "🎰",
-        color: "hsl(43,80%,50%)",
+        detail: Number(result.prize_value) >= 20 ? "Vault-tier free spin drop" : presentation.detail,
+        icon: presentation.icon,
+        color: presentation.color,
         weight: 1,
       };
 
@@ -482,7 +484,7 @@ function PrizeReelInner() {
               animate={{ scale: [1, 1.03, 1] }}
               transition={{ repeat: Infinity, duration: 1.5 }}
             >
-              🏆 Loyalty Bonus Active! All prizes x2!
+              🏆 Loyalty Bonus Active! Premium free-spin pool unlocked!
             </motion.div>
           )}
         </motion.div>
@@ -509,7 +511,7 @@ function PrizeReelInner() {
                 boxShadow: "0 0 12px hsl(43,80%,50%,0.4)",
               }}
             >
-              ★ Daily Free Spin ★
+                ★ DAILY FREE SPINS · 1 TO 25 ★
             </div>
           </div>
 
@@ -547,7 +549,7 @@ function PrizeReelInner() {
                   ) : (
                     <>
                       <Gift className="h-5 w-5 mr-2" />
-                      {isLoyaltySpin ? "Loyalty Spin!" : "SPIN"}
+                       {isLoyaltySpin ? "LOYALTY SPIN" : "SPIN NOW"}
                     </>
                   )}
                 </Button>
@@ -603,7 +605,7 @@ function PrizeReelInner() {
             ))}
           </div>
           <p className="text-[10px] text-muted-foreground text-center mt-2">
-            Rare prizes available exclusively through the Loyalty Bonus spin
+            The 7-day loyalty spin leans toward the 5 to 25 free-spin rewards.
           </p>
         </motion.div>
 
