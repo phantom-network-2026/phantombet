@@ -280,18 +280,63 @@ function BlackjackInner() {
           <ArrowLeft className="h-4 w-4 mr-1" /> Back
         </Button>
 
-        {/* Table */}
-        <div className="relative rounded-3xl overflow-hidden border border-[hsl(var(--casino-green))/0.3]">
-          {/* Felt background */}
-          <div className="absolute inset-0 bg-gradient-to-b from-[hsl(145,50%,18%)] via-[hsl(145,45%,15%)] to-[hsl(145,50%,12%)]" />
-          <div className="absolute inset-0 opacity-[0.03]" style={{
-            backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='20' height='20' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='1' fill='white'/%3E%3C/svg%3E\")",
-            backgroundSize: "20px 20px"
-          }} />
+        {/* Table — Dark luxury (purple/gold brand) */}
+        <div className="relative rounded-[2rem] overflow-hidden ring-1 ring-[hsl(var(--casino-gold))/0.35] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.8)]">
+          {/* Outer wood/gold rail */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[hsl(43,55%,25%)] via-[hsl(43,75%,42%)] to-[hsl(43,55%,22%)]" />
 
-          {/* Glow edges */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-px bg-gradient-to-r from-transparent via-[hsl(var(--casino-gold))/0.4] to-transparent" />
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2/3 h-px bg-gradient-to-r from-transparent via-[hsl(var(--casino-gold))/0.4] to-transparent" />
+          {/* Inner felt surface — radial purple velvet */}
+          <div
+            className="absolute inset-[10px] rounded-[1.5rem]"
+            style={{
+              background:
+                "radial-gradient(ellipse at center top, hsl(280,50%,22%) 0%, hsl(275,55%,15%) 45%, hsl(270,60%,9%) 100%)",
+              boxShadow:
+                "inset 0 0 80px hsl(270,80%,5%), inset 0 4px 20px hsl(280,60%,30%,0.4)",
+            }}
+          />
+
+          {/* Felt micro-texture (very subtle dot grid) */}
+          <div
+            className="absolute inset-[10px] rounded-[1.5rem] opacity-[0.06] mix-blend-overlay"
+            style={{
+              backgroundImage:
+                "url(\"data:image/svg+xml,%3Csvg width='14' height='14' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='0.7' fill='white'/%3E%3C/svg%3E\")",
+              backgroundSize: "14px 14px",
+            }}
+          />
+
+          {/* Decorative arc (where dealer stands) */}
+          <svg
+            className="absolute inset-0 w-full h-full pointer-events-none opacity-30"
+            viewBox="0 0 400 400"
+            preserveAspectRatio="none"
+          >
+            <defs>
+              <linearGradient id="bjArc" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="hsl(43,80%,55%)" stopOpacity="0" />
+                <stop offset="50%" stopColor="hsl(43,90%,65%)" stopOpacity="1" />
+                <stop offset="100%" stopColor="hsl(43,80%,55%)" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <ellipse cx="200" cy="170" rx="170" ry="55" fill="none" stroke="url(#bjArc)" strokeWidth="0.7" />
+            <ellipse cx="200" cy="170" rx="155" ry="48" fill="none" stroke="url(#bjArc)" strokeWidth="0.4" />
+          </svg>
+
+          {/* "BLACKJACK PAYS 3 TO 2" arc text mock */}
+          <div className="absolute top-[28%] left-1/2 -translate-x-1/2 text-[9px] sm:text-[11px] font-display font-bold tracking-[0.4em] text-[hsl(43,80%,60%)/0.6] uppercase pointer-events-none">
+            Blackjack Pays 3 to 2
+          </div>
+          <div className="absolute top-[33%] left-1/2 -translate-x-1/2 text-[7px] sm:text-[9px] font-medium tracking-[0.3em] text-[hsl(43,70%,55%)/0.45] uppercase pointer-events-none">
+            Dealer Must Stand on All 17
+          </div>
+
+          {/* Top + bottom gold glow accent lines */}
+          <div className="absolute top-[10px] left-1/2 -translate-x-1/2 w-3/4 h-px bg-gradient-to-r from-transparent via-[hsl(var(--casino-gold))/0.6] to-transparent" />
+          <div className="absolute bottom-[10px] left-1/2 -translate-x-1/2 w-3/4 h-px bg-gradient-to-r from-transparent via-[hsl(var(--casino-gold))/0.6] to-transparent" />
+
+          {/* Vignette */}
+          <div className="absolute inset-[10px] rounded-[1.5rem] pointer-events-none" style={{ boxShadow: "inset 0 0 120px rgba(0,0,0,0.55)" }} />
 
           <div className="relative p-4 sm:p-6 space-y-4">
             {/* Title & Balance Bar */}
