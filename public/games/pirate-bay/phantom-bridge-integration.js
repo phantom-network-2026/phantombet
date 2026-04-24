@@ -12,6 +12,18 @@
   const MAX_BET_USD = 5.00;
   let tierIndex = 0; // default $0.10
 
+  function clampTierIndex(value) {
+    return Math.max(0, Math.min(BET_TIERS.length - 1, value));
+  }
+
+  function setTierIndexFromInternal(lineBet) {
+    const numeric = Number(lineBet);
+    if (Number.isFinite(numeric)) {
+      tierIndex = clampTierIndex(Math.round(numeric) - 1);
+    }
+    return tierIndex;
+  }
+
   function currentUsdBet() { return BET_TIERS[tierIndex]; }
   function formatUsd(v) { return '$' + Number(v).toFixed(2); }
 
@@ -24,16 +36,43 @@
   }
 
   function currentDisplayedUsd() {
+    const ctrls = getCtrls();
+    if (ctrls) setTierIndexFromInternal(ctrls.lineBet);
     return currentUsdBet();
   }
 
   function syncBetDisplay() {
     const ctrls = getCtrls();
     if (!ctrls) return;
-    const usd = currentDisplayedUsd();
+    ctrls.maxLineBet = BET_TIERS.length;
+    setTierIndexFromInternal(ctrls.lineBet);
+    const usd = currentUsdBet();
     const txt = formatUsd(usd);
     try { if (ctrls.totalBetSumText) ctrls.totalBetSumText.text = txt; } catch (e) {}
     try { if (ctrls.lineBetAmountText) ctrls.lineBetAmountText.text = txt; } catch (e) {}
+  }
+
+  function bindExistingControls() {
+    const ctrls = getCtrls();
+    if (!ctrls || ctrls.__pbUsdPatched) return false;
+
+    ctrls.__pbUsdPatched = true;
+    ctrls.maxLineBet = BET_TIERS.length;
+    ctrls.defaultLineBet = 1;
+
+    try { if (ctrls.changeTotalBetEvent && typeof ctrls.changeTotalBetEvent.add === 'function') ctrls.changeTotalBetEvent.add(syncBetDisplay, ctrls); } catch (e) {}
+    try { if (ctrls.changeLineBetEvent && typeof ctrls.changeLineBetEvent.add === 'function') ctrls.changeLineBetEvent.add(syncBetDisplay, ctrls); } catch (e) {}
+    try { if (ctrls.changeSelectedLinesEvent && typeof ctrls.changeSelectedLinesEvent.add === 'function') ctrls.changeSelectedLinesEvent.add(syncBetDisplay, ctrls); } catch (e) {}
+
+    try {
+      ctrls.setLineBet(1);
+    } catch (e) {
+      ctrls.lineBet = 1;
+      setTierIndexFromInternal(1);
+    }
+
+    syncBetDisplay();
+    return true;
   }
 
   function waitForClass(name, cb) {
@@ -86,9 +125,27 @@
       const origMax   = SlotControls.prototype.maxBet_Click;
       const origLoop  = SlotControls.prototype.lineBetLoop_Click;
       const origApply = SlotControls.prototype.applyBet;
+      const origSetLineBet = SlotControls.prototype.setLineBet;
+      const origSetMaxLineBet = SlotControls.prototype.setMaxLineBet;
       const origRefreshBetLines = SlotControls.prototype.refreshBetLines;
       const origChangeTotal = SlotControls.prototype.changeTotalBetHandler;
       const origChangeLine = SlotControls.prototype.changeLineBetHandler;
+
+      SlotControls.prototype.setLineBet = function (count) {
+        const normalized = clampTierIndex(Math.round(Number(count) || 1) - 1) + 1;
+        this.maxLineBet = BET_TIERS.length;
+        const result = origSetLineBet ? origSetLineBet.call(this, normalized) : undefined;
+        setTierIndexFromInternal(this.lineBet || normalized);
+        syncBetDisplay();
+        return result;
+      };
+      SlotControls.prototype.setMaxLineBet = function () {
+        this.maxLineBet = BET_TIERS.length;
+        const result = origSetMaxLineBet ? origSetMaxLineBet.call(this) : this.setLineBet(BET_TIERS.length);
+        setTierIndexFromInternal(this.lineBet || BET_TIERS.length);
+        syncBetDisplay();
+        return result;
+      };
 
       SlotControls.prototype.refreshBetLines = function () {
         const result = origRefreshBetLines ? origRefreshBetLines.call(this) : undefined;
@@ -165,6 +222,7 @@
           const sc = game.scene.scenes[0];
           if (sc.slotPlayer) {
             sc.slotPlayer._scene = sc;
+            bindExistingControls();
             syncBetDisplay();
             clearInterval(observer);
           }
