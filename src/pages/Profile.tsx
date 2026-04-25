@@ -17,6 +17,7 @@ import {
 import { toast } from "sonner";
 import { usePresence, getStatusColor, getStatusLabel, type AppearanceStatus } from "@/hooks/usePresence";
 import { StaffUsername, type StaffRole } from "@/components/casino/StaffUsername";
+import { MyBonusesPanel } from "@/components/casino/MyBonusesPanel";
 
 const BORDER_STYLES = [
   { id: "none", label: "None", price: 0, preview: "" },
@@ -350,6 +351,9 @@ export default function Profile() {
               )}
             </div>
           </div>
+
+          {/* My Bonuses */}
+          <MyBonusesPanel />
 
           {/* Social Links Display */}
           {Object.values(socialLinks).some(Boolean) && (
