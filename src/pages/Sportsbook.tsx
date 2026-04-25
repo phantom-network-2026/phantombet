@@ -370,6 +370,7 @@ function FootballSection() {
   const [stake, setStake] = useState(1);
   const [placing, setPlacing] = useState(false);
   const [oddsHistory, setOddsHistory] = useState<Record<string, number>>({});
+  const footballBanner = useSportsBanner("football_top");
   const [view, setView] = useState<"matches" | "in_play" | "today" | "competitions">("matches");
   const [search, setSearch] = useState("");
   const [compFilter, setCompFilter] = useState<string | null>(null);
