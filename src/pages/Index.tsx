@@ -163,34 +163,6 @@ export default function Index() {
 
       <HeroBanner />
 
-      {/* Non-KYC Banner */}
-      <div className="mx-4 mt-3 rounded-xl border border-[hsl(var(--casino-green))/0.3] bg-[hsl(var(--casino-green))/0.08] p-4">
-        <div className="flex items-start gap-3">
-          <span className="text-2xl">🔒</span>
-          <div className="space-y-1">
-            <p className="text-sm font-bold text-[hsl(var(--casino-green))]">100% Non-KYC Casino</p>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              No ID verification required — deposit and withdraw freely with full privacy. 
-              <span className="text-[hsl(var(--casino-gold))] font-semibold"> Unlimited withdrawals</span> with no caps or restrictions.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Live Game Chat Banner */}
-      <div className="mx-4 mt-3 rounded-xl border border-primary/30 bg-primary/8 p-4">
-        <div className="flex items-start gap-3">
-          <span className="text-2xl">💬</span>
-          <div className="space-y-1">
-            <p className="text-sm font-bold text-primary">Live Game Chat in Every Game</p>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Chat with other players in real-time while you play! Every game features a built-in group chat — 
-              <span className="text-[hsl(var(--casino-gold))] font-semibold"> strategize, celebrate wins, and play together.</span>
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Prize Reel Banner */}
       <PrizeReelBanner />
 
