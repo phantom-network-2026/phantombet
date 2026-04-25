@@ -869,6 +869,82 @@ function FootballSection() {
           </Card>
         );
       })}
+
+      {/* Floating Multi Bet Slip */}
+      {((slipMode === "builder" && builderLegs.length > 0) || (slipMode === "acca" && accaLegs.length > 0)) && (
+        <div className="sticky bottom-20 z-30">
+          <Card className={`p-3 space-y-2 border-2 shadow-2xl ${slipMode === "builder" ? "border-casino-gold bg-gradient-to-br from-card to-casino-gold/5" : "border-casino-pink bg-gradient-to-br from-card to-casino-pink/5"}`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span className="text-base">{slipMode === "builder" ? "🛠️" : "🚀"}</span>
+                <span className={`text-xs font-bold uppercase ${slipMode === "builder" ? "text-casino-gold" : "text-casino-pink"}`}>
+                  {slipMode === "builder" ? "Bet Builder" : "Accumulator"}
+                </span>
+                <Badge variant="outline" className="text-[10px]">
+                  {(slipMode === "builder" ? builderLegs : accaLegs).length} leg{(slipMode === "builder" ? builderLegs : accaLegs).length !== 1 ? "s" : ""}
+                </Badge>
+              </div>
+              <button
+                onClick={() => slipMode === "builder" ? setBuilderLegs([]) : setAccaLegs([])}
+                className="text-muted-foreground hover:text-casino-pink"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+
+            <div className="max-h-40 overflow-y-auto space-y-1 pr-1">
+              {(slipMode === "builder" ? builderLegs : accaLegs).map((l) => (
+                <div key={`${l.matchId}-${l.market}`} className="flex items-center justify-between gap-2 text-xs p-1.5 rounded bg-secondary/40">
+                  <div className="min-w-0">
+                    <div className="font-semibold truncate">{l.label}</div>
+                    <div className="text-[10px] text-muted-foreground truncate">{l.home} vs {l.away}</div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="font-mono font-bold text-casino-gold">{l.odds.toFixed(2)}</span>
+                    <button onClick={() => removeLeg(slipMode as "builder" | "acca", l.matchId, l.market)} className="text-muted-foreground hover:text-casino-pink">
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-6 gap-1">
+              {STAKE_TIERS.map((s) => (
+                <button key={s} onClick={() => setMultiStake(s)}
+                  className={`py-1 rounded text-[11px] font-semibold transition ${multiStake === s ? "bg-casino-gold text-background" : "bg-secondary text-muted-foreground"}`}>
+                  £{s.toFixed(2)}
+                </button>
+              ))}
+            </div>
+
+            {(() => {
+              const legs = slipMode === "builder" ? builderLegs : accaLegs;
+              const odds = slipMode === "builder" ? builderOdds : accaBoosted;
+              const showBoost = slipMode === "acca" && accaLegs.length >= 3 && accaBoosted > accaOdds;
+              return (
+                <>
+                  <div className="flex items-center justify-between text-xs">
+                    <span>
+                      {slipMode === "builder" ? "Combined" : "Total"}: <span className="font-mono font-bold text-casino-gold">{odds.toFixed(2)}</span>
+                      {showBoost && <span className="ml-1 text-[10px] text-casino-pink">⚡Boosted</span>}
+                    </span>
+                    <span>Returns: <span className="font-mono font-bold text-casino-green">£{(multiStake * odds).toFixed(2)}</span></span>
+                  </div>
+                  <Button
+                    onClick={() => placeMulti(slipMode as "builder" | "acca")}
+                    disabled={placingMulti || legs.length < 2}
+                    variant="gold"
+                    className="w-full"
+                  >
+                    {placingMulti ? "Placing…" : legs.length < 2 ? `Add ${2 - legs.length} more leg${2 - legs.length !== 1 ? "s" : ""}` : `Place £${multiStake.toFixed(2)} ${slipMode === "builder" ? "Builder" : "Acca"}`}
+                  </Button>
+                </>
+              );
+            })()}
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
