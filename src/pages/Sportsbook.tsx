@@ -362,6 +362,381 @@ export default function Sportsbook() {
 }
 
 
+function FootballSection() {
+  const [matches, setMatches] = useState<FootballMatch[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [selection, setSelection] = useState<FootballMarket | null>(null);
+  const [stake, setStake] = useState(1);
+  const [placing, setPlacing] = useState(false);
+  const [oddsHistory, setOddsHistory] = useState<Record<string, number>>({});
+  const [view, setView] = useState<"matches" | "in_play" | "today" | "competitions">("matches");
+  const [search, setSearch] = useState("");
+  const [compFilter, setCompFilter] = useState<string | null>(null);
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+
+  const load = async () => {
+    const { data } = await supabase.from("football_matches").select("*")
+      .in("status", ["upcoming", "live"]).order("kickoff_time");
+    const list = (data || []) as FootballMatch[];
+    list.forEach((m) => {
+      (["home", "draw", "away"] as const).forEach((k) => {
+        const key = `${m.id}-${k}`;
+        const v = (m as any)[`${k}_odds`];
+        setOddsHistory((prev) => ({ ...prev, [key]: prev[key] ?? v }));
+      });
+    });
+    setMatches(list);
+  };
+
+  useEffect(() => {
+    load();
+    const tick = async () => {
+      try { await supabase.functions.invoke("football-tick"); } catch {}
+      await load();
+    };
+    tick();
+    const i = setInterval(tick, 5000);
+    return () => clearInterval(i);
+  }, []);
+
+  useEffect(() => {
+    const ch = supabase.channel("football-rt")
+      .on("postgres_changes", { event: "*", schema: "public", table: "football_matches" }, () => load())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, []);
+
+  const trend = (id: string, market: FootballMarket, current: number) => {
+    const prev = oddsHistory[`${id}-${market}`];
+    if (prev === undefined || Math.abs(prev - current) < 0.01) return "flat";
+    return current > prev ? "up" : "down";
+  };
+
+  const placeBet = async (matchId: string) => {
+    if (!selection) { toast.error("Pick a market"); return; }
+    setPlacing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("football-place-bet", {
+        body: { match_id: matchId, selection, stake },
+      });
+      if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message || "Failed");
+      const m = matches.find((x) => x.id === matchId);
+      const odds = m ? (selection === "home" ? m.home_odds : selection === "draw" ? m.draw_odds : m.away_odds) : 0;
+      toast.success(`Bet placed! Potential return £${(stake * odds).toFixed(2)}`);
+      setSelection(null);
+    } catch (e: any) {
+      toast.error(e.message || "Failed to place bet");
+    } finally {
+      setPlacing(false);
+    }
+  };
+
+  if (matches.length === 0) {
+    return <Card className="p-6 text-center text-muted-foreground">Loading fixtures…</Card>;
+  }
+
+  const liveMatches = matches.filter((m) => m.status === "live");
+  const todayEnd = (() => { const d = new Date(); d.setHours(23, 59, 59, 999); return d.getTime(); })();
+  const todayMatches = matches.filter((m) => new Date(m.kickoff_time).getTime() <= todayEnd);
+
+  let visible = matches;
+  if (view === "in_play") visible = liveMatches;
+  else if (view === "today") visible = todayMatches;
+  else if (view === "competitions" && compFilter) visible = matches.filter((m) => m.competition === compFilter);
+
+  if (search.trim()) {
+    const q = search.trim().toLowerCase();
+    visible = visible.filter((m) =>
+      m.home_team.toLowerCase().includes(q) ||
+      m.away_team.toLowerCase().includes(q) ||
+      m.competition.toLowerCase().includes(q)
+    );
+  }
+
+  const grouped: Record<string, FootballMatch[]> = {};
+  for (const m of visible) {
+    (grouped[m.competition] = grouped[m.competition] || []).push(m);
+  }
+  const competitions = Object.keys(grouped).sort();
+  const allCompetitions = Array.from(new Set(matches.map((m) => m.competition))).sort();
+
+  const renderMatchRow = (m: FootballMatch) => {
+    const isOpen = activeId === m.id;
+    const isLive = m.status === "live";
+    const ko = new Date(m.kickoff_time);
+    const cd = (() => {
+      if (isLive) return `${m.minute}'`;
+      const ms = ko.getTime() - Date.now();
+      if (ms <= 0) return "KO";
+      const mins = Math.floor(ms / 60000);
+      if (mins >= 60) return `${Math.floor(mins / 60)}h ${mins % 60}m`;
+      const secs = Math.floor((ms % 60000) / 1000);
+      return `${mins}:${secs.toString().padStart(2, "0")}`;
+    })();
+    return (
+      <div key={m.id} className={isLive ? "bg-casino-pink/5" : ""}>
+        <button
+          onClick={() => { setActiveId(isOpen ? null : m.id); setSelection(null); }}
+          className="w-full grid grid-cols-[1fr_auto_auto_auto] gap-2 items-center p-2.5 hover:bg-secondary/40 transition text-left"
+        >
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+              {isLive ? (
+                <span className="font-bold text-casino-pink animate-pulse">● LIVE {m.minute}'</span>
+              ) : (
+                <><Clock className="h-3 w-3" /><span>{cd}</span><span>•</span><span>{ko.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span></>
+              )}
+            </div>
+            <div className="text-sm font-semibold truncate">{m.home_team}</div>
+            <div className="text-sm font-semibold truncate">{m.away_team}</div>
+            {isLive && (
+              <div className="text-xs font-mono font-bold text-casino-gold mt-0.5">{m.home_score} - {m.away_score}</div>
+            )}
+          </div>
+          {(["home", "draw", "away"] as FootballMarket[]).map((mk) => {
+            const odds = mk === "home" ? m.home_odds : mk === "draw" ? m.draw_odds : m.away_odds;
+            const t = trend(m.id, mk, odds);
+            const disabled = m.status !== "upcoming";
+            return (
+              <div key={mk} className={`w-12 h-11 rounded-md border flex flex-col items-center justify-center ${disabled ? "border-border bg-muted/30 opacity-60" : "border-casino-gold/40 bg-casino-gold/5 hover:bg-casino-gold/15"} transition`}>
+                <div className="flex items-center gap-0.5 leading-none h-2.5">
+                  {t === "up" && <ChevronUp className="h-2.5 w-2.5 text-casino-green" />}
+                  {t === "down" && <ChevronDown className="h-2.5 w-2.5 text-casino-pink" />}
+                </div>
+                <span className="font-mono text-xs font-bold text-casino-gold tabular-nums">{Number(odds).toFixed(2)}</span>
+              </div>
+            );
+          })}
+        </button>
+
+        {isOpen && m.status === "upcoming" && (
+          <div className="border-t border-border p-3 space-y-3 bg-background/40">
+            <div className="text-[10px] font-bold uppercase text-muted-foreground">Match Result (1X2)</div>
+            <div className="grid grid-cols-3 gap-2">
+              {(["home", "draw", "away"] as FootballMarket[]).map((mk) => {
+                const odds = mk === "home" ? m.home_odds : mk === "draw" ? m.draw_odds : m.away_odds;
+                const label = mk === "home" ? m.home_team : mk === "draw" ? "Draw" : m.away_team;
+                const isSel = selection === mk;
+                return (
+                  <button key={mk} onClick={() => setSelection(isSel ? null : mk)}
+                    className={`p-2 rounded-md border transition ${isSel ? "border-casino-gold bg-casino-gold/15 shadow-[0_0_12px_hsl(var(--casino-gold)/0.3)]" : "border-border bg-secondary/30 hover:bg-secondary/50"}`}>
+                    <div className="text-[10px] text-muted-foreground uppercase truncate">{label}</div>
+                    <div className="font-mono font-bold text-casino-gold">{Number(odds).toFixed(2)}</div>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="text-[10px] font-bold uppercase text-muted-foreground pt-1">More Markets</div>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { name: "Both Teams to Score", tag: "BTTS" },
+                { name: "Over/Under 2.5 Goals", tag: "O/U" },
+                { name: "Correct Score", tag: "CS" },
+                { name: "Double Chance", tag: "DC" },
+                { name: "Half-Time / Full-Time", tag: "HT/FT" },
+                { name: "First Goalscorer", tag: "FGS" },
+              ].map((mk) => (
+                <div key={mk.name} className="p-2 rounded-md border border-dashed border-border bg-secondary/20 flex items-center justify-between opacity-70">
+                  <span className="text-[11px]">{mk.name}</span>
+                  <Badge variant="outline" className="text-[9px]">Soon</Badge>
+                </div>
+              ))}
+            </div>
+
+            {selection && (
+              <div className="rounded-lg border border-casino-gold/40 bg-casino-gold/5 p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-casino-gold uppercase">Bet Slip</span>
+                  <button onClick={() => setSelection(null)} className="text-muted-foreground hover:text-casino-pink">
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {selection === "home" ? m.home_team : selection === "draw" ? "Draw" : m.away_team} to win
+                </div>
+                <div className="grid grid-cols-6 gap-1">
+                  {STAKE_TIERS.map((s) => (
+                    <button key={s} onClick={() => setStake(s)}
+                      className={`py-1 rounded text-[11px] font-semibold transition ${stake === s ? "bg-casino-gold text-background" : "bg-secondary text-muted-foreground"}`}>
+                      £{s.toFixed(2)}
+                    </button>
+                  ))}
+                </div>
+                {(() => {
+                  const odds = selection === "home" ? m.home_odds : selection === "draw" ? m.draw_odds : m.away_odds;
+                  return (
+                    <>
+                      <div className="flex items-center justify-between text-xs">
+                        <span>Odds: <span className="font-mono font-bold text-casino-gold">{Number(odds).toFixed(2)}</span></span>
+                        <span>Returns: <span className="font-mono font-bold text-casino-green">£{(stake * Number(odds)).toFixed(2)}</span></span>
+                      </div>
+                      <Button onClick={() => placeBet(m.id)} disabled={placing} variant="gold" className="w-full">
+                        {placing ? "Placing…" : `Place £${stake.toFixed(2)} Bet`}
+                      </Button>
+                    </>
+                  );
+                })()}
+              </div>
+            )}
+          </div>
+        )}
+        {isOpen && m.status === "live" && (
+          <div className="border-t border-border p-3 text-center text-xs text-muted-foreground bg-background/40">
+            Betting closed — match in play • {m.home_score} - {m.away_score} ({m.minute}')
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* Promo strip */}
+      <div className="rounded-xl overflow-hidden bg-gradient-to-r from-casino-pink/20 via-casino-gold/15 to-casino-green/20 border border-casino-gold/30 p-3 flex items-center gap-3">
+        <div className="h-10 w-10 rounded-full bg-casino-gold/20 flex items-center justify-center text-xl">🎁</div>
+        <div className="flex-1 min-w-0">
+          <div className="text-xs font-bold text-casino-gold uppercase">Acca Boost</div>
+          <div className="text-[11px] text-muted-foreground truncate">3+ selections @ 2.0+ — get up to 50% extra winnings</div>
+        </div>
+      </div>
+
+      {/* Quick stat tiles */}
+      <div className="grid grid-cols-3 gap-2">
+        <button onClick={() => { setView("in_play"); setCompFilter(null); }} className={`p-2.5 rounded-lg border text-left transition ${view === "in_play" ? "border-casino-pink bg-casino-pink/10" : "border-border bg-card hover:bg-secondary/40"}`}>
+          <div className="flex items-center gap-1.5"><Flame className="h-3.5 w-3.5 text-casino-pink" /><span className="text-[10px] font-bold uppercase text-muted-foreground">In-Play</span></div>
+          <div className="text-lg font-bold text-casino-pink">{liveMatches.length}</div>
+        </button>
+        <button onClick={() => { setView("today"); setCompFilter(null); }} className={`p-2.5 rounded-lg border text-left transition ${view === "today" ? "border-casino-gold bg-casino-gold/10" : "border-border bg-card hover:bg-secondary/40"}`}>
+          <div className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5 text-casino-gold" /><span className="text-[10px] font-bold uppercase text-muted-foreground">Today</span></div>
+          <div className="text-lg font-bold text-casino-gold">{todayMatches.length}</div>
+        </button>
+        <button onClick={() => { setView("matches"); setCompFilter(null); }} className={`p-2.5 rounded-lg border text-left transition ${view === "matches" ? "border-casino-green bg-casino-green/10" : "border-border bg-card hover:bg-secondary/40"}`}>
+          <div className="flex items-center gap-1.5"><Globe2 className="h-3.5 w-3.5 text-casino-green" /><span className="text-[10px] font-bold uppercase text-muted-foreground">All</span></div>
+          <div className="text-lg font-bold text-casino-green">{matches.length}</div>
+        </button>
+      </div>
+
+      {/* Sub-tabs */}
+      <div className="flex gap-1 overflow-x-auto pb-1 -mx-1 px-1 border-b border-border">
+        {[
+          { id: "matches", label: "Matches", icon: Star },
+          { id: "in_play", label: "In-Play", icon: Flame },
+          { id: "today", label: "Today", icon: Calendar },
+          { id: "competitions", label: "Competitions", icon: Trophy },
+        ].map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            onClick={() => { setView(id as any); setCompFilter(null); }}
+            className={`shrink-0 flex items-center gap-1.5 px-3 py-2 text-xs font-bold uppercase tracking-wide transition border-b-2 -mb-px ${view === id ? "border-casino-gold text-casino-gold" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+          >
+            <Icon className="h-3.5 w-3.5" />
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Search */}
+      <div className="relative">
+        <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search teams or competitions..."
+          className="pl-9 h-9 text-sm bg-card border-border"
+        />
+      </div>
+
+      {/* Competitions browser */}
+      {view === "competitions" && !compFilter && (
+        <Card className="overflow-hidden">
+          <div className="p-3 border-b border-border bg-secondary/30 flex items-center justify-between">
+            <span className="text-xs font-bold uppercase text-muted-foreground">Upcoming Events</span>
+            <Badge variant="outline" className="text-[10px]">{matches.length}</Badge>
+          </div>
+          <div className="divide-y divide-border">
+            {allCompetitions.map((comp) => {
+              const meta = compMeta(comp);
+              const count = matches.filter((m) => m.competition === comp).length;
+              return (
+                <button
+                  key={comp}
+                  onClick={() => setCompFilter(comp)}
+                  className="w-full flex items-center justify-between p-3 hover:bg-secondary/40 transition"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-base">{meta.flag}</span>
+                    <div className="min-w-0 text-left">
+                      <div className="text-sm font-semibold truncate">{comp}</div>
+                      <div className="text-[10px] text-muted-foreground">{meta.group}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge variant="secondary" className="text-[10px]">{count}</Badge>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </Card>
+      )}
+
+      {view === "competitions" && compFilter && (
+        <button onClick={() => setCompFilter(null)} className="text-xs text-casino-gold hover:underline flex items-center gap-1">
+          ← All competitions
+        </button>
+      )}
+
+      {visible.length === 0 && (view !== "competitions" || compFilter) && (
+        <Card className="p-8 text-center text-muted-foreground text-sm">
+          {view === "in_play" ? "No live matches right now." : "No matches found."}
+        </Card>
+      )}
+
+      {(view !== "competitions" || compFilter) && competitions.map((comp) => {
+        const meta = compMeta(comp);
+        const compMatches = grouped[comp];
+        const isCollapsed = collapsed[comp];
+        return (
+          <Card key={comp} className="overflow-hidden border border-border bg-card/80">
+            <button
+              onClick={() => setCollapsed((p) => ({ ...p, [comp]: !p[comp] }))}
+              className="w-full p-3 bg-gradient-to-r from-secondary/60 to-secondary/30 border-b border-border flex items-center justify-between hover:from-secondary/80 transition"
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-lg">{meta.flag}</span>
+                <div className="min-w-0 text-left">
+                  <div className="text-sm font-bold truncate">{comp}</div>
+                  <div className="text-[10px] text-muted-foreground">{meta.group}</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <Badge variant="secondary" className="text-[10px]">{compMatches.length}</Badge>
+                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${isCollapsed ? "-rotate-90" : ""}`} />
+              </div>
+            </button>
+
+            {!isCollapsed && (
+              <>
+                <div className="grid grid-cols-[1fr_auto_auto_auto] gap-2 px-3 py-1.5 bg-background/40 border-b border-border text-[10px] font-bold uppercase text-muted-foreground items-center">
+                  <span>Match</span>
+                  <span className="text-center w-12">1</span>
+                  <span className="text-center w-12">X</span>
+                  <span className="text-center w-12">2</span>
+                </div>
+                <div className="divide-y divide-border">
+                  {compMatches.map((m) => renderMatchRow(m))}
+                </div>
+              </>
+            )}
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
 function MyFootballBetsSection() {
   const [bets, setBets] = useState<any[]>([]);
   useEffect(() => {
