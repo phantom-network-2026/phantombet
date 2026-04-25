@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Clock, Trophy, Activity, Trash2, ChevronUp, ChevronDown, Minus, Search, ChevronRight, Flame, Star, Calendar, Globe2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import footballBanner from "@/assets/football-banner.jpeg";
+import { useSportsBanner } from "@/hooks/useSportsBanner";
 
 // Map competitions to a country/region flag emoji + group label.
 const COMP_META: Record<string, { flag: string; group: string }> = {
