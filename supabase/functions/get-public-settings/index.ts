@@ -13,6 +13,7 @@ const PUBLIC_KEYS = [
   "panel_visibility",
   "home_carousels",
   "bonus_probability",
+  "sports_promo_banners",
 ];
 
 Deno.serve(async (req) => {
