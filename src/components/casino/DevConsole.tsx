@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import JSZip from "jszip";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +11,7 @@ import {
   Upload, Download, RefreshCw, ChevronRight, Code, Image, Music,
   FileText, Plus, X, Copy, Eye, Undo2, Redo2, Replace,
   Terminal, Gamepad2, FolderPlus, Pencil, Check, FileCode,
-  Braces, Palette, Globe, Layers, Package, OctagonX
+  Braces, Palette, Globe, Layers, Package, OctagonX, FileArchive
 } from "lucide-react";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
