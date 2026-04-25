@@ -2162,7 +2162,7 @@ function BroadcastPanel({ onBack }: { onBack: () => void }) {
 }
 
 // ── Main cPanel Page ────────────────────────────────────────────
-type ActivePanel = null | "users" | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "bonus-probability" | "slots-config" | "promotions" | "wallet-mode" | "deposits-withdrawals" | "welcome-config" | "ghost-users" | "broadcasts" | "dev-console" | "ai-agent";
+type ActivePanel = null | "users" | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "bonus-probability" | "slots-config" | "promotions" | "wallet-mode" | "deposits-withdrawals" | "welcome-config" | "ghost-users" | "broadcasts" | "dev-console" | "ai-agent" | "sports-promos";
 
 export default function CPanel() {
   const { isAdmin, isOwner, loading, profile } = useAuth();
@@ -2225,6 +2225,7 @@ export default function CPanel() {
           {activePanel === "broadcasts" && <BroadcastPanel onBack={back} />}
           {activePanel === "dev-console" && <DevConsole onBack={back} />}
           {activePanel === "ai-agent" && <AiAgentPanel onBack={back} />}
+          {activePanel === "sports-promos" && <SportsPromoUploaderPanel onBack={back} />}
         </div>
       </div>
     );
