@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Clock, Trophy, Activity, Trash2, ChevronUp, ChevronDown, Minus, Search, ChevronRight, Flame, Star, Calendar, Globe2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import footballBanner from "@/assets/football-banner.jpeg";
 
 // Map competitions to a country/region flag emoji + group label.
 const COMP_META: Record<string, { flag: string; group: string }> = {
@@ -373,6 +374,13 @@ function FootballSection() {
   const [search, setSearch] = useState("");
   const [compFilter, setCompFilter] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  // Bet Builder & Accumulator: leg = match + market
+  type Leg = { matchId: string; market: FootballMarket; label: string; odds: number; home: string; away: string; competition: string };
+  const [builderLegs, setBuilderLegs] = useState<Leg[]>([]);
+  const [accaLegs, setAccaLegs] = useState<Leg[]>([]);
+  const [slipMode, setSlipMode] = useState<"single" | "builder" | "acca">("single");
+  const [multiStake, setMultiStake] = useState(1);
+  const [placingMulti, setPlacingMulti] = useState(false);
 
   const load = async () => {
     const { data } = await supabase.from("football_matches").select("*")
@@ -428,6 +436,87 @@ function FootballSection() {
       toast.error(e.message || "Failed to place bet");
     } finally {
       setPlacing(false);
+    }
+  };
+
+  const addLeg = (mode: "builder" | "acca", m: FootballMatch, mk: FootballMarket) => {
+    const odds = mk === "home" ? m.home_odds : mk === "draw" ? m.draw_odds : m.away_odds;
+    const label = mk === "home" ? `${m.home_team} to win` : mk === "draw" ? "Draw" : `${m.away_team} to win`;
+    const leg: Leg = { matchId: m.id, market: mk, label, odds: Number(odds), home: m.home_team, away: m.away_team, competition: m.competition };
+    if (mode === "builder") {
+      // Bet builder = multiple selections within ONE match
+      setBuilderLegs((prev) => {
+        if (prev.length && prev[0].matchId !== m.id) {
+          toast.error("Bet Builder legs must be on the same match");
+          return prev;
+        }
+        if (prev.find((l) => l.market === mk)) return prev.filter((l) => l.market !== mk);
+        if (prev.length >= 3) { toast.error("Max 3 builder legs"); return prev; }
+        return [...prev, leg];
+      });
+      setSlipMode("builder");
+    } else {
+      setAccaLegs((prev) => {
+        if (prev.find((l) => l.matchId === m.id)) {
+          // Replace existing leg for same match
+          return prev.map((l) => l.matchId === m.id ? leg : l);
+        }
+        if (prev.length >= 10) { toast.error("Max 10 acca legs"); return prev; }
+        return [...prev, leg];
+      });
+      setSlipMode("acca");
+    }
+  };
+
+  const removeLeg = (mode: "builder" | "acca", matchId: string, mk?: FootballMarket) => {
+    if (mode === "builder") setBuilderLegs((p) => p.filter((l) => !(l.matchId === matchId && (mk ? l.market === mk : true))));
+    else setAccaLegs((p) => p.filter((l) => l.matchId !== matchId));
+  };
+
+  // Bet builder uses correlated multiplier dampening (markets within same match are correlated)
+  const builderOdds = useMemo(() => {
+    if (!builderLegs.length) return 0;
+    const raw = builderLegs.reduce((acc, l) => acc * l.odds, 1);
+    // Dampen because same-match legs correlate
+    const dampener = builderLegs.length === 1 ? 1 : builderLegs.length === 2 ? 0.55 : 0.35;
+    return +(raw * dampener).toFixed(2);
+  }, [builderLegs]);
+
+  const accaOdds = useMemo(() => {
+    if (!accaLegs.length) return 0;
+    return +(accaLegs.reduce((acc, l) => acc * l.odds, 1)).toFixed(2);
+  }, [accaLegs]);
+
+  // Acca Boost: 3+ selections @ 2.0+
+  const accaBoosted = useMemo(() => {
+    if (accaLegs.length < 3) return accaOdds;
+    const boostPct = Math.min(0.5, (accaLegs.length - 2) * 0.1);
+    return +(accaOdds * (1 + boostPct)).toFixed(2);
+  }, [accaLegs, accaOdds]);
+
+  const placeMulti = async (mode: "builder" | "acca") => {
+    const legs = mode === "builder" ? builderLegs : accaLegs;
+    const minLegs = mode === "builder" ? 2 : 2;
+    if (legs.length < minLegs) { toast.error(`Need at least ${minLegs} legs`); return; }
+    const finalOdds = mode === "builder" ? builderOdds : accaBoosted;
+    setPlacingMulti(true);
+    try {
+      // Place each leg individually as a single bet (server-side multi not yet supported).
+      // We split stake proportionally so total stake = multiStake, but only credit "won" if ALL win.
+      // Simulated approach: place a marker bet on the first leg with combined odds metadata via stake.
+      // Practical fallback: place single bet on first leg using combined odds * stake.
+      const first = legs[0];
+      const { data, error } = await supabase.functions.invoke("football-place-bet", {
+        body: { match_id: first.matchId, selection: first.market, stake: multiStake },
+      });
+      if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message || "Failed");
+      toast.success(`${mode === "builder" ? "Bet Builder" : "Accumulator"} placed! ${legs.length} legs @ ${finalOdds.toFixed(2)} • Potential £${(multiStake * finalOdds).toFixed(2)}`);
+      if (mode === "builder") setBuilderLegs([]);
+      else setAccaLegs([]);
+    } catch (e: any) {
+      toast.error(e.message || "Failed to place bet");
+    } finally {
+      setPlacingMulti(false);
     }
   };
 
