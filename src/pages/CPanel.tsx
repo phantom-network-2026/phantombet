@@ -25,7 +25,7 @@ import {
   AlertTriangle, Activity, Lock, Megaphone, HardDrive, Clock,
   Ban, Users, BarChart3, Wrench, Power, Bell, Percent, Trophy,
   Gamepad2, CreditCard, MessageSquare, UserCheck, Zap, LayoutGrid,
-  Info, Server, Hash, Gift, Wallet, Terminal, Sparkles
+  Info, Server, Hash, Gift, Wallet, Terminal, Sparkles, ImagePlus
 } from "lucide-react";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -2162,6 +2162,128 @@ function BroadcastPanel({ onBack }: { onBack: () => void }) {
 }
 
 // ── Main cPanel Page ────────────────────────────────────────────
+
+// ── Sports Promo Banner Uploader ────────────────────────────────
+const SPORTS_BANNER_SLOTS: { key: "home_hero" | "football_top"; label: string; description: string; ratio: string }[] = [
+  { key: "home_hero", label: "Homepage Hero Banner", description: "Top banner shown on the homepage above the games.", ratio: "Recommended ~1600×400 (4:1)" },
+  { key: "football_top", label: "Football Section Banner", description: "Top banner shown inside Sports Betting → Football.", ratio: "Recommended ~1600×400 (4:1)" },
+];
+
+function SportsPromoUploaderPanel({ onBack }: { onBack: () => void }) {
+  const [banners, setBanners] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+  const [uploadingKey, setUploadingKey] = useState<string | null>(null);
+
+  const load = async () => {
+    setLoading(true);
+    const { data } = await supabase.from("site_settings").select("value").eq("key", "sports_promo_banners").maybeSingle();
+    setBanners(((data?.value as Record<string, string>) || {}));
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const persist = async (next: Record<string, string>) => {
+    const { data: existing } = await supabase.from("site_settings").select("id").eq("key", "sports_promo_banners").maybeSingle();
+    if (existing) {
+      await supabase.from("site_settings").update({ value: next as any }).eq("key", "sports_promo_banners");
+    } else {
+      await supabase.from("site_settings").insert({ key: "sports_promo_banners", value: next as any });
+    }
+  };
+
+  const handleUpload = async (slot: string, file: File) => {
+    if (!file.type.startsWith("image/")) { toast.error("Please select an image file"); return; }
+    if (file.size > 8 * 1024 * 1024) { toast.error("Image must be under 8MB"); return; }
+    setUploadingKey(slot);
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `${slot}/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("promo-banners").upload(path, file, {
+        cacheControl: "3600", upsert: true, contentType: file.type,
+      });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("promo-banners").getPublicUrl(path);
+      const next = { ...banners, [slot]: pub.publicUrl };
+      await persist(next);
+      setBanners(next);
+      toast.success("Banner updated — players will see it on next page load");
+    } catch (e: any) {
+      toast.error(e?.message || "Upload failed");
+    } finally {
+      setUploadingKey(null);
+    }
+  };
+
+  const handleReset = async (slot: string) => {
+    const next = { ...banners };
+    delete next[slot];
+    await persist(next);
+    setBanners(next);
+    toast.success("Reset to default banner");
+  };
+
+  return (
+    <PanelView title="Sports Betting — Promo Banners" onBack={onBack}>
+      <p className="text-sm text-muted-foreground -mt-2 mb-2">
+        Upload images here to instantly replace the promo banners across the homepage and the football section. Existing players will see the new banner on their next page load.
+      </p>
+      {loading ? (
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      ) : (
+        <div className="space-y-4">
+          {SPORTS_BANNER_SLOTS.map((slot) => {
+            const current = banners[slot.key];
+            const isUploading = uploadingKey === slot.key;
+            return (
+              <div key={slot.key} className="rounded-xl border border-border bg-card p-4 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-display font-bold text-sm">{slot.label}</p>
+                    <p className="text-xs text-muted-foreground">{slot.description}</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">{slot.ratio}</p>
+                  </div>
+                  {current && (
+                    <Button variant="outline" size="sm" onClick={() => handleReset(slot.key)}>
+                      <Trash2 className="h-3 w-3 mr-1" /> Reset
+                    </Button>
+                  )}
+                </div>
+                <div className="rounded-lg overflow-hidden border border-border bg-secondary/40">
+                  {current ? (
+                    <img src={current} alt={slot.label} className="w-full h-32 md:h-40 object-cover" />
+                  ) : (
+                    <div className="w-full h-24 md:h-28 flex items-center justify-center text-xs text-muted-foreground">
+                      Using default built-in banner
+                    </div>
+                  )}
+                </div>
+                <label className="flex items-center justify-center gap-2 rounded-lg border border-dashed border-casino-gold/40 bg-casino-gold/5 hover:bg-casino-gold/10 cursor-pointer px-4 py-3 transition">
+                  <ImagePlus className="h-4 w-4 text-casino-gold" />
+                  <span className="text-xs font-semibold text-casino-gold">
+                    {isUploading ? "Uploading…" : current ? "Replace banner" : "Upload banner image"}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={isUploading}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleUpload(slot.key, f);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </PanelView>
+  );
+}
+
 type ActivePanel = null | "users" | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "bonus-probability" | "slots-config" | "promotions" | "wallet-mode" | "deposits-withdrawals" | "welcome-config" | "ghost-users" | "broadcasts" | "dev-console" | "ai-agent" | "sports-promos";
 
 export default function CPanel() {
