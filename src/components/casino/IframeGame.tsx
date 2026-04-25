@@ -8,6 +8,9 @@ import { ArrowLeft, Loader2, MessageSquare, X } from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserBonuses } from "@/hooks/useUserBonuses";
+import { Sparkles } from "lucide-react";
+import { toast } from "sonner";
 
 const STORAGE_GAME_PATH = "/storage/v1/object/public/game-files/";
 const BRIDGE_FALLBACK_SRC = "/games/bridge.js";
@@ -348,6 +351,14 @@ function IframeGameInner({ title, slug, description, emoji, src }: IframeGamePro
   const [isIframeLoading, setIsIframeLoading] = useState(isStorageGame);
   const [iframeError, setIframeError] = useState<string | null>(null);
   const { user, profile, refreshProfile } = useAuth();
+  const { totalFreeSpins, consumeFreeSpin } = useUserBonuses();
+  const [useFreeSpin, setUseFreeSpin] = useState(false);
+  const useFreeSpinRef = useRef(false);
+  useEffect(() => { useFreeSpinRef.current = useFreeSpin; }, [useFreeSpin]);
+  // If inventory drops to zero, auto-disable
+  useEffect(() => {
+    if (totalFreeSpins <= 0 && useFreeSpin) setUseFreeSpin(false);
+  }, [totalFreeSpins, useFreeSpin]);
 
   // Use refs to avoid stale closures
   const profileRef = useRef(profile);
@@ -412,6 +423,30 @@ function IframeGameInner({ title, slug, description, emoji, src }: IframeGamePro
         return;
       }
 
+      // Free spin path: applies only to a bet deduction (negative amount)
+      if (amount < 0 && useFreeSpinRef.current) {
+        const stake = Math.abs(amount);
+        // Only allow free spin to cover stakes up to $0.10 per current rule
+        if (stake <= 0.10001) {
+          const result = await consumeFreeSpin();
+          if (result.success) {
+            const balance = profileRef.current?.balance ?? 0;
+            toast.success("Free spin used", { description: "Stake covered by your bonus." });
+            (sourceWindow as Window).postMessage({
+              type: 'SETTLE_RESPONSE', callbackId, success: true, balance, forcedLoss: false,
+            }, '*');
+            return;
+          } else {
+            toast.error("No free spins left", { description: "Charging your balance instead." });
+            setUseFreeSpin(false);
+          }
+        } else {
+          toast.message("Free spin requires $0.10 bet", {
+            description: "Lower your stake to use a free spin.",
+          });
+        }
+      }
+
       const { data, error } = await supabase.functions.invoke('game-settle', {
         body: { userId: currentUser.id, amount, gameType, outcome }
       });
@@ -442,7 +477,7 @@ function IframeGameInner({ title, slug, description, emoji, src }: IframeGamePro
         type: 'SETTLE_RESPONSE', callbackId, success: false, error: 'Settlement failed'
       }, '*');
     }
-  }, [refreshProfile]);
+  }, [refreshProfile, consumeFreeSpin]);
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -549,9 +584,25 @@ function IframeGameInner({ title, slug, description, emoji, src }: IframeGamePro
           Exit
         </Button>
         
-        <span className="text-xs font-display font-bold text-gold truncate max-w-[40%]">
-          {emoji} {title}
-        </span>
+        {totalFreeSpins > 0 ? (
+          <button
+            onClick={() => setUseFreeSpin((v) => !v)}
+            className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold transition-colors ${
+              useFreeSpin
+                ? "bg-casino-gold/20 border-casino-gold text-casino-gold"
+                : "bg-white/5 border-white/15 text-white/80 hover:bg-white/10"
+            }`}
+            title="Toggle free spin: when ON, your next $0.10 bet uses a bonus spin"
+          >
+            <Sparkles className="h-3 w-3" />
+            {useFreeSpin ? "Free Spin: ON" : "Use Free Spin"}
+            <span className="opacity-70">({totalFreeSpins})</span>
+          </button>
+        ) : (
+          <span className="text-xs font-display font-bold text-gold truncate max-w-[40%]">
+            {emoji} {title}
+          </span>
+        )}
 
         <Button
           variant="ghost"

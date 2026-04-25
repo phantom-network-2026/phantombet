@@ -4,6 +4,7 @@ import { AuthGuard } from "@/components/casino/AuthGuard";
 import { BalanceDisplay } from "@/components/casino/BalanceDisplay";
 import { Clock, ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
 import { motion } from "framer-motion";
+import { MyBonusesPanel } from "@/components/casino/MyBonusesPanel";
 
 const WALLET_CRYPTOS = [
   { symbol: "BTC", name: "Bitcoin", icon: "₿", balance: 0 },
@@ -51,6 +52,9 @@ export default function Wallet() {
               </button>
             </div>
           </motion.div>
+
+          {/* My Bonuses */}
+          <MyBonusesPanel />
 
           {/* Coming soon banner */}
           <motion.div

@@ -881,6 +881,57 @@ export type Database = {
         }
         Relationships: []
       }
+      user_bonuses: {
+        Row: {
+          awarded_at: string
+          bonus_type: Database["public"]["Enums"]["user_bonus_type"]
+          created_at: string
+          expires_at: string
+          id: string
+          remaining_count: number
+          source: string
+          source_label: string | null
+          stake_value: number
+          status: Database["public"]["Enums"]["user_bonus_status"]
+          total_count: number
+          updated_at: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          awarded_at?: string
+          bonus_type?: Database["public"]["Enums"]["user_bonus_type"]
+          created_at?: string
+          expires_at?: string
+          id?: string
+          remaining_count?: number
+          source?: string
+          source_label?: string | null
+          stake_value?: number
+          status?: Database["public"]["Enums"]["user_bonus_status"]
+          total_count?: number
+          updated_at?: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          awarded_at?: string
+          bonus_type?: Database["public"]["Enums"]["user_bonus_type"]
+          created_at?: string
+          expires_at?: string
+          id?: string
+          remaining_count?: number
+          source?: string
+          source_label?: string | null
+          stake_value?: number
+          status?: Database["public"]["Enums"]["user_bonus_status"]
+          total_count?: number
+          updated_at?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_presence: {
         Row: {
           appearance_status: string
@@ -1034,6 +1085,14 @@ export type Database = {
           symbols: string[]
         }[]
       }
+      consume_free_spin: {
+        Args: { p_user_id: string }
+        Returns: {
+          remaining_total: number
+          stake_value: number
+          success: boolean
+        }[]
+      }
       deposit_address_for_user: {
         Args: { p_user_id: string }
         Returns: {
@@ -1041,6 +1100,7 @@ export type Database = {
           tron_address: string
         }[]
       }
+      expire_old_bonuses: { Args: { p_user_id: string }; Returns: undefined }
       grant_xp: {
         Args: { p_amount: number; p_user_id: string }
         Returns: {
@@ -1098,6 +1158,8 @@ export type Database = {
       race_type: "horse" | "greyhound"
       sports_bet_status: "pending" | "won" | "lost" | "void" | "partial"
       sports_bet_type: "win" | "place" | "each_way" | "forecast" | "tricast"
+      user_bonus_status: "active" | "used" | "expired"
+      user_bonus_type: "free_spin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1251,6 +1313,8 @@ export const Constants = {
       race_type: ["horse", "greyhound"],
       sports_bet_status: ["pending", "won", "lost", "void", "partial"],
       sports_bet_type: ["win", "place", "each_way", "forecast", "tricast"],
+      user_bonus_status: ["active", "used", "expired"],
+      user_bonus_type: ["free_spin"],
     },
   },
 } as const
