@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/casino/Header";
 import { AuthGuard } from "@/components/casino/AuthGuard";
 import { GameChat } from "@/components/casino/GameChat";
+import { ChatPopupOverlay } from "@/components/casino/ChatPopupOverlay";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, MessageSquare, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -132,6 +133,9 @@ function RoyalRumbleInner() {
               </div>
             </div>
           </div>
+        )}
+        {!showChat && (
+          <ChatPopupOverlay gameRoom={GAME_SLUG} positionClassName="absolute left-2 right-2 bottom-2 z-30" />
         )}
       </div>
 

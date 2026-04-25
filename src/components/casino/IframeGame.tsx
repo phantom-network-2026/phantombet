@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/casino/Header";
 import { BottomNav } from "@/components/casino/BottomNav";
 import { GameChat } from "@/components/casino/GameChat";
+import { ChatPopupOverlay } from "@/components/casino/ChatPopupOverlay";
 import { AuthGuard } from "@/components/casino/AuthGuard";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2, MessageSquare, X } from "lucide-react";
@@ -569,6 +570,11 @@ function IframeGameInner({ title, slug, description, emoji, src }: IframeGamePro
               </div>
             </div>
           </div>
+        )}
+
+        {/* Floating chat popups so messages are visible while playing */}
+        {!showChat && (
+          <ChatPopupOverlay gameRoom={slug} positionClassName="absolute left-2 right-2 bottom-2 z-30" />
         )}
       </div>
 

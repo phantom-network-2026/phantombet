@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { AuthGuard } from "@/components/casino/AuthGuard";
 import { GameChat } from "@/components/casino/GameChat";
+import { ChatPopupOverlay } from "@/components/casino/ChatPopupOverlay";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, MessageSquare, X, Volume2, VolumeX, Coins, Info, Repeat } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -1738,6 +1739,10 @@ function SlotEngineInner({ theme }: { theme: SlotTheme }) {
             </div>
           </div>
         </div>
+      )}
+
+      {!showChat && (
+        <ChatPopupOverlay gameRoom={theme.slug} positionClassName="absolute left-2 right-2 bottom-20 z-30" />
       )}
     </div>
   );

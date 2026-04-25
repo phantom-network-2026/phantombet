@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/casino/Header";
 import { AuthGuard } from "@/components/casino/AuthGuard";
 import { GameChat } from "@/components/casino/GameChat";
+import { ChatPopupOverlay } from "@/components/casino/ChatPopupOverlay";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, MessageSquare, X, Volume2, VolumeX, Settings2, Coins, Info, Repeat } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -1479,6 +1480,9 @@ function PiratePlunderInner() {
             </div>
           </div>
         </div>
+      )}
+      {!showChat && (
+        <ChatPopupOverlay gameRoom={GAME_SLUG} positionClassName="absolute left-2 right-2 bottom-20 z-30" />
       )}
     </div>
   );
