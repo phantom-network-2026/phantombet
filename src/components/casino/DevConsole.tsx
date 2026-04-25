@@ -368,9 +368,74 @@ export default function DevConsole({ onBack }: { onBack: () => void }) {
   const filtered = files.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   const [installName, setInstallName] = useState("");
-  const [installCategory, setInstallCategory] = useState<string>("instant");
+  const [installCategory, setInstallCategory] = useState<string>("auto");
   const [installing, setInstalling] = useState(false);
   const [installFiles, setInstallFiles] = useState<File[]>([]);
+  const [installProgress, setInstallProgress] = useState<{ done: number; total: number } | null>(null);
+  const zipInputRef = useRef<HTMLInputElement>(null);
+
+  // Helper: build a synthetic File with a webkitRelativePath we control.
+  const makeFile = (name: string, data: Blob, relPath: string): File => {
+    const f = new File([data], name, { type: data.type || "application/octet-stream" });
+    Object.defineProperty(f, "webkitRelativePath", { value: relPath, writable: false });
+    return f;
+  };
+
+  // Auto-categorize from file names + index.html content.
+  const detectCategory = async (files: File[]): Promise<string> => {
+    const names = files.map(f => (f.webkitRelativePath || f.name).toLowerCase()).join("\n");
+    const slug = installName.toLowerCase();
+    const haystack = `${slug}\n${names}`;
+    const matchers: Array<[string, RegExp]> = [
+      ["scratch", /scratch|rasca/],
+      ["jackpot", /jackpot|mega-?win/],
+      ["table", /blackjack|roulette|poker|baccarat|table/],
+      ["slots", /slot|reel|spin|fruit|wild|scatter|payline|symbols?/],
+      ["instant", /crash|plinko|mines|wheel|dice|hilo|keno|coinflip|bomb|cross/],
+    ];
+    for (const [cat, rx] of matchers) if (rx.test(haystack)) return cat;
+    // Inspect index.html as a last resort
+    const idx = files.find(f => /(^|\/)index\.html?$/i.test(f.webkitRelativePath || f.name));
+    if (idx) {
+      try {
+        const txt = (await idx.text()).toLowerCase();
+        for (const [cat, rx] of matchers) if (rx.test(txt)) return cat;
+      } catch {}
+    }
+    return "instant";
+  };
+
+  // Extract a zip file into File[] mirroring webkitdirectory uploads.
+  const handleZipSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!/\.zip$/i.test(file.name)) { toast.error("Please select a .zip file"); return; }
+    toast.info(`Extracting ${file.name}…`);
+    try {
+      const zip = await JSZip.loadAsync(file);
+      const entries = Object.values(zip.files).filter(en => !en.dir);
+      // Detect a single common root folder so we strip it (mirrors folder upload behavior).
+      const tops = new Set(entries.map(en => en.name.split("/")[0]));
+      const stripRoot = tops.size === 1 ? [...tops][0] + "/" : "";
+      const baseFolder = (stripRoot ? stripRoot.replace(/\/$/, "") : file.name.replace(/\.zip$/i, "")) || "game";
+      const out: File[] = [];
+      for (const en of entries) {
+        const blob = await en.async("blob");
+        const trimmed = stripRoot && en.name.startsWith(stripRoot) ? en.name.slice(stripRoot.length) : en.name;
+        if (!trimmed) continue;
+        // webkitRelativePath convention: <root>/<rest>
+        out.push(makeFile(trimmed.split("/").pop() || trimmed, blob, `${baseFolder}/${trimmed}`));
+      }
+      setInstallFiles(out);
+      if (!installName) setInstallName(baseFolder.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "-"));
+      toast.success(`Extracted ${out.length} files from ZIP`);
+    } catch (err: any) {
+      console.error(err);
+      toast.error(`Failed to read ZIP: ${err?.message || err}`);
+    } finally {
+      if (zipInputRef.current) zipInputRef.current.value = "";
+    }
+  };
 
   const handleInstallSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(e.target.files || []);
