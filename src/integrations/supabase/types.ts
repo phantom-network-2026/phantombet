@@ -334,6 +334,51 @@ export type Database = {
         }
         Relationships: []
       }
+      free_bet_progress: {
+        Row: {
+          award_amount: number
+          awarded_at: string | null
+          created_at: string
+          deposit_progress: number
+          deposit_required: number
+          expires_at: string
+          id: string
+          status: Database["public"]["Enums"]["free_bet_status"]
+          updated_at: string
+          user_id: string
+          wager_progress: number
+          wager_required: number
+        }
+        Insert: {
+          award_amount?: number
+          awarded_at?: string | null
+          created_at?: string
+          deposit_progress?: number
+          deposit_required?: number
+          expires_at?: string
+          id?: string
+          status?: Database["public"]["Enums"]["free_bet_status"]
+          updated_at?: string
+          user_id: string
+          wager_progress?: number
+          wager_required?: number
+        }
+        Update: {
+          award_amount?: number
+          awarded_at?: string | null
+          created_at?: string
+          deposit_progress?: number
+          deposit_required?: number
+          expires_at?: string
+          id?: string
+          status?: Database["public"]["Enums"]["free_bet_status"]
+          updated_at?: string
+          user_id?: string
+          wager_progress?: number
+          wager_required?: number
+        }
+        Relationships: []
+      }
       friendships: {
         Row: {
           addressee_id: string
@@ -972,6 +1017,14 @@ export type Database = {
       }
     }
     Functions: {
+      bump_free_bet_progress: {
+        Args: {
+          p_deposit_amount?: number
+          p_user_id: string
+          p_wager_amount?: number
+        }
+        Returns: Database["public"]["Enums"]["free_bet_status"]
+      }
       claim_random_scratch_card: {
         Args: { p_bet_tier: number; p_user_id: string }
         Returns: {
@@ -1024,6 +1077,7 @@ export type Database = {
         | "owner"
       football_bet_market: "home" | "draw" | "away"
       football_match_status: "upcoming" | "live" | "finished" | "cancelled"
+      free_bet_status: "pending" | "qualified" | "awarded" | "expired"
       friendship_status: "pending" | "accepted" | "rejected"
       game_category:
         | "slots"
@@ -1174,6 +1228,7 @@ export const Constants = {
       app_role: ["admin", "user", "moderator", "staff", "active_user", "owner"],
       football_bet_market: ["home", "draw", "away"],
       football_match_status: ["upcoming", "live", "finished", "cancelled"],
+      free_bet_status: ["pending", "qualified", "awarded", "expired"],
       friendship_status: ["pending", "accepted", "rejected"],
       game_category: [
         "slots",
