@@ -158,7 +158,7 @@ export default function Sportsbook() {
         <main className="container py-4 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl md:text-3xl font-display font-bold text-casino-gold">Sportsbook</h1>
+              <h1 className="text-2xl md:text-3xl font-display font-bold text-casino-gold">Sports Betting</h1>
               <p className="text-xs text-muted-foreground flex items-center gap-1.5">
                 <Activity className="h-3 w-3 animate-pulse text-casino-green" /> Live UK Racing & Football • Updates every few seconds
               </p>

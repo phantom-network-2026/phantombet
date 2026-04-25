@@ -9,7 +9,7 @@ import { toast } from "sonner";
 const navItems = [
   { icon: Home, labelKey: "home" as const, path: "/", requiresAuth: false },
   { icon: Dice5, labelKey: "games" as const, path: "/games", requiresAuth: false },
-  { icon: Medal, labelKey: "home" as const, path: "/sportsbook", requiresAuth: true, label: "Racing" },
+  { icon: Medal, labelKey: "home" as const, path: "/sportsbook", requiresAuth: true, label: "Sports" },
   { icon: Users, labelKey: "friends" as const, path: "/friends", requiresAuth: true },
   { icon: Trophy, labelKey: "promos" as const, path: "/promotions", requiresAuth: true },
   { icon: HelpCircle, labelKey: "help" as const, path: "/help", requiresAuth: false },
