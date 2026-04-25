@@ -311,12 +311,14 @@ Deno.serve(async (req) => {
     if (!finalReply) finalReply = allResults.length ? "Done." : "No action taken.";
 
     // Audit log (best effort)
-    admin.from("ai_agent_log").insert({
-      user_id: user.id,
-      prompt,
-      reply: finalReply,
-      tool_results: allResults,
-    }).then(() => {}).catch(() => {});
+    Promise.resolve(
+      admin.from("ai_agent_log").insert({
+        user_id: user.id,
+        prompt,
+        reply: finalReply,
+        tool_results: allResults,
+      })
+    ).then(() => {}, () => {});
 
     return json({ reply: finalReply, tool_results: allResults });
   } catch (e) {

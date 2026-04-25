@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
           .select(`${balanceField}`)
           .eq("user_id", userId)
           .single();
-        const currentBal = Number(currentProfile?.[balanceField]) || 0;
+        const currentBal = Number((currentProfile as Record<string, any> | null)?.[balanceField]) || 0;
         return new Response(JSON.stringify({ success: true, balance: currentBal, forced_loss: true }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -184,7 +184,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const currentBalance = Number(profile[balanceField]) || 0;
+    const currentBalance = Number((profile as Record<string, any>)[balanceField]) || 0;
     const newBalance = currentBalance + adjustedAmount;
     if (newBalance < 0) {
       return new Response(JSON.stringify({ error: "Insufficient balance" }), {
