@@ -100,6 +100,15 @@ Deno.serve(async (req) => {
           // Grant XP: 10 XP per dollar deposited
           await adminClient.rpc("grant_xp", { p_user_id: addr.user_id, p_amount: Math.round(usdtAmount * 10) });
 
+          // Bump free bet welcome promo progress (best-effort)
+          try {
+            await adminClient.rpc("bump_free_bet_progress", {
+              p_user_id: addr.user_id,
+              p_deposit_amount: usdtAmount,
+              p_wager_amount: 0,
+            });
+          } catch (_) { /* non-fatal */ }
+
           totalCredited++;
           console.log(`Credited $${usdtAmount} to user ${addr.user_id} from tx ${txId}`);
         }

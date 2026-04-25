@@ -55,6 +55,11 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: betErr.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    // Free bet welcome promo progress (best-effort)
+    try {
+      await admin.rpc("bump_free_bet_progress", { p_user_id: user.id, p_deposit_amount: 0, p_wager_amount: stake });
+    } catch (_) { /* non-fatal */ }
+
     return new Response(JSON.stringify({ ok: true, bet }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

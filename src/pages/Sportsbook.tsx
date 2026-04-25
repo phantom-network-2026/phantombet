@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { Clock, Trophy, Activity, Trash2, ChevronUp, ChevronDown, Minus, Search, ChevronRight, Flame, Star, Calendar, Globe2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useSportsBanner } from "@/hooks/useSportsBanner";
+import { FreeBetProgress } from "@/components/casino/FreeBetProgress";
 
 // Map competitions to a country/region flag emoji + group label.
 const COMP_META: Record<string, { flag: string; group: string }> = {
@@ -713,6 +714,9 @@ function FootballSection() {
       <div className="relative overflow-hidden rounded-xl border border-casino-gold/30 shadow-[0_0_20px_hsl(var(--casino-gold)/0.15)]">
         <img src={footballBanner} alt="Get a £5 Free Bet Builder" className="w-full h-32 md:h-40 object-cover" />
       </div>
+
+      {/* Free bet promo tracker */}
+      <FreeBetProgress />
 
       {/* Bet Builder / Acca tiles */}
       <div className="grid grid-cols-2 gap-2">
