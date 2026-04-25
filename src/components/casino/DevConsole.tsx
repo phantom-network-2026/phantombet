@@ -653,7 +653,9 @@ export default function DevConsole({ onBack }: { onBack: () => void }) {
         <div className="space-y-4">
           <div className="rounded-xl border border-border bg-card p-5 space-y-4">
             <h4 className="font-bold flex items-center gap-2"><Package className="h-4 w-4 text-casino-gold" /> Install New Game</h4>
-            <p className="text-xs text-muted-foreground">Upload a folder containing your casino game files (index.html, script.js, style.css, etc). The game will be automatically registered and categorized.</p>
+            <p className="text-xs text-muted-foreground">
+              Upload a <b>.zip archive</b> or a <b>folder</b> containing your game (HTML5, Unity WebGL, WASM, Flash/SWF via Ruffle, Java/JAR via CheerpJ, web3 dApps, etc.). The game is automatically extracted, categorized, registered in the database and listed under <code>/games</code>.
+            </p>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -667,6 +669,7 @@ export default function DevConsole({ onBack }: { onBack: () => void }) {
                   onChange={e => setInstallCategory(e.target.value)}
                   className="w-full h-10 rounded-md border border-border bg-background px-3 text-sm"
                 >
+                  <option value="auto">Auto-detect</option>
                   <option value="slots">Slots</option>
                   <option value="table">Table</option>
                   <option value="instant">Instant</option>
@@ -676,24 +679,44 @@ export default function DevConsole({ onBack }: { onBack: () => void }) {
               </div>
             </div>
 
-            <div className="border-2 border-dashed border-border rounded-lg p-6 text-center space-y-3">
-              <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">Select game folder to upload</p>
-              <input
-                ref={folderInputRef}
-                type="file"
-                // @ts-ignore
-                webkitdirectory=""
-                directory=""
-                multiple
-                className="hidden"
-                onChange={handleInstallSelect}
-              />
-              <Button variant="outline" onClick={() => folderInputRef.current?.click()}>
-                <FolderOpen className="h-4 w-4 mr-2" /> Select Folder
-              </Button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="border-2 border-dashed border-casino-gold/40 rounded-lg p-5 text-center space-y-2 bg-casino-gold/5">
+                <FileArchive className="h-7 w-7 mx-auto text-casino-gold" />
+                <p className="text-xs font-bold">ZIP archive (recommended)</p>
+                <p className="text-[10px] text-muted-foreground">Any game packaged as .zip</p>
+                <input
+                  ref={zipInputRef}
+                  type="file"
+                  accept=".zip,application/zip,application/x-zip-compressed"
+                  className="hidden"
+                  onChange={handleZipSelect}
+                />
+                <Button variant="gold" size="sm" onClick={() => zipInputRef.current?.click()}>
+                  <FileArchive className="h-3.5 w-3.5 mr-1.5" /> Upload .zip
+                </Button>
+              </div>
+              <div className="border-2 border-dashed border-border rounded-lg p-5 text-center space-y-2">
+                <FolderOpen className="h-7 w-7 mx-auto text-muted-foreground" />
+                <p className="text-xs font-bold">Folder</p>
+                <p className="text-[10px] text-muted-foreground">Pick an unzipped game folder</p>
+                <input
+                  ref={folderInputRef}
+                  type="file"
+                  // @ts-ignore
+                  webkitdirectory=""
+                  directory=""
+                  multiple
+                  className="hidden"
+                  onChange={handleInstallSelect}
+                />
+                <Button variant="outline" size="sm" onClick={() => folderInputRef.current?.click()}>
+                  <FolderOpen className="h-3.5 w-3.5 mr-1.5" /> Select Folder
+                </Button>
+              </div>
+            </div>
+
               {installFiles.length > 0 && (
-                <div className="text-left mt-3 max-h-40 overflow-y-auto space-y-1">
+                <div className="text-left mt-1 max-h-40 overflow-y-auto space-y-1 rounded-md border border-border bg-background/40 p-3">
                   <p className="text-xs font-bold text-casino-gold">{installFiles.length} files selected:</p>
                   {installFiles.slice(0, 20).map((f, i) => (
                     <p key={i} className="text-xs text-muted-foreground truncate">{f.webkitRelativePath || f.name}</p>
@@ -701,10 +724,11 @@ export default function DevConsole({ onBack }: { onBack: () => void }) {
                   {installFiles.length > 20 && <p className="text-xs text-muted-foreground">...and {installFiles.length - 20} more</p>}
                 </div>
               )}
-            </div>
 
             <Button variant="gold" className="w-full" onClick={handleInstallGame} disabled={installing || !installFiles.length || !installName}>
-              {installing ? <><RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Installing...</> : <><Gamepad2 className="h-4 w-4 mr-2" /> Install Game</>}
+              {installing
+                ? <><RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Installing… {installProgress ? `${installProgress.done}/${installProgress.total}` : ""}</>
+                : <><Gamepad2 className="h-4 w-4 mr-2" /> Install Game</>}
             </Button>
           </div>
 
