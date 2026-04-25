@@ -35,7 +35,7 @@ function PrizeReelBanner() {
   return (
     <button
       onClick={() => navigate("/prize-reel")}
-      className="mx-4 mt-3 w-[calc(100%-2rem)] rounded-xl overflow-hidden text-left transition-transform active:scale-[0.98] hover:scale-[1.01]"
+      className="mx-4 mt-3 w-[calc(100%-2rem)] rounded-xl overflow-hidden text-left transition-transform active:scale-[0.98] hover:scale-[1.01] animate-border-gold"
       style={{
         background: "linear-gradient(135deg, hsl(270,40%,15%), hsl(280,35%,10%))",
         border: "1px solid hsl(43,80%,45%,0.4)",
