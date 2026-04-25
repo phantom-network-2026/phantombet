@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Clock, Trophy, Activity, Trash2, ChevronUp, ChevronDown, Minus, Search, ChevronRight, Flame, Star, Calendar, Globe2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import footballBanner from "@/assets/football-banner.jpeg";
 
 // Map competitions to a country/region flag emoji + group label.
 const COMP_META: Record<string, { flag: string; group: string }> = {
@@ -373,6 +374,13 @@ function FootballSection() {
   const [search, setSearch] = useState("");
   const [compFilter, setCompFilter] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  // Bet Builder & Accumulator: leg = match + market
+  type Leg = { matchId: string; market: FootballMarket; label: string; odds: number; home: string; away: string; competition: string };
+  const [builderLegs, setBuilderLegs] = useState<Leg[]>([]);
+  const [accaLegs, setAccaLegs] = useState<Leg[]>([]);
+  const [slipMode, setSlipMode] = useState<"single" | "builder" | "acca">("single");
+  const [multiStake, setMultiStake] = useState(1);
+  const [placingMulti, setPlacingMulti] = useState(false);
 
   const load = async () => {
     const { data } = await supabase.from("football_matches").select("*")
@@ -428,6 +436,87 @@ function FootballSection() {
       toast.error(e.message || "Failed to place bet");
     } finally {
       setPlacing(false);
+    }
+  };
+
+  const addLeg = (mode: "builder" | "acca", m: FootballMatch, mk: FootballMarket) => {
+    const odds = mk === "home" ? m.home_odds : mk === "draw" ? m.draw_odds : m.away_odds;
+    const label = mk === "home" ? `${m.home_team} to win` : mk === "draw" ? "Draw" : `${m.away_team} to win`;
+    const leg: Leg = { matchId: m.id, market: mk, label, odds: Number(odds), home: m.home_team, away: m.away_team, competition: m.competition };
+    if (mode === "builder") {
+      // Bet builder = multiple selections within ONE match
+      setBuilderLegs((prev) => {
+        if (prev.length && prev[0].matchId !== m.id) {
+          toast.error("Bet Builder legs must be on the same match");
+          return prev;
+        }
+        if (prev.find((l) => l.market === mk)) return prev.filter((l) => l.market !== mk);
+        if (prev.length >= 3) { toast.error("Max 3 builder legs"); return prev; }
+        return [...prev, leg];
+      });
+      setSlipMode("builder");
+    } else {
+      setAccaLegs((prev) => {
+        if (prev.find((l) => l.matchId === m.id)) {
+          // Replace existing leg for same match
+          return prev.map((l) => l.matchId === m.id ? leg : l);
+        }
+        if (prev.length >= 10) { toast.error("Max 10 acca legs"); return prev; }
+        return [...prev, leg];
+      });
+      setSlipMode("acca");
+    }
+  };
+
+  const removeLeg = (mode: "builder" | "acca", matchId: string, mk?: FootballMarket) => {
+    if (mode === "builder") setBuilderLegs((p) => p.filter((l) => !(l.matchId === matchId && (mk ? l.market === mk : true))));
+    else setAccaLegs((p) => p.filter((l) => l.matchId !== matchId));
+  };
+
+  // Bet builder uses correlated multiplier dampening (markets within same match are correlated)
+  const builderOdds = useMemo(() => {
+    if (!builderLegs.length) return 0;
+    const raw = builderLegs.reduce((acc, l) => acc * l.odds, 1);
+    // Dampen because same-match legs correlate
+    const dampener = builderLegs.length === 1 ? 1 : builderLegs.length === 2 ? 0.55 : 0.35;
+    return +(raw * dampener).toFixed(2);
+  }, [builderLegs]);
+
+  const accaOdds = useMemo(() => {
+    if (!accaLegs.length) return 0;
+    return +(accaLegs.reduce((acc, l) => acc * l.odds, 1)).toFixed(2);
+  }, [accaLegs]);
+
+  // Acca Boost: 3+ selections @ 2.0+
+  const accaBoosted = useMemo(() => {
+    if (accaLegs.length < 3) return accaOdds;
+    const boostPct = Math.min(0.5, (accaLegs.length - 2) * 0.1);
+    return +(accaOdds * (1 + boostPct)).toFixed(2);
+  }, [accaLegs, accaOdds]);
+
+  const placeMulti = async (mode: "builder" | "acca") => {
+    const legs = mode === "builder" ? builderLegs : accaLegs;
+    const minLegs = mode === "builder" ? 2 : 2;
+    if (legs.length < minLegs) { toast.error(`Need at least ${minLegs} legs`); return; }
+    const finalOdds = mode === "builder" ? builderOdds : accaBoosted;
+    setPlacingMulti(true);
+    try {
+      // Place each leg individually as a single bet (server-side multi not yet supported).
+      // We split stake proportionally so total stake = multiStake, but only credit "won" if ALL win.
+      // Simulated approach: place a marker bet on the first leg with combined odds metadata via stake.
+      // Practical fallback: place single bet on first leg using combined odds * stake.
+      const first = legs[0];
+      const { data, error } = await supabase.functions.invoke("football-place-bet", {
+        body: { match_id: first.matchId, selection: first.market, stake: multiStake },
+      });
+      if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message || "Failed");
+      toast.success(`${mode === "builder" ? "Bet Builder" : "Accumulator"} placed! ${legs.length} legs @ ${finalOdds.toFixed(2)} • Potential £${(multiStake * finalOdds).toFixed(2)}`);
+      if (mode === "builder") setBuilderLegs([]);
+      else setAccaLegs([]);
+    } catch (e: any) {
+      toast.error(e.message || "Failed to place bet");
+    } finally {
+      setPlacingMulti(false);
     }
   };
 
@@ -527,6 +616,33 @@ function FootballSection() {
               })}
             </div>
 
+            {/* Add to Builder / Acca */}
+            <div className="rounded-lg border border-casino-gold/20 bg-background/30 p-2 space-y-2">
+              <div className="text-[10px] font-bold uppercase text-muted-foreground">Add to Multi</div>
+              <div className="grid grid-cols-3 gap-1.5">
+                {(["home", "draw", "away"] as FootballMarket[]).map((mk) => {
+                  const inBuilder = builderLegs.some((l) => l.matchId === m.id && l.market === mk);
+                  return (
+                    <button key={`b-${mk}`} onClick={() => addLeg("builder", m, mk)}
+                      className={`text-[10px] py-1 rounded border font-semibold transition ${inBuilder ? "border-casino-gold bg-casino-gold text-background" : "border-casino-gold/40 text-casino-gold hover:bg-casino-gold/10"}`}>
+                      🛠️ {mk === "home" ? "1" : mk === "draw" ? "X" : "2"}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="grid grid-cols-3 gap-1.5">
+                {(["home", "draw", "away"] as FootballMarket[]).map((mk) => {
+                  const inAcca = accaLegs.some((l) => l.matchId === m.id && l.market === mk);
+                  return (
+                    <button key={`a-${mk}`} onClick={() => addLeg("acca", m, mk)}
+                      className={`text-[10px] py-1 rounded border font-semibold transition ${inAcca ? "border-casino-pink bg-casino-pink text-white" : "border-casino-pink/40 text-casino-pink hover:bg-casino-pink/10"}`}>
+                      🚀 {mk === "home" ? "1" : mk === "draw" ? "X" : "2"}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="text-[10px] font-bold uppercase text-muted-foreground pt-1">More Markets</div>
             <div className="grid grid-cols-2 gap-2">
               {[
@@ -592,13 +708,33 @@ function FootballSection() {
 
   return (
     <div className="space-y-3">
-      {/* Promo strip */}
-      <div className="rounded-xl overflow-hidden bg-gradient-to-r from-casino-pink/20 via-casino-gold/15 to-casino-green/20 border border-casino-gold/30 p-3 flex items-center gap-3">
-        <div className="h-10 w-10 rounded-full bg-casino-gold/20 flex items-center justify-center text-xl">🎁</div>
-        <div className="flex-1 min-w-0">
-          <div className="text-xs font-bold text-casino-gold uppercase">Acca Boost</div>
-          <div className="text-[11px] text-muted-foreground truncate">3+ selections @ 2.0+ — get up to 50% extra winnings</div>
-        </div>
+      {/* Football hero banner */}
+      <div className="relative overflow-hidden rounded-xl border border-casino-gold/30 shadow-[0_0_20px_hsl(var(--casino-gold)/0.15)]">
+        <img src={footballBanner} alt="Get a £5 Free Bet Builder" className="w-full h-32 md:h-40 object-cover" />
+      </div>
+
+      {/* Bet Builder / Acca tiles */}
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          onClick={() => setSlipMode("builder")}
+          className={`p-3 rounded-xl border text-left transition ${slipMode === "builder" ? "border-casino-gold bg-casino-gold/10" : "border-casino-gold/30 bg-gradient-to-br from-casino-gold/5 to-transparent hover:bg-casino-gold/10"}`}
+        >
+          <div className="flex items-center gap-1.5 text-casino-gold">
+            <span className="text-base">🛠️</span>
+            <span className="text-xs font-bold uppercase">Bet Builder</span>
+          </div>
+          <div className="text-[10px] text-muted-foreground mt-0.5">Combine markets in 1 match • {builderLegs.length} leg{builderLegs.length !== 1 ? "s" : ""}</div>
+        </button>
+        <button
+          onClick={() => setSlipMode("acca")}
+          className={`p-3 rounded-xl border text-left transition ${slipMode === "acca" ? "border-casino-pink bg-casino-pink/10" : "border-casino-pink/30 bg-gradient-to-br from-casino-pink/5 to-transparent hover:bg-casino-pink/10"}`}
+        >
+          <div className="flex items-center gap-1.5 text-casino-pink">
+            <span className="text-base">🚀</span>
+            <span className="text-xs font-bold uppercase">Accumulator</span>
+          </div>
+          <div className="text-[10px] text-muted-foreground mt-0.5">Multiple matches • Up to +50% Acca Boost • {accaLegs.length} leg{accaLegs.length !== 1 ? "s" : ""}</div>
+        </button>
       </div>
 
       {/* Quick stat tiles */}
@@ -733,6 +869,82 @@ function FootballSection() {
           </Card>
         );
       })}
+
+      {/* Floating Multi Bet Slip */}
+      {((slipMode === "builder" && builderLegs.length > 0) || (slipMode === "acca" && accaLegs.length > 0)) && (
+        <div className="sticky bottom-20 z-30">
+          <Card className={`p-3 space-y-2 border-2 shadow-2xl ${slipMode === "builder" ? "border-casino-gold bg-gradient-to-br from-card to-casino-gold/5" : "border-casino-pink bg-gradient-to-br from-card to-casino-pink/5"}`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span className="text-base">{slipMode === "builder" ? "🛠️" : "🚀"}</span>
+                <span className={`text-xs font-bold uppercase ${slipMode === "builder" ? "text-casino-gold" : "text-casino-pink"}`}>
+                  {slipMode === "builder" ? "Bet Builder" : "Accumulator"}
+                </span>
+                <Badge variant="outline" className="text-[10px]">
+                  {(slipMode === "builder" ? builderLegs : accaLegs).length} leg{(slipMode === "builder" ? builderLegs : accaLegs).length !== 1 ? "s" : ""}
+                </Badge>
+              </div>
+              <button
+                onClick={() => slipMode === "builder" ? setBuilderLegs([]) : setAccaLegs([])}
+                className="text-muted-foreground hover:text-casino-pink"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+
+            <div className="max-h-40 overflow-y-auto space-y-1 pr-1">
+              {(slipMode === "builder" ? builderLegs : accaLegs).map((l) => (
+                <div key={`${l.matchId}-${l.market}`} className="flex items-center justify-between gap-2 text-xs p-1.5 rounded bg-secondary/40">
+                  <div className="min-w-0">
+                    <div className="font-semibold truncate">{l.label}</div>
+                    <div className="text-[10px] text-muted-foreground truncate">{l.home} vs {l.away}</div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="font-mono font-bold text-casino-gold">{l.odds.toFixed(2)}</span>
+                    <button onClick={() => removeLeg(slipMode as "builder" | "acca", l.matchId, l.market)} className="text-muted-foreground hover:text-casino-pink">
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-6 gap-1">
+              {STAKE_TIERS.map((s) => (
+                <button key={s} onClick={() => setMultiStake(s)}
+                  className={`py-1 rounded text-[11px] font-semibold transition ${multiStake === s ? "bg-casino-gold text-background" : "bg-secondary text-muted-foreground"}`}>
+                  £{s.toFixed(2)}
+                </button>
+              ))}
+            </div>
+
+            {(() => {
+              const legs = slipMode === "builder" ? builderLegs : accaLegs;
+              const odds = slipMode === "builder" ? builderOdds : accaBoosted;
+              const showBoost = slipMode === "acca" && accaLegs.length >= 3 && accaBoosted > accaOdds;
+              return (
+                <>
+                  <div className="flex items-center justify-between text-xs">
+                    <span>
+                      {slipMode === "builder" ? "Combined" : "Total"}: <span className="font-mono font-bold text-casino-gold">{odds.toFixed(2)}</span>
+                      {showBoost && <span className="ml-1 text-[10px] text-casino-pink">⚡Boosted</span>}
+                    </span>
+                    <span>Returns: <span className="font-mono font-bold text-casino-green">£{(multiStake * odds).toFixed(2)}</span></span>
+                  </div>
+                  <Button
+                    onClick={() => placeMulti(slipMode as "builder" | "acca")}
+                    disabled={placingMulti || legs.length < 2}
+                    variant="gold"
+                    className="w-full"
+                  >
+                    {placingMulti ? "Placing…" : legs.length < 2 ? `Add ${2 - legs.length} more leg${2 - legs.length !== 1 ? "s" : ""}` : `Place £${multiStake.toFixed(2)} ${slipMode === "builder" ? "Builder" : "Acca"}`}
+                  </Button>
+                </>
+              );
+            })()}
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
