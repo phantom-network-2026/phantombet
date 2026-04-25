@@ -36,7 +36,7 @@ function formatCountdown(offIso: string) {
 }
 
 export default function Sportsbook() {
-  const [tab, setTab] = useState<"horse" | "greyhound" | "football">("horse");
+  const [tab, setTab] = useState<"horse" | "greyhound" | "football">("football");
   const [races, setRaces] = useState<Race[]>([]);
   const [runnersByRace, setRunnersByRace] = useState<Record<string, Runner[]>>({});
   const [activeRaceId, setActiveRaceId] = useState<string | null>(null);
@@ -170,9 +170,9 @@ export default function Sportsbook() {
 
           <Tabs value={tab} onValueChange={(v) => { setTab(v as any); setActiveRaceId(null); }}>
             <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="football">⚽ Football</TabsTrigger>
               <TabsTrigger value="horse">🏇 Horse Racing</TabsTrigger>
               <TabsTrigger value="greyhound">🐕 Greyhounds</TabsTrigger>
-              <TabsTrigger value="football">⚽ Football</TabsTrigger>
             </TabsList>
 
             {(["horse", "greyhound"] as const).map((kind) => (
