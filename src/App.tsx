@@ -70,6 +70,7 @@ import RoyalFlush from "./pages/games/RoyalFlush.tsx";
 import AztecGold from "./pages/games/AztecGold.tsx";
 import GalacticSpins from "./pages/games/GalacticSpins.tsx";
 import SweetBonanza from "./pages/games/SweetBonanza.tsx";
+import Sportsbook from "./pages/Sportsbook.tsx";
 const queryClient = new QueryClient();
 
 function PresenceTracker({ children }: { children: React.ReactNode }) {
@@ -117,6 +118,7 @@ const App = () => (
               <Route path="/help" element={<Help />} />
               <Route path="/exchange" element={<Exchange />} />
               <Route path="/wallet" element={<Wallet />} />
+              <Route path="/sportsbook" element={<Sportsbook />} />
               {/* New HTML5 games */}
               <Route path="/chicken-cross" element={<ChickenCross />} />
               <Route path="/scratch-royale" element={<ScratchRoyale />} />

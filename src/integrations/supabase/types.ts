@@ -463,6 +463,101 @@ export type Database = {
         }
         Relationships: []
       }
+      race_runners: {
+        Row: {
+          created_at: string
+          finishing_position: number | null
+          id: string
+          is_scratched: boolean
+          jockey_trainer: string | null
+          name: string
+          number: number
+          place_odds: number
+          race_id: string
+          updated_at: string
+          win_odds: number
+        }
+        Insert: {
+          created_at?: string
+          finishing_position?: number | null
+          id?: string
+          is_scratched?: boolean
+          jockey_trainer?: string | null
+          name: string
+          number: number
+          place_odds?: number
+          race_id: string
+          updated_at?: string
+          win_odds?: number
+        }
+        Update: {
+          created_at?: string
+          finishing_position?: number | null
+          id?: string
+          is_scratched?: boolean
+          jockey_trainer?: string | null
+          name?: string
+          number?: number
+          place_odds?: number
+          race_id?: string
+          updated_at?: string
+          win_odds?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "race_runners_race_id_fkey"
+            columns: ["race_id"]
+            isOneToOne: false
+            referencedRelation: "races"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      races: {
+        Row: {
+          created_at: string
+          distance: string
+          going: string | null
+          id: string
+          off_time: string
+          race_name: string
+          race_number: number
+          race_type: Database["public"]["Enums"]["race_type"]
+          status: Database["public"]["Enums"]["race_status"]
+          updated_at: string
+          venue: string
+          winners: number[] | null
+        }
+        Insert: {
+          created_at?: string
+          distance: string
+          going?: string | null
+          id?: string
+          off_time: string
+          race_name: string
+          race_number: number
+          race_type: Database["public"]["Enums"]["race_type"]
+          status?: Database["public"]["Enums"]["race_status"]
+          updated_at?: string
+          venue: string
+          winners?: number[] | null
+        }
+        Update: {
+          created_at?: string
+          distance?: string
+          going?: string | null
+          id?: string
+          off_time?: string
+          race_name?: string
+          race_number?: number
+          race_type?: Database["public"]["Enums"]["race_type"]
+          status?: Database["public"]["Enums"]["race_status"]
+          updated_at?: string
+          venue?: string
+          winners?: number[] | null
+        }
+        Relationships: []
+      }
       scratch_card_pool: {
         Row: {
           bet_tier: number
@@ -519,6 +614,59 @@ export type Database = {
           value?: Json
         }
         Relationships: []
+      }
+      sports_bets: {
+        Row: {
+          bet_type: Database["public"]["Enums"]["sports_bet_type"]
+          id: string
+          odds_taken: number
+          payout: number
+          placed_at: string
+          potential_payout: number
+          race_id: string
+          selections: number[]
+          settled_at: string | null
+          stake: number
+          status: Database["public"]["Enums"]["sports_bet_status"]
+          user_id: string
+        }
+        Insert: {
+          bet_type: Database["public"]["Enums"]["sports_bet_type"]
+          id?: string
+          odds_taken: number
+          payout?: number
+          placed_at?: string
+          potential_payout: number
+          race_id: string
+          selections: number[]
+          settled_at?: string | null
+          stake: number
+          status?: Database["public"]["Enums"]["sports_bet_status"]
+          user_id: string
+        }
+        Update: {
+          bet_type?: Database["public"]["Enums"]["sports_bet_type"]
+          id?: string
+          odds_taken?: number
+          payout?: number
+          placed_at?: string
+          potential_payout?: number
+          race_id?: string
+          selections?: number[]
+          settled_at?: string | null
+          stake?: number
+          status?: Database["public"]["Enums"]["sports_bet_status"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sports_bets_race_id_fkey"
+            columns: ["race_id"]
+            isOneToOne: false
+            referencedRelation: "races"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       staff_tasks: {
         Row: {
@@ -794,6 +942,10 @@ export type Database = {
         | "warn"
         | "kick"
         | "delete_message"
+      race_status: "upcoming" | "live" | "settled" | "cancelled"
+      race_type: "horse" | "greyhound"
+      sports_bet_status: "pending" | "won" | "lost" | "void" | "partial"
+      sports_bet_type: "win" | "place" | "each_way" | "forecast" | "tricast"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -940,6 +1092,10 @@ export const Constants = {
         "kick",
         "delete_message",
       ],
+      race_status: ["upcoming", "live", "settled", "cancelled"],
+      race_type: ["horse", "greyhound"],
+      sports_bet_status: ["pending", "won", "lost", "void", "partial"],
+      sports_bet_type: ["win", "place", "each_way", "forecast", "tricast"],
     },
   },
 } as const
