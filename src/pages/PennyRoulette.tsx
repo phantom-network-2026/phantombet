@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthGuard } from "@/components/casino/AuthGuard";
 import { GameChat } from "@/components/casino/GameChat";
+import { ChatPopupOverlay } from "@/components/casino/ChatPopupOverlay";
 import { motion, AnimatePresence } from "framer-motion";
 import { RotateCw, X, Volume2, VolumeX } from "lucide-react";
 import { useRouletteAudio } from "@/hooks/useRouletteAudio";
@@ -770,6 +771,9 @@ export default function PennyRoulette() {
         </div>
 
         {bottomBar}
+        {!showChat && (
+          <ChatPopupOverlay gameRoom="penny-roulette" positionClassName="absolute left-2 right-2 bottom-20 z-30" />
+        )}
       </div>
     </AuthGuard>
   );
