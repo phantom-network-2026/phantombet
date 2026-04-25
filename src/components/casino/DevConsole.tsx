@@ -376,7 +376,7 @@ export default function DevConsole({ onBack }: { onBack: () => void }) {
 
   // Helper: build a synthetic File with a webkitRelativePath we control.
   const makeFile = (name: string, data: Blob, relPath: string): File => {
-    const f = new File([data], name, { type: data.type || "application/octet-stream" });
+    const f = new (window as any).File([data], name, { type: data.type || "application/octet-stream" }) as File;
     Object.defineProperty(f, "webkitRelativePath", { value: relPath, writable: false });
     return f;
   };
