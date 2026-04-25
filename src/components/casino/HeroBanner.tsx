@@ -13,15 +13,15 @@ export function HeroBanner() {
       <img
         src={bannerUrl}
         alt="PhantomBet Football Betting — Get a £5 Free Bet Builder"
-        className="w-full h-40 md:h-56 object-cover"
+        className="w-full h-40 md:h-56 object-contain bg-background"
       />
-      <div className="absolute inset-x-0 bottom-0 p-3 pl-2 flex items-center justify-start gap-2 bg-gradient-to-t from-background/80 to-transparent">
+      <div className="absolute left-0 bottom-0 p-2 flex items-center justify-start gap-2">
         {user ? (
-          <Button variant="gold" size="sm" className="text-xs h-8 px-3" onClick={() => navigate("/sportsbook")}>
+          <Button variant="gold" size="sm" className="text-[10px] h-6 px-2" onClick={() => navigate("/sportsbook")}>
             Bet Now
           </Button>
         ) : (
-          <Button variant="gold" size="sm" className="text-xs h-8 px-3" onClick={() => navigate("/signup")}>
+          <Button variant="gold" size="sm" className="text-[10px] h-6 px-2" onClick={() => navigate("/signup")}>
             Claim £5 Free Bet
           </Button>
         )}
