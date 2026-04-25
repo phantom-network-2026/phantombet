@@ -8,7 +8,52 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Clock, Trophy, Activity, Trash2, ChevronUp, ChevronDown, Minus } from "lucide-react";
+import { Clock, Trophy, Activity, Trash2, ChevronUp, ChevronDown, Minus, Search, ChevronRight, Flame, Star, Calendar, Globe2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+
+// Map competitions to a country/region flag emoji + group label.
+const COMP_META: Record<string, { flag: string; group: string }> = {
+  "Premier League": { flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", group: "England" },
+  "Championship": { flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", group: "England" },
+  "League One": { flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", group: "England" },
+  "League Two": { flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", group: "England" },
+  "FA Cup": { flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", group: "England" },
+  "EFL Cup": { flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", group: "England" },
+  "Scottish Premiership": { flag: "🏴󠁧󠁢󠁳󠁣󠁴󠁿", group: "Scotland" },
+  "Scottish Championship": { flag: "🏴󠁧󠁢󠁳󠁣󠁴󠁿", group: "Scotland" },
+  "Scottish League 1": { flag: "🏴󠁧󠁢󠁳󠁣󠁴󠁿", group: "Scotland" },
+  "Scottish League 2": { flag: "🏴󠁧󠁢󠁳󠁣󠁴󠁿", group: "Scotland" },
+  "Scottish Cup": { flag: "🏴󠁧󠁢󠁳󠁣󠁴󠁿", group: "Scotland" },
+  "Champions League": { flag: "🏆", group: "European" },
+  "Europa League": { flag: "🏆", group: "European" },
+  "Europa Conference League": { flag: "🏆", group: "European" },
+  "UEFA Champions League Women's": { flag: "🏆", group: "Women" },
+  "UEFA Europa Cup - Women": { flag: "🏆", group: "Women" },
+  "La Liga": { flag: "🇪🇸", group: "Spain" },
+  "La Liga 2": { flag: "🇪🇸", group: "Spain" },
+  "Bundesliga": { flag: "🇩🇪", group: "Germany" },
+  "Bundesliga 2": { flag: "🇩🇪", group: "Germany" },
+  "Serie A": { flag: "🇮🇹", group: "Italy" },
+  "Serie B": { flag: "🇮🇹", group: "Italy" },
+  "Ligue 1": { flag: "🇫🇷", group: "France" },
+  "Eredivisie": { flag: "🇳🇱", group: "Netherlands" },
+  "Primeira Liga": { flag: "🇵🇹", group: "Portugal" },
+  "Belgian Pro League": { flag: "🇧🇪", group: "Belgium" },
+  "MLS": { flag: "🇺🇸", group: "Americas" },
+  "Liga MX": { flag: "🇲🇽", group: "Americas" },
+  "Brasileirão": { flag: "🇧🇷", group: "Americas" },
+  "Argentine Primera": { flag: "🇦🇷", group: "Americas" },
+  "Saudi Pro League": { flag: "🇸🇦", group: "Asia / RoW" },
+  "Turkish Süper Lig": { flag: "🇹🇷", group: "Asia / RoW" },
+  "Greek Super League": { flag: "🇬🇷", group: "Europe (Other)" },
+  "Australian A-League": { flag: "🇦🇺", group: "Asia / RoW" },
+  "J1 League": { flag: "🇯🇵", group: "Asia / RoW" },
+  "K League 1": { flag: "🇰🇷", group: "Asia / RoW" },
+  "World Cup Qualifiers": { flag: "🌍", group: "International" },
+  "Nations League": { flag: "🌍", group: "International" },
+  "International Friendly": { flag: "🌍", group: "International" },
+};
+const compMeta = (c: string) => COMP_META[c] || { flag: "⚽", group: "Other" };
 
 type Race = { id: string; race_type: "horse" | "greyhound"; venue: string; race_number: number; race_name: string; distance: string; going: string | null; off_time: string; status: "upcoming" | "live" | "settled"; winners: number[] | null };
 type Runner = { id: string; race_id: string; number: number; name: string; jockey_trainer: string | null; win_odds: number; place_odds: number; finishing_position: number | null };
