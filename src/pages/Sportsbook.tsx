@@ -616,6 +616,33 @@ function FootballSection() {
               })}
             </div>
 
+            {/* Add to Builder / Acca */}
+            <div className="rounded-lg border border-casino-gold/20 bg-background/30 p-2 space-y-2">
+              <div className="text-[10px] font-bold uppercase text-muted-foreground">Add to Multi</div>
+              <div className="grid grid-cols-3 gap-1.5">
+                {(["home", "draw", "away"] as FootballMarket[]).map((mk) => {
+                  const inBuilder = builderLegs.some((l) => l.matchId === m.id && l.market === mk);
+                  return (
+                    <button key={`b-${mk}`} onClick={() => addLeg("builder", m, mk)}
+                      className={`text-[10px] py-1 rounded border font-semibold transition ${inBuilder ? "border-casino-gold bg-casino-gold text-background" : "border-casino-gold/40 text-casino-gold hover:bg-casino-gold/10"}`}>
+                      🛠️ {mk === "home" ? "1" : mk === "draw" ? "X" : "2"}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="grid grid-cols-3 gap-1.5">
+                {(["home", "draw", "away"] as FootballMarket[]).map((mk) => {
+                  const inAcca = accaLegs.some((l) => l.matchId === m.id && l.market === mk);
+                  return (
+                    <button key={`a-${mk}`} onClick={() => addLeg("acca", m, mk)}
+                      className={`text-[10px] py-1 rounded border font-semibold transition ${inAcca ? "border-casino-pink bg-casino-pink text-white" : "border-casino-pink/40 text-casino-pink hover:bg-casino-pink/10"}`}>
+                      🚀 {mk === "home" ? "1" : mk === "draw" ? "X" : "2"}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="text-[10px] font-bold uppercase text-muted-foreground pt-1">More Markets</div>
             <div className="grid grid-cols-2 gap-2">
               {[
