@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import JSZip from "jszip";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +11,7 @@ import {
   Upload, Download, RefreshCw, ChevronRight, Code, Image, Music,
   FileText, Plus, X, Copy, Eye, Undo2, Redo2, Replace,
   Terminal, Gamepad2, FolderPlus, Pencil, Check, FileCode,
-  Braces, Palette, Globe, Layers, Package, OctagonX
+  Braces, Palette, Globe, Layers, Package, OctagonX, FileArchive
 } from "lucide-react";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -367,9 +368,74 @@ export default function DevConsole({ onBack }: { onBack: () => void }) {
   const filtered = files.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   const [installName, setInstallName] = useState("");
-  const [installCategory, setInstallCategory] = useState<string>("instant");
+  const [installCategory, setInstallCategory] = useState<string>("auto");
   const [installing, setInstalling] = useState(false);
   const [installFiles, setInstallFiles] = useState<File[]>([]);
+  const [installProgress, setInstallProgress] = useState<{ done: number; total: number } | null>(null);
+  const zipInputRef = useRef<HTMLInputElement>(null);
+
+  // Helper: build a synthetic File with a webkitRelativePath we control.
+  const makeFile = (name: string, data: Blob, relPath: string): File => {
+    const f = new (window as any).File([data], name, { type: data.type || "application/octet-stream" }) as File;
+    Object.defineProperty(f, "webkitRelativePath", { value: relPath, writable: false });
+    return f;
+  };
+
+  // Auto-categorize from file names + index.html content.
+  const detectCategory = async (files: File[]): Promise<string> => {
+    const names = files.map(f => (f.webkitRelativePath || f.name).toLowerCase()).join("\n");
+    const slug = installName.toLowerCase();
+    const haystack = `${slug}\n${names}`;
+    const matchers: Array<[string, RegExp]> = [
+      ["scratch", /scratch|rasca/],
+      ["jackpot", /jackpot|mega-?win/],
+      ["table", /blackjack|roulette|poker|baccarat|table/],
+      ["slots", /slot|reel|spin|fruit|wild|scatter|payline|symbols?/],
+      ["instant", /crash|plinko|mines|wheel|dice|hilo|keno|coinflip|bomb|cross/],
+    ];
+    for (const [cat, rx] of matchers) if (rx.test(haystack)) return cat;
+    // Inspect index.html as a last resort
+    const idx = files.find(f => /(^|\/)index\.html?$/i.test(f.webkitRelativePath || f.name));
+    if (idx) {
+      try {
+        const txt = (await idx.text()).toLowerCase();
+        for (const [cat, rx] of matchers) if (rx.test(txt)) return cat;
+      } catch {}
+    }
+    return "instant";
+  };
+
+  // Extract a zip file into File[] mirroring webkitdirectory uploads.
+  const handleZipSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!/\.zip$/i.test(file.name)) { toast.error("Please select a .zip file"); return; }
+    toast.info(`Extracting ${file.name}…`);
+    try {
+      const zip = await JSZip.loadAsync(file);
+      const entries = Object.values(zip.files).filter(en => !en.dir);
+      // Detect a single common root folder so we strip it (mirrors folder upload behavior).
+      const tops = new Set(entries.map(en => en.name.split("/")[0]));
+      const stripRoot = tops.size === 1 ? [...tops][0] + "/" : "";
+      const baseFolder = (stripRoot ? stripRoot.replace(/\/$/, "") : file.name.replace(/\.zip$/i, "")) || "game";
+      const out: File[] = [];
+      for (const en of entries) {
+        const blob = await en.async("blob");
+        const trimmed = stripRoot && en.name.startsWith(stripRoot) ? en.name.slice(stripRoot.length) : en.name;
+        if (!trimmed) continue;
+        // webkitRelativePath convention: <root>/<rest>
+        out.push(makeFile(trimmed.split("/").pop() || trimmed, blob, `${baseFolder}/${trimmed}`));
+      }
+      setInstallFiles(out);
+      if (!installName) setInstallName(baseFolder.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "-"));
+      toast.success(`Extracted ${out.length} files from ZIP`);
+    } catch (err: any) {
+      console.error(err);
+      toast.error(`Failed to read ZIP: ${err?.message || err}`);
+    } finally {
+      if (zipInputRef.current) zipInputRef.current.value = "";
+    }
+  };
 
   const handleInstallSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(e.target.files || []);
@@ -388,6 +454,10 @@ export default function DevConsole({ onBack }: { onBack: () => void }) {
     const slug = installName.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-");
     let success = 0;
     let indexHtmlFound = false;
+    setInstallProgress({ done: 0, total: installFiles.length });
+
+    // Resolve category — "auto" means scan files for hints.
+    const finalCategory = installCategory === "auto" ? await detectCategory(installFiles) : installCategory;
 
     // Upload bridge.js into THIS game's folder first so relative path always resolves.
     try {
@@ -413,7 +483,9 @@ export default function DevConsole({ onBack }: { onBack: () => void }) {
       // Auto-inject PhantomBridge into index.html so the game can sync balance.
       // CRITICAL: must load BEFORE game scripts, so inject into <head>.
       let toUpload: Blob = file;
-      if (relativePath.toLowerCase() === "index.html") {
+      const lowerRel = relativePath.toLowerCase();
+      const isEntryHtml = /^(index|main|game|start|play)\.html?$/.test(lowerRel);
+      if (isEntryHtml) {
         indexHtmlFound = true;
         try {
           const text = await file.text();
@@ -438,10 +510,37 @@ export default function DevConsole({ onBack }: { onBack: () => void }) {
       const contentType = getContentType(relativePath, file.type || (isTextFile(relativePath) ? "text/plain" : "application/octet-stream"));
       const { error } = await supabase.storage.from(BUCKET).upload(storagePath, toUpload, { upsert: true, contentType });
       if (error) { console.error(`Failed: ${storagePath}`, error); } else { success++; }
+      setInstallProgress({ done: success, total: installFiles.length });
     }
 
+    // If no html entry found, look for non-html entry types and synthesize a wrapper index.html.
     if (!indexHtmlFound) {
-      toast.error("No index.html found in folder. Game won't be playable.");
+      const allRel = installFiles.map(f => (f.webkitRelativePath || f.name).split("/").slice(1).join("/"));
+      const jar = allRel.find(p => /\.jar$/i.test(p));
+      const unity = allRel.find(p => /\.unityweb$|UnityLoader\.js$|Build\/.+\.loader\.js$/i.test(p));
+      const wasm = allRel.find(p => /\.wasm$/i.test(p));
+      const swf  = allRel.find(p => /\.swf$/i.test(p));
+      const anyHtml = allRel.find(p => /\.html?$/i.test(p));
+      let wrapper: string | null = null;
+      if (anyHtml) {
+        // Re-route entry to first html found
+        wrapper = `<!doctype html><meta charset="utf-8"><title>${slug}</title><script src="bridge.js"></script><meta http-equiv="refresh" content="0;url=${anyHtml}">`;
+      } else if (swf) {
+        wrapper = `<!doctype html><html><head><meta charset="utf-8"><title>${slug}</title><script src="bridge.js"></script><script src="https://unpkg.com/@ruffle-rs/ruffle"></script></head><body style="margin:0;background:#000"><object data="${swf}" type="application/x-shockwave-flash" width="100%" height="100%"></object></body></html>`;
+      } else if (unity) {
+        wrapper = `<!doctype html><html><head><meta charset="utf-8"><title>${slug}</title><script src="bridge.js"></script></head><body style="margin:0;background:#000"><iframe src="${unity}" style="border:0;width:100vw;height:100vh"></iframe></body></html>`;
+      } else if (wasm) {
+        wrapper = `<!doctype html><html><head><meta charset="utf-8"><title>${slug}</title><script src="bridge.js"></script></head><body style="margin:0;background:#000;color:#fff;font-family:sans-serif;padding:1rem">WASM module installed: <code>${wasm}</code>. Provide a custom index.html that instantiates it.</body></html>`;
+      } else if (jar) {
+        wrapper = `<!doctype html><html><head><meta charset="utf-8"><title>${slug}</title><script src="bridge.js"></script></head><body style="margin:0;background:#000;color:#fff;font-family:sans-serif;padding:1rem">Java applet (<code>${jar}</code>) installed. Modern browsers no longer run applets natively — use CheerpJ to run it: <a style="color:#facc15" href="https://leaningtech.com/cheerpj/" target="_blank">leaningtech.com/cheerpj</a>.</body></html>`;
+      }
+      if (wrapper) {
+        await supabase.storage.from(BUCKET).upload(`${slug}/index.html`, new Blob([wrapper], { type: "text/html" }), { upsert: true, contentType: "text/html" });
+        indexHtmlFound = true;
+        success++;
+      } else {
+        toast.error("No entry file found (index.html / .swf / .unityweb / .wasm / .jar). Game won't be playable.");
+      }
     }
 
     if (success > 0) {
@@ -450,7 +549,7 @@ export default function DevConsole({ onBack }: { onBack: () => void }) {
         name: displayName,
         slug,
         source: "storage",
-        category: installCategory as any,
+        category: finalCategory as any,
         description: `Custom installed game: ${displayName}`,
         is_active: true,
         is_featured: false,
@@ -459,7 +558,7 @@ export default function DevConsole({ onBack }: { onBack: () => void }) {
         console.error("DB insert error:", dbErr);
         toast.error("Files uploaded but game registration failed: " + dbErr.message);
       } else {
-        toast.success(`✓ Installed "${displayName}" — appears in /games now!`);
+        toast.success(`✓ Installed "${displayName}" as ${finalCategory} — appears in /games now!`);
       }
       setInstallFiles([]);
       setInstallName("");
@@ -468,6 +567,7 @@ export default function DevConsole({ onBack }: { onBack: () => void }) {
       toast.error("Installation failed");
     }
     setInstalling(false);
+    setInstallProgress(null);
   };
 
   const uninstallGame = async (slug: string) => {
@@ -553,7 +653,9 @@ export default function DevConsole({ onBack }: { onBack: () => void }) {
         <div className="space-y-4">
           <div className="rounded-xl border border-border bg-card p-5 space-y-4">
             <h4 className="font-bold flex items-center gap-2"><Package className="h-4 w-4 text-casino-gold" /> Install New Game</h4>
-            <p className="text-xs text-muted-foreground">Upload a folder containing your casino game files (index.html, script.js, style.css, etc). The game will be automatically registered and categorized.</p>
+            <p className="text-xs text-muted-foreground">
+              Upload a <b>.zip archive</b> or a <b>folder</b> containing your game (HTML5, Unity WebGL, WASM, Flash/SWF via Ruffle, Java/JAR via CheerpJ, web3 dApps, etc.). The game is automatically extracted, categorized, registered in the database and listed under <code>/games</code>.
+            </p>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -567,6 +669,7 @@ export default function DevConsole({ onBack }: { onBack: () => void }) {
                   onChange={e => setInstallCategory(e.target.value)}
                   className="w-full h-10 rounded-md border border-border bg-background px-3 text-sm"
                 >
+                  <option value="auto">Auto-detect</option>
                   <option value="slots">Slots</option>
                   <option value="table">Table</option>
                   <option value="instant">Instant</option>
@@ -576,24 +679,44 @@ export default function DevConsole({ onBack }: { onBack: () => void }) {
               </div>
             </div>
 
-            <div className="border-2 border-dashed border-border rounded-lg p-6 text-center space-y-3">
-              <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">Select game folder to upload</p>
-              <input
-                ref={folderInputRef}
-                type="file"
-                // @ts-ignore
-                webkitdirectory=""
-                directory=""
-                multiple
-                className="hidden"
-                onChange={handleInstallSelect}
-              />
-              <Button variant="outline" onClick={() => folderInputRef.current?.click()}>
-                <FolderOpen className="h-4 w-4 mr-2" /> Select Folder
-              </Button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="border-2 border-dashed border-casino-gold/40 rounded-lg p-5 text-center space-y-2 bg-casino-gold/5">
+                <FileArchive className="h-7 w-7 mx-auto text-casino-gold" />
+                <p className="text-xs font-bold">ZIP archive (recommended)</p>
+                <p className="text-[10px] text-muted-foreground">Any game packaged as .zip</p>
+                <input
+                  ref={zipInputRef}
+                  type="file"
+                  accept=".zip,application/zip,application/x-zip-compressed"
+                  className="hidden"
+                  onChange={handleZipSelect}
+                />
+                <Button variant="gold" size="sm" onClick={() => zipInputRef.current?.click()}>
+                  <FileArchive className="h-3.5 w-3.5 mr-1.5" /> Upload .zip
+                </Button>
+              </div>
+              <div className="border-2 border-dashed border-border rounded-lg p-5 text-center space-y-2">
+                <FolderOpen className="h-7 w-7 mx-auto text-muted-foreground" />
+                <p className="text-xs font-bold">Folder</p>
+                <p className="text-[10px] text-muted-foreground">Pick an unzipped game folder</p>
+                <input
+                  ref={folderInputRef}
+                  type="file"
+                  // @ts-ignore
+                  webkitdirectory=""
+                  directory=""
+                  multiple
+                  className="hidden"
+                  onChange={handleInstallSelect}
+                />
+                <Button variant="outline" size="sm" onClick={() => folderInputRef.current?.click()}>
+                  <FolderOpen className="h-3.5 w-3.5 mr-1.5" /> Select Folder
+                </Button>
+              </div>
+            </div>
+
               {installFiles.length > 0 && (
-                <div className="text-left mt-3 max-h-40 overflow-y-auto space-y-1">
+                <div className="text-left mt-1 max-h-40 overflow-y-auto space-y-1 rounded-md border border-border bg-background/40 p-3">
                   <p className="text-xs font-bold text-casino-gold">{installFiles.length} files selected:</p>
                   {installFiles.slice(0, 20).map((f, i) => (
                     <p key={i} className="text-xs text-muted-foreground truncate">{f.webkitRelativePath || f.name}</p>
@@ -601,10 +724,11 @@ export default function DevConsole({ onBack }: { onBack: () => void }) {
                   {installFiles.length > 20 && <p className="text-xs text-muted-foreground">...and {installFiles.length - 20} more</p>}
                 </div>
               )}
-            </div>
 
             <Button variant="gold" className="w-full" onClick={handleInstallGame} disabled={installing || !installFiles.length || !installName}>
-              {installing ? <><RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Installing...</> : <><Gamepad2 className="h-4 w-4 mr-2" /> Install Game</>}
+              {installing
+                ? <><RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Installing… {installProgress ? `${installProgress.done}/${installProgress.total}` : ""}</>
+                : <><Gamepad2 className="h-4 w-4 mr-2" /> Install Game</>}
             </Button>
           </div>
 
