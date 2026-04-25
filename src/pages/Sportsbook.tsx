@@ -681,13 +681,33 @@ function FootballSection() {
 
   return (
     <div className="space-y-3">
-      {/* Promo strip */}
-      <div className="rounded-xl overflow-hidden bg-gradient-to-r from-casino-pink/20 via-casino-gold/15 to-casino-green/20 border border-casino-gold/30 p-3 flex items-center gap-3">
-        <div className="h-10 w-10 rounded-full bg-casino-gold/20 flex items-center justify-center text-xl">🎁</div>
-        <div className="flex-1 min-w-0">
-          <div className="text-xs font-bold text-casino-gold uppercase">Acca Boost</div>
-          <div className="text-[11px] text-muted-foreground truncate">3+ selections @ 2.0+ — get up to 50% extra winnings</div>
-        </div>
+      {/* Football hero banner */}
+      <div className="relative overflow-hidden rounded-xl border border-casino-gold/30 shadow-[0_0_20px_hsl(var(--casino-gold)/0.15)]">
+        <img src={footballBanner} alt="Get a £5 Free Bet Builder" className="w-full h-32 md:h-40 object-cover" />
+      </div>
+
+      {/* Bet Builder / Acca tiles */}
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          onClick={() => setSlipMode("builder")}
+          className={`p-3 rounded-xl border text-left transition ${slipMode === "builder" ? "border-casino-gold bg-casino-gold/10" : "border-casino-gold/30 bg-gradient-to-br from-casino-gold/5 to-transparent hover:bg-casino-gold/10"}`}
+        >
+          <div className="flex items-center gap-1.5 text-casino-gold">
+            <span className="text-base">🛠️</span>
+            <span className="text-xs font-bold uppercase">Bet Builder</span>
+          </div>
+          <div className="text-[10px] text-muted-foreground mt-0.5">Combine markets in 1 match • {builderLegs.length} leg{builderLegs.length !== 1 ? "s" : ""}</div>
+        </button>
+        <button
+          onClick={() => setSlipMode("acca")}
+          className={`p-3 rounded-xl border text-left transition ${slipMode === "acca" ? "border-casino-pink bg-casino-pink/10" : "border-casino-pink/30 bg-gradient-to-br from-casino-pink/5 to-transparent hover:bg-casino-pink/10"}`}
+        >
+          <div className="flex items-center gap-1.5 text-casino-pink">
+            <span className="text-base">🚀</span>
+            <span className="text-xs font-bold uppercase">Accumulator</span>
+          </div>
+          <div className="text-[10px] text-muted-foreground mt-0.5">Multiple matches • Up to +50% Acca Boost • {accaLegs.length} leg{accaLegs.length !== 1 ? "s" : ""}</div>
+        </button>
       </div>
 
       {/* Quick stat tiles */}
