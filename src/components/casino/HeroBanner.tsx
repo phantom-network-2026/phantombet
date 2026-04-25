@@ -9,7 +9,7 @@ export function HeroBanner() {
   const bannerUrl = useSportsBanner("home_hero");
 
   return (
-    <div className="relative overflow-hidden rounded-2xl mx-4 mt-4 group">
+    <div className="relative overflow-hidden rounded-2xl mx-4 mt-4 group animate-border-gold">
       <img
         src={bannerUrl}
         alt="PhantomBet Football Betting — Get a £5 Free Bet Builder"
