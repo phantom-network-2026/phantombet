@@ -161,9 +161,7 @@ export default function Index() {
         />
       </div>
 
-      <div className="rounded-2xl mx-4 mt-3 animate-border-gold">
-        <HeroBanner />
-      </div>
+      <HeroBanner />
 
       {/* Prize Reel Banner */}
       <PrizeReelBanner />
