@@ -238,6 +238,102 @@ export type Database = {
         }
         Relationships: []
       }
+      football_bets: {
+        Row: {
+          id: string
+          match_id: string
+          odds_taken: number
+          payout: number
+          placed_at: string
+          potential_payout: number
+          selection: Database["public"]["Enums"]["football_bet_market"]
+          settled_at: string | null
+          stake: number
+          status: Database["public"]["Enums"]["sports_bet_status"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          match_id: string
+          odds_taken: number
+          payout?: number
+          placed_at?: string
+          potential_payout: number
+          selection: Database["public"]["Enums"]["football_bet_market"]
+          settled_at?: string | null
+          stake: number
+          status?: Database["public"]["Enums"]["sports_bet_status"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          match_id?: string
+          odds_taken?: number
+          payout?: number
+          placed_at?: string
+          potential_payout?: number
+          selection?: Database["public"]["Enums"]["football_bet_market"]
+          settled_at?: string | null
+          stake?: number
+          status?: Database["public"]["Enums"]["sports_bet_status"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      football_matches: {
+        Row: {
+          away_odds: number
+          away_score: number
+          away_team: string
+          competition: string
+          created_at: string
+          draw_odds: number
+          home_odds: number
+          home_score: number
+          home_team: string
+          id: string
+          kickoff_time: string
+          minute: number
+          result: Database["public"]["Enums"]["football_bet_market"] | null
+          status: Database["public"]["Enums"]["football_match_status"]
+          updated_at: string
+        }
+        Insert: {
+          away_odds?: number
+          away_score?: number
+          away_team: string
+          competition: string
+          created_at?: string
+          draw_odds?: number
+          home_odds?: number
+          home_score?: number
+          home_team: string
+          id?: string
+          kickoff_time: string
+          minute?: number
+          result?: Database["public"]["Enums"]["football_bet_market"] | null
+          status?: Database["public"]["Enums"]["football_match_status"]
+          updated_at?: string
+        }
+        Update: {
+          away_odds?: number
+          away_score?: number
+          away_team?: string
+          competition?: string
+          created_at?: string
+          draw_odds?: number
+          home_odds?: number
+          home_score?: number
+          home_team?: string
+          id?: string
+          kickoff_time?: string
+          minute?: number
+          result?: Database["public"]["Enums"]["football_bet_market"] | null
+          status?: Database["public"]["Enums"]["football_match_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       friendships: {
         Row: {
           addressee_id: string
@@ -926,6 +1022,8 @@ export type Database = {
         | "staff"
         | "active_user"
         | "owner"
+      football_bet_market: "home" | "draw" | "away"
+      football_match_status: "upcoming" | "live" | "finished" | "cancelled"
       friendship_status: "pending" | "accepted" | "rejected"
       game_category:
         | "slots"
@@ -1074,6 +1172,8 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user", "moderator", "staff", "active_user", "owner"],
+      football_bet_market: ["home", "draw", "away"],
+      football_match_status: ["upcoming", "live", "finished", "cancelled"],
       friendship_status: ["pending", "accepted", "rejected"],
       game_category: [
         "slots",
