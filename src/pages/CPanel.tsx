@@ -2455,6 +2455,13 @@ export default function CPanel() {
             </CpanelSection>
             )}
 
+            {/* ── Sports Betting ─────────────────────── */}
+            <CpanelSection title="Sports Betting" icon={<Trophy className="h-5 w-5" />}>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1">
+                <ToolCard icon={<ImagePlus className="h-6 w-6" />} label="Promo Banners" onClick={() => setActivePanel("sports-promos")} active={activePanel === "sports-promos"} />
+              </div>
+            </CpanelSection>
+
             {/* ── Files ──────────────────────────────── */}
             {sec("cpanel_files") && (
             <CpanelSection title="Files" icon={<FolderOpen className="h-5 w-5" />}>
