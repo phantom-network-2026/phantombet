@@ -151,8 +151,6 @@ export default function Index() {
         </div>
       )}
 
-      <HeroBanner />
-
       {/* Welcome PhantomBet Hero Banner */}
       <div className="mx-4 mt-3 rounded-2xl overflow-hidden border border-casino-gold/30 shadow-[0_0_24px_hsl(43_80%_50%/0.15)]">
         <img
@@ -162,6 +160,8 @@ export default function Index() {
           loading="eager"
         />
       </div>
+
+      <HeroBanner />
 
       {/* Non-KYC Banner */}
       <div className="mx-4 mt-3 rounded-xl border border-[hsl(var(--casino-green))/0.3] bg-[hsl(var(--casino-green))/0.08] p-4">
