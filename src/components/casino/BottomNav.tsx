@@ -66,8 +66,10 @@ export function BottomNav() {
             <button
               key={item.path}
               onClick={() => handleClick(item)}
-              className={`relative flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors ${
-                isActive ? "text-casino-gold" : "text-muted-foreground hover:text-foreground"
+              className={`relative flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-all ${
+                isActive
+                  ? "text-casino-gold bg-casino-gold/10 ring-1 ring-casino-gold/50 shadow-[0_0_12px_hsl(42_90%_55%/0.5)]"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <div className="relative">

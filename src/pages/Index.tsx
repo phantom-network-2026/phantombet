@@ -35,7 +35,7 @@ function PrizeReelBanner() {
   return (
     <button
       onClick={() => navigate("/prize-reel")}
-      className="mx-4 mt-3 w-[calc(100%-2rem)] rounded-xl overflow-hidden text-left transition-transform active:scale-[0.98] hover:scale-[1.01]"
+      className="mx-4 mt-3 w-[calc(100%-2rem)] rounded-xl overflow-hidden text-left transition-transform active:scale-[0.98] hover:scale-[1.01] animate-border-gold"
       style={{
         background: "linear-gradient(135deg, hsl(270,40%,15%), hsl(280,35%,10%))",
         border: "1px solid hsl(43,80%,45%,0.4)",
@@ -152,7 +152,7 @@ export default function Index() {
       )}
 
       {/* Welcome PhantomBet Hero Banner */}
-      <div className="mx-4 mt-3 rounded-2xl overflow-hidden border border-casino-gold/30 shadow-[0_0_24px_hsl(43_80%_50%/0.15)]">
+      <div className="mx-4 mt-3 rounded-2xl overflow-hidden border border-casino-gold/40 animate-border-gold">
         <img
           src={welcomeBannerImg}
           alt="Welcome to PhantomBet — 100% Non-KYC Casino with Live Game Chat"
