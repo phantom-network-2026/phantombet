@@ -1481,6 +1481,9 @@ function PiratePlunderInner() {
           </div>
         </div>
       )}
+      {!showChat && (
+        <ChatPopupOverlay gameRoom={GAME_SLUG} positionClassName="absolute left-2 right-2 bottom-20 z-30" />
+      )}
     </div>
   );
 }

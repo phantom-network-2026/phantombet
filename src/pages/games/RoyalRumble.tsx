@@ -134,6 +134,9 @@ function RoyalRumbleInner() {
             </div>
           </div>
         )}
+        {!showChat && (
+          <ChatPopupOverlay gameRoom={GAME_SLUG} positionClassName="absolute left-2 right-2 bottom-2 z-30" />
+        )}
       </div>
 
       <div className="shrink-0 bg-[#0f0a1e]/95 border-t border-white/10 flex items-center justify-between px-4 py-2 safe-area-bottom">
