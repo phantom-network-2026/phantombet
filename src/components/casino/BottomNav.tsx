@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Dice5, Trophy, Users, HelpCircle, ArrowLeftRight } from "lucide-react";
+import { Home, Dice5, Trophy, Users, HelpCircle, Medal } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage, type LanguageCode } from "@/hooks/useLanguage";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,9 +9,9 @@ import { toast } from "sonner";
 const navItems = [
   { icon: Home, labelKey: "home" as const, path: "/", requiresAuth: false },
   { icon: Dice5, labelKey: "games" as const, path: "/games", requiresAuth: false },
+  { icon: Medal, labelKey: "home" as const, path: "/sportsbook", requiresAuth: true, label: "Racing" },
   { icon: Users, labelKey: "friends" as const, path: "/friends", requiresAuth: true },
   { icon: Trophy, labelKey: "promos" as const, path: "/promotions", requiresAuth: true },
-  { icon: ArrowLeftRight, labelKey: "exchange" as const, path: "/exchange", requiresAuth: true },
   { icon: HelpCircle, labelKey: "help" as const, path: "/help", requiresAuth: false },
 ];
 
@@ -78,7 +78,7 @@ export function BottomNav() {
                   </span>
                 )}
               </div>
-              <span className="text-[10px] font-medium">{t(item.labelKey)}</span>
+              <span className="text-[10px] font-medium">{(item as any).label || t(item.labelKey)}</span>
             </button>
           );
         })}
