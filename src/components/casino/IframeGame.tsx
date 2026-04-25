@@ -571,6 +571,11 @@ function IframeGameInner({ title, slug, description, emoji, src }: IframeGamePro
             </div>
           </div>
         )}
+
+        {/* Floating chat popups so messages are visible while playing */}
+        {!showChat && (
+          <ChatPopupOverlay gameRoom={slug} positionClassName="absolute left-2 right-2 bottom-2 z-30" />
+        )}
       </div>
 
       {/* Bottom navigation bar */}
