@@ -454,6 +454,10 @@ export default function DevConsole({ onBack }: { onBack: () => void }) {
     const slug = installName.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-");
     let success = 0;
     let indexHtmlFound = false;
+    setInstallProgress({ done: 0, total: installFiles.length });
+
+    // Resolve category — "auto" means scan files for hints.
+    const finalCategory = installCategory === "auto" ? await detectCategory(installFiles) : installCategory;
 
     // Upload bridge.js into THIS game's folder first so relative path always resolves.
     try {
@@ -479,7 +483,9 @@ export default function DevConsole({ onBack }: { onBack: () => void }) {
       // Auto-inject PhantomBridge into index.html so the game can sync balance.
       // CRITICAL: must load BEFORE game scripts, so inject into <head>.
       let toUpload: Blob = file;
-      if (relativePath.toLowerCase() === "index.html") {
+      const lowerRel = relativePath.toLowerCase();
+      const isEntryHtml = /^(index|main|game|start|play)\.html?$/.test(lowerRel);
+      if (isEntryHtml) {
         indexHtmlFound = true;
         try {
           const text = await file.text();
@@ -504,10 +510,37 @@ export default function DevConsole({ onBack }: { onBack: () => void }) {
       const contentType = getContentType(relativePath, file.type || (isTextFile(relativePath) ? "text/plain" : "application/octet-stream"));
       const { error } = await supabase.storage.from(BUCKET).upload(storagePath, toUpload, { upsert: true, contentType });
       if (error) { console.error(`Failed: ${storagePath}`, error); } else { success++; }
+      setInstallProgress({ done: success, total: installFiles.length });
     }
 
+    // If no html entry found, look for non-html entry types and synthesize a wrapper index.html.
     if (!indexHtmlFound) {
-      toast.error("No index.html found in folder. Game won't be playable.");
+      const allRel = installFiles.map(f => (f.webkitRelativePath || f.name).split("/").slice(1).join("/"));
+      const jar = allRel.find(p => /\.jar$/i.test(p));
+      const unity = allRel.find(p => /\.unityweb$|UnityLoader\.js$|Build\/.+\.loader\.js$/i.test(p));
+      const wasm = allRel.find(p => /\.wasm$/i.test(p));
+      const swf  = allRel.find(p => /\.swf$/i.test(p));
+      const anyHtml = allRel.find(p => /\.html?$/i.test(p));
+      let wrapper: string | null = null;
+      if (anyHtml) {
+        // Re-route entry to first html found
+        wrapper = `<!doctype html><meta charset="utf-8"><title>${slug}</title><script src="bridge.js"></script><meta http-equiv="refresh" content="0;url=${anyHtml}">`;
+      } else if (swf) {
+        wrapper = `<!doctype html><html><head><meta charset="utf-8"><title>${slug}</title><script src="bridge.js"></script><script src="https://unpkg.com/@ruffle-rs/ruffle"></script></head><body style="margin:0;background:#000"><object data="${swf}" type="application/x-shockwave-flash" width="100%" height="100%"></object></body></html>`;
+      } else if (unity) {
+        wrapper = `<!doctype html><html><head><meta charset="utf-8"><title>${slug}</title><script src="bridge.js"></script></head><body style="margin:0;background:#000"><iframe src="${unity}" style="border:0;width:100vw;height:100vh"></iframe></body></html>`;
+      } else if (wasm) {
+        wrapper = `<!doctype html><html><head><meta charset="utf-8"><title>${slug}</title><script src="bridge.js"></script></head><body style="margin:0;background:#000;color:#fff;font-family:sans-serif;padding:1rem">WASM module installed: <code>${wasm}</code>. Provide a custom index.html that instantiates it.</body></html>`;
+      } else if (jar) {
+        wrapper = `<!doctype html><html><head><meta charset="utf-8"><title>${slug}</title><script src="bridge.js"></script></head><body style="margin:0;background:#000;color:#fff;font-family:sans-serif;padding:1rem">Java applet (<code>${jar}</code>) installed. Modern browsers no longer run applets natively — use CheerpJ to run it: <a style="color:#facc15" href="https://leaningtech.com/cheerpj/" target="_blank">leaningtech.com/cheerpj</a>.</body></html>`;
+      }
+      if (wrapper) {
+        await supabase.storage.from(BUCKET).upload(`${slug}/index.html`, new Blob([wrapper], { type: "text/html" }), { upsert: true, contentType: "text/html" });
+        indexHtmlFound = true;
+        success++;
+      } else {
+        toast.error("No entry file found (index.html / .swf / .unityweb / .wasm / .jar). Game won't be playable.");
+      }
     }
 
     if (success > 0) {
@@ -516,7 +549,7 @@ export default function DevConsole({ onBack }: { onBack: () => void }) {
         name: displayName,
         slug,
         source: "storage",
-        category: installCategory as any,
+        category: finalCategory as any,
         description: `Custom installed game: ${displayName}`,
         is_active: true,
         is_featured: false,
@@ -525,7 +558,7 @@ export default function DevConsole({ onBack }: { onBack: () => void }) {
         console.error("DB insert error:", dbErr);
         toast.error("Files uploaded but game registration failed: " + dbErr.message);
       } else {
-        toast.success(`✓ Installed "${displayName}" — appears in /games now!`);
+        toast.success(`✓ Installed "${displayName}" as ${finalCategory} — appears in /games now!`);
       }
       setInstallFiles([]);
       setInstallName("");
@@ -534,6 +567,7 @@ export default function DevConsole({ onBack }: { onBack: () => void }) {
       toast.error("Installation failed");
     }
     setInstalling(false);
+    setInstallProgress(null);
   };
 
   const uninstallGame = async (slug: string) => {
