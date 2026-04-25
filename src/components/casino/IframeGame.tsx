@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/casino/Header";
 import { BottomNav } from "@/components/casino/BottomNav";
 import { GameChat } from "@/components/casino/GameChat";
+import { ChatPopupOverlay } from "@/components/casino/ChatPopupOverlay";
 import { AuthGuard } from "@/components/casino/AuthGuard";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2, MessageSquare, X } from "lucide-react";
