@@ -1,4 +1,0 @@
-UPDATE public.games SET name = 'Crazy Monkey', slug = 'crazy-monkey', description = 'Swing through the jungle for banana-fuelled wins!' WHERE slug = 'crazy-monkey-slot';
-UPDATE public.games SET name = 'Christmas Magic', slug = 'christmas-magic', description = 'Festive spins, gifts and jackpots — Santa pays out!' WHERE slug = 'christmas-casino';
-UPDATE public.games SET name = 'Fruit Cocktail', slug = 'fruit-cocktail', description = 'Classic fruit reels with a juicy twist!' WHERE slug = 'fruit-cocktail-slot';
-UPDATE public.games SET is_active = false WHERE slug IN ('crazy-monkey-casino','fruit-cocktail-casino','mysterious-night-slot','mysterious-night-casino','wolf-forest','pirate-bay','xmas-slot','canvas-slots');
