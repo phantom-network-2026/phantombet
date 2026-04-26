@@ -25,6 +25,16 @@ const NATIVE_ROUTES: Record<string, string> = {
   "aztec-gold": "/aztec-gold",
   "galactic-spins": "/galactic-spins",
   "sweet-bonanza": "/sweet-bonanza",
+  "crazy-monkey": "/crazy-monkey",
+  // Redirect broken Construct 3 games to new bridge-integrated React replacements
+  "crazy-monkey-slot": "/crazy-monkey",
+  "crazy-monkey-casino": "/crazy-monkey",
+  "christmas-magic": "/christmas-magic",
+  "christmas-casino": "/christmas-magic",
+  "xmas-slot": "/christmas-magic",
+  "fruit-cocktail": "/fruit-cocktail",
+  "fruit-cocktail-slot": "/fruit-cocktail",
+  "fruit-cocktail-casino": "/fruit-cocktail",
 };
 
 interface GameRow {
