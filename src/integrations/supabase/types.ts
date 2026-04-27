@@ -532,6 +532,101 @@ export type Database = {
         }
         Relationships: []
       }
+      party_lobbies: {
+        Row: {
+          created_at: string
+          host_id: string
+          id: string
+          is_active: boolean
+          is_public: boolean
+          max_members: number
+          name: string
+          password_hash: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          host_id: string
+          id?: string
+          is_active?: boolean
+          is_public?: boolean
+          max_members?: number
+          name: string
+          password_hash?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          host_id?: string
+          id?: string
+          is_active?: boolean
+          is_public?: boolean
+          max_members?: number
+          name?: string
+          password_hash?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      party_lobby_members: {
+        Row: {
+          id: string
+          is_muted: boolean
+          joined_at: string
+          lobby_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          is_muted?: boolean
+          joined_at?: string
+          lobby_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          is_muted?: boolean
+          joined_at?: string
+          lobby_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "party_lobby_members_lobby_id_fkey"
+            columns: ["lobby_id"]
+            isOneToOne: false
+            referencedRelation: "party_lobbies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      party_reports: {
+        Row: {
+          created_at: string
+          id: string
+          lobby_id: string | null
+          reason: string | null
+          reported_user_id: string
+          reporter_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lobby_id?: string | null
+          reason?: string | null
+          reported_user_id: string
+          reporter_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lobby_id?: string | null
+          reason?: string | null
+          reported_user_id?: string
+          reporter_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
