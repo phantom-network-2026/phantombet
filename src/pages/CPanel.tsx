@@ -25,7 +25,8 @@ import {
   AlertTriangle, Activity, Lock, Megaphone, HardDrive, Clock,
   Ban, Users, BarChart3, Wrench, Power, Bell, Percent, Trophy,
   Gamepad2, CreditCard, MessageSquare, UserCheck, Zap, LayoutGrid,
-  Info, Server, Hash, Gift, Wallet, Terminal, Sparkles, ImagePlus
+  Info, Server, Hash, Gift, Wallet, Terminal, Sparkles, ImagePlus,
+  Coins, ArrowLeftRight, Plus
 } from "lucide-react";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -2284,7 +2285,217 @@ function SportsPromoUploaderPanel({ onBack }: { onBack: () => void }) {
   );
 }
 
-type ActivePanel = null | "users" | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "bonus-probability" | "slots-config" | "promotions" | "wallet-mode" | "deposits-withdrawals" | "welcome-config" | "ghost-users" | "broadcasts" | "dev-console" | "ai-agent" | "sports-promos";
+function ExchangeAdminPanel({ onBack }: { onBack: () => void }) {
+  type Coin = { id: string; symbol: string; name: string; icon: string };
+  type Welcome = { enabled: boolean; title: string; message: string; banner_url: string };
+
+  const DEFAULT_COINS: Coin[] = [
+    { id: "bitcoin", symbol: "BTC", name: "Bitcoin", icon: "₿" },
+    { id: "ethereum", symbol: "ETH", name: "Ethereum", icon: "Ξ" },
+    { id: "binancecoin", symbol: "BNB", name: "BNB", icon: "⬡" },
+    { id: "solana", symbol: "SOL", name: "Solana", icon: "◎" },
+    { id: "ripple", symbol: "XRP", name: "XRP", icon: "✕" },
+    { id: "cardano", symbol: "ADA", name: "Cardano", icon: "₳" },
+    { id: "dogecoin", symbol: "DOGE", name: "Dogecoin", icon: "Ð" },
+    { id: "polkadot", symbol: "DOT", name: "Polkadot", icon: "●" },
+    { id: "avalanche-2", symbol: "AVAX", name: "Avalanche", icon: "▲" },
+    { id: "chainlink", symbol: "LINK", name: "Chainlink", icon: "⬡" },
+    { id: "matic-network", symbol: "MATIC", name: "Polygon", icon: "⬡" },
+    { id: "litecoin", symbol: "LTC", name: "Litecoin", icon: "Ł" },
+    { id: "tron", symbol: "TRX", name: "TRON", icon: "◈" },
+    { id: "shiba-inu", symbol: "SHIB", name: "Shiba Inu", icon: "🐕" },
+  ];
+
+  const [coins, setCoins] = useState<Coin[]>(DEFAULT_COINS);
+  const [welcome, setWelcome] = useState<Welcome>({
+    enabled: true,
+    title: "Exchange — Launching in a couple of weeks!",
+    message: "Every coin listed below has been approved for listing at launch. Get ready to swap directly on PhantomBet.",
+    banner_url: "",
+  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [newCoin, setNewCoin] = useState<Coin>({ id: "", symbol: "", name: "", icon: "" });
+
+  useEffect(() => {
+    (async () => {
+      const [{ data: c }, { data: w }] = await Promise.all([
+        supabase.from("site_settings").select("value").eq("key", "exchange_coins").maybeSingle(),
+        supabase.from("site_settings").select("value").eq("key", "exchange_welcome").maybeSingle(),
+      ]);
+      if (c?.value && Array.isArray((c.value as any).coins)) setCoins((c.value as any).coins);
+      if (w?.value) setWelcome({ ...welcome, ...(w.value as any) });
+      setLoading(false);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const persist = async (key: string, value: any) => {
+    const { data: existing } = await supabase.from("site_settings").select("id").eq("key", key).maybeSingle();
+    if (existing) await supabase.from("site_settings").update({ value }).eq("key", key);
+    else await supabase.from("site_settings").insert({ key, value });
+  };
+
+  const saveCoins = async (next: Coin[]) => {
+    setCoins(next);
+    await persist("exchange_coins", { coins: next } as any);
+    toast.success("Coin list updated");
+  };
+
+  const handleAddCoin = async () => {
+    const id = newCoin.id.trim().toLowerCase();
+    const symbol = newCoin.symbol.trim().toUpperCase();
+    const name = newCoin.name.trim();
+    const icon = newCoin.icon.trim() || symbol.charAt(0);
+    if (!id || !symbol || !name) { toast.error("CoinGecko ID, symbol & name are required"); return; }
+    if (coins.some((c) => c.id === id)) { toast.error("That coin is already in the list"); return; }
+    await saveCoins([...coins, { id, symbol, name, icon }]);
+    setNewCoin({ id: "", symbol: "", name: "", icon: "" });
+  };
+
+  const handleRemoveCoin = async (id: string) => {
+    await saveCoins(coins.filter((c) => c.id !== id));
+  };
+
+  const handleSaveWelcome = async () => {
+    setSaving(true);
+    await persist("exchange_welcome", welcome as any);
+    setSaving(false);
+    toast.success("Welcome banner saved — players see it on next page load");
+  };
+
+  const handleUploadBanner = async (file: File) => {
+    if (!file.type.startsWith("image/")) { toast.error("Please select an image"); return; }
+    if (file.size > 8 * 1024 * 1024) { toast.error("Image must be under 8MB"); return; }
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `exchange/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("promo-banners").upload(path, file, {
+        cacheControl: "3600", upsert: true, contentType: file.type,
+      });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("promo-banners").getPublicUrl(path);
+      const next = { ...welcome, banner_url: pub.publicUrl };
+      setWelcome(next);
+      await persist("exchange_welcome", next as any);
+      toast.success("Banner uploaded");
+    } catch (e: any) {
+      toast.error(e?.message || "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <PanelView title="Exchange — Coins & Welcome Banner" onBack={onBack}>
+      <p className="text-sm text-muted-foreground -mt-2 mb-2">
+        Manage which cryptocurrencies appear in the upcoming Exchange and configure the launch promo banner shown to players.
+      </p>
+
+      {loading ? (
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      ) : (
+        <div className="space-y-6">
+          {/* Welcome / Promo banner */}
+          <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Megaphone className="h-4 w-4 text-casino-gold" />
+                <h3 className="font-display font-bold text-sm">Welcome / Launch Banner</h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="welcome-on" className="text-xs text-muted-foreground">Enabled</Label>
+                <Switch id="welcome-on" checked={welcome.enabled} onCheckedChange={(v) => setWelcome({ ...welcome, enabled: v })} />
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label className="text-xs">Title</Label>
+              <Input value={welcome.title} onChange={(e) => setWelcome({ ...welcome, title: e.target.value })} placeholder="Exchange — Launching soon" />
+            </div>
+            <div className="grid gap-2">
+              <Label className="text-xs">Message</Label>
+              <Textarea
+                value={welcome.message}
+                onChange={(e) => setWelcome({ ...welcome, message: e.target.value })}
+                rows={3}
+                placeholder="Mention launch window and that listed coins are approved."
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label className="text-xs">Banner image (optional)</Label>
+              {welcome.banner_url && (
+                <div className="rounded-lg overflow-hidden border border-border bg-secondary/40">
+                  <img src={welcome.banner_url} alt="Exchange banner" className="w-full h-32 object-cover" />
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <label className="flex items-center justify-center gap-2 rounded-lg border border-dashed border-casino-gold/40 bg-casino-gold/5 hover:bg-casino-gold/10 cursor-pointer px-4 py-2 transition flex-1">
+                  <ImagePlus className="h-4 w-4 text-casino-gold" />
+                  <span className="text-xs font-semibold text-casino-gold">
+                    {uploading ? "Uploading…" : welcome.banner_url ? "Replace banner" : "Upload banner"}
+                  </span>
+                  <input type="file" accept="image/*" className="hidden" disabled={uploading}
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUploadBanner(f); e.target.value = ""; }} />
+                </label>
+                {welcome.banner_url && (
+                  <Button variant="outline" size="sm" onClick={async () => { const next = { ...welcome, banner_url: "" }; setWelcome(next); await persist("exchange_welcome", next as any); }}>
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
+            </div>
+            <Button variant="gold" onClick={handleSaveWelcome} disabled={saving} className="w-full">
+              {saving ? "Saving…" : "Save welcome banner"}
+            </Button>
+          </div>
+
+          {/* Coins list */}
+          <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Coins className="h-4 w-4 text-casino-gold" />
+              <h3 className="font-display font-bold text-sm">Listed Coins ({coins.length})</h3>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Coins listed here are marked as <span className="text-casino-gold font-semibold">approved for listing at launch</span>. Use the CoinGecko API ID (e.g. <code>bitcoin</code>, <code>ethereum</code>) so live prices load.
+            </p>
+
+            <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+              {coins.map((c) => (
+                <div key={c.id} className="flex items-center gap-3 rounded-lg border border-border bg-secondary/40 p-2">
+                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-casino-gold to-casino-gold/60 flex items-center justify-center text-background font-bold text-sm shrink-0">{c.icon}</div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold truncate">{c.name} <span className="text-xs text-muted-foreground">({c.symbol})</span></p>
+                    <p className="text-[10px] text-muted-foreground truncate">id: {c.id}</p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => handleRemoveCoin(c.id)}>
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+
+            <div className="rounded-lg border border-dashed border-border p-3 space-y-2">
+              <p className="text-xs font-semibold">Add a custom coin</p>
+              <div className="grid grid-cols-2 gap-2">
+                <Input placeholder="CoinGecko ID (e.g. bitcoin)" value={newCoin.id} onChange={(e) => setNewCoin({ ...newCoin, id: e.target.value })} />
+                <Input placeholder="Symbol (e.g. BTC)" value={newCoin.symbol} onChange={(e) => setNewCoin({ ...newCoin, symbol: e.target.value })} />
+                <Input placeholder="Name (e.g. Bitcoin)" value={newCoin.name} onChange={(e) => setNewCoin({ ...newCoin, name: e.target.value })} />
+                <Input placeholder="Icon (emoji or letter)" value={newCoin.icon} onChange={(e) => setNewCoin({ ...newCoin, icon: e.target.value })} />
+              </div>
+              <Button variant="gold" onClick={handleAddCoin} className="w-full">
+                <Plus className="h-3 w-3 mr-1" /> Add coin
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </PanelView>
+  );
+}
+
+type ActivePanel = null | "users" | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "bonus-probability" | "slots-config" | "promotions" | "wallet-mode" | "deposits-withdrawals" | "welcome-config" | "ghost-users" | "broadcasts" | "dev-console" | "ai-agent" | "sports-promos" | "exchange-admin";
 
 export default function CPanel() {
   const { isAdmin, isOwner, loading, profile } = useAuth();
@@ -2348,6 +2559,7 @@ export default function CPanel() {
           {activePanel === "dev-console" && <DevConsole onBack={back} />}
           {activePanel === "ai-agent" && <AiAgentPanel onBack={back} />}
           {activePanel === "sports-promos" && <SportsPromoUploaderPanel onBack={back} />}
+         {activePanel === "exchange-admin" && <ExchangeAdminPanel onBack={back} />}
         </div>
       </div>
     );
@@ -2459,6 +2671,14 @@ export default function CPanel() {
             <CpanelSection title="Sports Betting" icon={<Trophy className="h-5 w-5" />}>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1">
                 <ToolCard icon={<ImagePlus className="h-6 w-6" />} label="Promo Banners" onClick={() => setActivePanel("sports-promos")} active={activePanel === "sports-promos"} />
+              </div>
+            </CpanelSection>
+
+            {/* ── Exchange ───────────────────────────── */}
+            <CpanelSection title="Exchange" icon={<ArrowLeftRight className="h-5 w-5" />}>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1">
+                <ToolCard icon={<Coins className="h-6 w-6" />} label="Listed Coins" onClick={() => setActivePanel("exchange-admin")} active={activePanel === "exchange-admin"} />
+                <ToolCard icon={<Megaphone className="h-6 w-6" />} label="Welcome Banner" onClick={() => setActivePanel("exchange-admin")} />
               </div>
             </CpanelSection>
 

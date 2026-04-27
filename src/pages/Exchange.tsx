@@ -4,8 +4,9 @@ import { BottomNav } from "@/components/casino/BottomNav";
 import { AuthGuard } from "@/components/casino/AuthGuard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowDownUp, TrendingUp, TrendingDown, Minus, Search, Clock } from "lucide-react";
+import { ArrowDownUp, TrendingUp, TrendingDown, Minus, Search, Clock, BadgeCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CryptoAsset {
   id: string;
@@ -16,7 +17,7 @@ interface CryptoAsset {
   change24h: number;
 }
 
-const CRYPTO_LIST: CryptoAsset[] = [
+const DEFAULT_CRYPTO_LIST: CryptoAsset[] = [
   { id: "bitcoin", symbol: "BTC", name: "Bitcoin", icon: "₿", price: 0, change24h: 0 },
   { id: "ethereum", symbol: "ETH", name: "Ethereum", icon: "Ξ", price: 0, change24h: 0 },
   { id: "binancecoin", symbol: "BNB", name: "BNB", icon: "⬡", price: 0, change24h: 0 },
@@ -33,30 +34,68 @@ const CRYPTO_LIST: CryptoAsset[] = [
   { id: "shiba-inu", symbol: "SHIB", name: "Shiba Inu", icon: "🐕", price: 0, change24h: 0 },
 ];
 
+interface WelcomeConfig {
+  enabled: boolean;
+  title: string;
+  message: string;
+  banner_url: string;
+}
+
+const DEFAULT_WELCOME: WelcomeConfig = {
+  enabled: true,
+  title: "Exchange — Launching in a couple of weeks!",
+  message: "Every coin listed below has been approved for listing at launch. Get ready to swap directly on PhantomBet.",
+  banner_url: "",
+};
+
 export default function Exchange() {
-  const [cryptos, setCryptos] = useState<CryptoAsset[]>(CRYPTO_LIST);
+  const [coinList, setCoinList] = useState<CryptoAsset[]>(DEFAULT_CRYPTO_LIST);
+  const [cryptos, setCryptos] = useState<CryptoAsset[]>(DEFAULT_CRYPTO_LIST);
   const [selected, setSelected] = useState<CryptoAsset | null>(null);
   const [amount, setAmount] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [welcome, setWelcome] = useState<WelcomeConfig>(DEFAULT_WELCOME);
 
   useEffect(() => {
-    const ids = CRYPTO_LIST.map((c) => c.id).join(",");
-    fetch(
-      `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`
-    )
-      .then((r) => r.json())
-      .then((data) => {
+    (async () => {
+      // Fetch admin-configured coin list & welcome banner
+      let list = DEFAULT_CRYPTO_LIST;
+      try {
+        const { data } = await supabase.functions.invoke("get-public-settings", {
+          body: { keys: ["exchange_coins", "exchange_welcome"] },
+        });
+        const settings = (data as any)?.settings || {};
+        if (settings.exchange_coins?.coins?.length) {
+          list = settings.exchange_coins.coins.map((c: any) => ({
+            id: c.id, symbol: c.symbol, name: c.name, icon: c.icon || c.symbol?.charAt(0) || "•",
+            price: 0, change24h: 0,
+          }));
+        }
+        if (settings.exchange_welcome) {
+          setWelcome({ ...DEFAULT_WELCOME, ...settings.exchange_welcome });
+        }
+      } catch { /* fall back to defaults */ }
+      setCoinList(list);
+      setCryptos(list);
+
+      // Fetch live prices
+      try {
+        const ids = list.map((c) => c.id).join(",");
+        const res = await fetch(
+          `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`
+        );
+        const priceData = await res.json();
         setCryptos(
-          CRYPTO_LIST.map((c) => ({
+          list.map((c) => ({
             ...c,
-            price: data[c.id]?.usd ?? 0,
-            change24h: data[c.id]?.usd_24h_change ?? 0,
+            price: priceData[c.id]?.usd ?? 0,
+            change24h: priceData[c.id]?.usd_24h_change ?? 0,
           }))
         );
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      } catch { /* keep zeros */ }
+      setLoading(false);
+    })();
   }, []);
 
   const filtered = cryptos.filter(
@@ -79,25 +118,36 @@ export default function Exchange() {
           </div>
 
           {/* Coming soon banner */}
+          {welcome.enabled && (
           <motion.div
             initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="rounded-xl border border-[hsl(var(--casino-gold))/0.25] bg-[hsl(var(--casino-gold))/0.06] p-4 flex items-center gap-3"
+            className="rounded-xl border border-[hsl(var(--casino-gold))/0.25] bg-[hsl(var(--casino-gold))/0.06] overflow-hidden"
           >
-            <motion.div
-              animate={{ rotate: [0, 10, -10, 0] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              className="shrink-0 rounded-lg bg-[hsl(var(--casino-gold))/0.12] p-2"
-            >
-              <Clock className="h-5 w-5 text-[hsl(var(--casino-gold))]" />
-            </motion.div>
-            <div>
-              <p className="text-sm font-bold text-[hsl(var(--casino-gold))]">Exchange — Coming Soon</p>
-              <p className="text-[11px] text-muted-foreground leading-relaxed mt-0.5">
-                Swap between cryptocurrencies and USDT directly on PhantomBet. This feature is currently under development.
-              </p>
+            {welcome.banner_url && (
+              <img src={welcome.banner_url} alt="Exchange launch" className="w-full h-32 object-cover" />
+            )}
+            <div className="p-4 flex items-start gap-3">
+              <motion.div
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                className="shrink-0 rounded-lg bg-[hsl(var(--casino-gold))/0.12] p-2"
+              >
+                <Clock className="h-5 w-5 text-[hsl(var(--casino-gold))]" />
+              </motion.div>
+              <div className="flex-1">
+                <p className="text-sm font-bold text-[hsl(var(--casino-gold))]">{welcome.title}</p>
+                <p className="text-[11px] text-muted-foreground leading-relaxed mt-0.5 whitespace-pre-line">
+                  {welcome.message}
+                </p>
+                <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[hsl(var(--casino-green))/0.12] border border-[hsl(var(--casino-green))/0.3] px-2 py-0.5">
+                  <BadgeCheck className="h-3 w-3 text-[hsl(var(--casino-green))]" />
+                  <span className="text-[10px] font-semibold text-[hsl(var(--casino-green))]">All coins below approved for listing at launch</span>
+                </div>
+              </div>
             </div>
           </motion.div>
+          )}
 
           {/* Swap card */}
           <AnimatePresence mode="wait">
