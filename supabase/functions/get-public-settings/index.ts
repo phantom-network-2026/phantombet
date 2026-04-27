@@ -14,6 +14,8 @@ const PUBLIC_KEYS = [
   "home_carousels",
   "bonus_probability",
   "sports_promo_banners",
+  "exchange_coins",
+  "exchange_welcome",
 ];
 
 Deno.serve(async (req) => {
