@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Users, UserPlus, Search, MessageCircle, Check, X, Clock, Circle } from "lucide-react";
 import { toast } from "sonner";
+import PartyChat from "@/components/casino/PartyChat";
 
 interface UserResult {
   user_id: string;
@@ -29,7 +30,7 @@ interface Friendship {
 export default function Friends() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<"friends" | "online" | "requests" | "search">("friends");
+  const [tab, setTab] = useState<"friends" | "party" | "online" | "requests" | "search">("friends");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<UserResult[]>([]);
   const [friendships, setFriendships] = useState<Friendship[]>([]);
@@ -198,7 +199,7 @@ export default function Friends() {
 
         {/* Tabs */}
         <div className="flex gap-1 mb-6 overflow-x-auto">
-          {(["friends", "online", "requests", "search"] as const).map((t) => (
+          {(["friends", "party", "online", "requests", "search"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -220,6 +221,9 @@ export default function Friends() {
             </button>
           ))}
         </div>
+
+        {/* Party Chat */}
+        {tab === "party" && <PartyChat />}
 
         {/* Friends List */}
         {tab === "friends" && (
