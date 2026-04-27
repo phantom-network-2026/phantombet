@@ -2559,6 +2559,7 @@ export default function CPanel() {
           {activePanel === "dev-console" && <DevConsole onBack={back} />}
           {activePanel === "ai-agent" && <AiAgentPanel onBack={back} />}
           {activePanel === "sports-promos" && <SportsPromoUploaderPanel onBack={back} />}
+         {activePanel === "exchange-admin" && <ExchangeAdminPanel onBack={back} />}
         </div>
       </div>
     );
@@ -2670,6 +2671,14 @@ export default function CPanel() {
             <CpanelSection title="Sports Betting" icon={<Trophy className="h-5 w-5" />}>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1">
                 <ToolCard icon={<ImagePlus className="h-6 w-6" />} label="Promo Banners" onClick={() => setActivePanel("sports-promos")} active={activePanel === "sports-promos"} />
+              </div>
+            </CpanelSection>
+
+            {/* ── Exchange ───────────────────────────── */}
+            <CpanelSection title="Exchange" icon={<ArrowLeftRight className="h-5 w-5" />}>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1">
+                <ToolCard icon={<Coins className="h-6 w-6" />} label="Listed Coins" onClick={() => setActivePanel("exchange-admin")} active={activePanel === "exchange-admin"} />
+                <ToolCard icon={<Megaphone className="h-6 w-6" />} label="Welcome Banner" onClick={() => setActivePanel("exchange-admin")} />
               </div>
             </CpanelSection>
 
