@@ -2505,11 +2505,26 @@ function ExchangeAdminPanel({ onBack }: { onBack: () => void }) {
             <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
               {coins.map((c) => (
                 <div key={c.id} className="flex items-center gap-3 rounded-lg border border-border bg-secondary/40 p-2">
-                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-casino-gold to-casino-gold/60 flex items-center justify-center text-background font-bold text-sm shrink-0">{c.icon}</div>
+                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-casino-gold to-casino-gold/60 flex items-center justify-center text-background font-bold text-sm shrink-0 overflow-hidden">
+                    {c.image_url ? (
+                      <img src={c.image_url} alt={c.symbol} className="h-full w-full object-cover" />
+                    ) : c.icon}
+                  </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-bold truncate">{c.name} <span className="text-xs text-muted-foreground">({c.symbol})</span></p>
                     <p className="text-[10px] text-muted-foreground truncate">id: {c.id}</p>
                   </div>
+                  <label className="cursor-pointer rounded-md border border-casino-gold/40 bg-casino-gold/10 hover:bg-casino-gold/20 px-2 py-1 text-[10px] font-semibold text-casino-gold transition">
+                    <ImagePlus className="h-3 w-3 inline -mt-0.5 mr-1" />
+                    {coinUploadingId === c.id ? "…" : c.image_url ? "Replace" : "Logo"}
+                    <input type="file" accept="image/*" className="hidden" disabled={coinUploadingId === c.id}
+                      onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUploadCoinImage(c.id, f); e.target.value = ""; }} />
+                  </label>
+                  {c.image_url && (
+                    <Button variant="outline" size="sm" onClick={() => handleClearCoinImage(c.id)} title="Remove logo">
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  )}
                   <Button variant="outline" size="sm" onClick={() => handleRemoveCoin(c.id)}>
                     <Trash2 className="h-3 w-3" />
                   </Button>
@@ -2524,6 +2539,26 @@ function ExchangeAdminPanel({ onBack }: { onBack: () => void }) {
                 <Input placeholder="Symbol (e.g. BTC)" value={newCoin.symbol} onChange={(e) => setNewCoin({ ...newCoin, symbol: e.target.value })} />
                 <Input placeholder="Name (e.g. Bitcoin)" value={newCoin.name} onChange={(e) => setNewCoin({ ...newCoin, name: e.target.value })} />
                 <Input placeholder="Icon (emoji or letter)" value={newCoin.icon} onChange={(e) => setNewCoin({ ...newCoin, icon: e.target.value })} />
+              </div>
+              <div className="flex items-center gap-2">
+                {newCoin.image_url && (
+                  <div className="h-10 w-10 rounded-full overflow-hidden border border-border shrink-0">
+                    <img src={newCoin.image_url} alt="preview" className="h-full w-full object-cover" />
+                  </div>
+                )}
+                <label className="flex items-center justify-center gap-2 rounded-lg border border-dashed border-casino-gold/40 bg-casino-gold/5 hover:bg-casino-gold/10 cursor-pointer px-3 py-2 transition flex-1">
+                  <ImagePlus className="h-3 w-3 text-casino-gold" />
+                  <span className="text-[11px] font-semibold text-casino-gold">
+                    {coinUploadingId === "__new__" ? "Uploading…" : newCoin.image_url ? "Replace logo image" : "Upload logo image (optional)"}
+                  </span>
+                  <input type="file" accept="image/*" className="hidden" disabled={coinUploadingId === "__new__"}
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUploadNewCoinImage(f); e.target.value = ""; }} />
+                </label>
+                {newCoin.image_url && (
+                  <Button variant="outline" size="sm" onClick={() => setNewCoin({ ...newCoin, image_url: "" })}>
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                )}
               </div>
               <Button variant="gold" onClick={handleAddCoin} className="w-full">
                 <Plus className="h-3 w-3 mr-1" /> Add coin
