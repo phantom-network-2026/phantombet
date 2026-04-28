@@ -13,6 +13,7 @@ interface CryptoAsset {
   symbol: string;
   name: string;
   icon: string;
+  image_url?: string;
   price: number;
   change24h: number;
 }
@@ -69,6 +70,7 @@ export default function Exchange() {
         if (settings.exchange_coins?.coins?.length) {
           list = settings.exchange_coins.coins.map((c: any) => ({
             id: c.id, symbol: c.symbol, name: c.name, icon: c.icon || c.symbol?.charAt(0) || "•",
+            image_url: c.image_url || "",
             price: 0, change24h: 0,
           }));
         }
@@ -175,8 +177,10 @@ export default function Exchange() {
                 <div className="rounded-xl bg-secondary/60 border border-border/50 p-4 space-y-2">
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">You send</p>
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[hsl(var(--casino-gold))] to-[hsl(var(--casino-gold))/0.6] flex items-center justify-center text-background font-bold text-lg shrink-0">
-                      {selected.icon}
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[hsl(var(--casino-gold))] to-[hsl(var(--casino-gold))/0.6] flex items-center justify-center text-background font-bold text-lg shrink-0 overflow-hidden">
+                      {selected.image_url ? (
+                        <img src={selected.image_url} alt={selected.symbol} className="h-full w-full object-cover" />
+                      ) : selected.icon}
                     </div>
                     <div className="flex-1">
                       <Input
@@ -260,8 +264,10 @@ export default function Exchange() {
                           transition={{ delay: i * 0.03 }}
                           className="w-full rounded-xl bg-card border border-border p-4 flex items-center gap-3 opacity-60 cursor-not-allowed"
                         >
-                          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-secondary to-secondary/60 flex items-center justify-center text-lg font-bold text-foreground shrink-0 group-hover:from-[hsl(var(--casino-gold))/0.2] group-hover:to-[hsl(var(--casino-gold))/0.05] transition-all">
-                            {crypto.icon}
+                          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-secondary to-secondary/60 flex items-center justify-center text-lg font-bold text-foreground shrink-0 overflow-hidden group-hover:from-[hsl(var(--casino-gold))/0.2] group-hover:to-[hsl(var(--casino-gold))/0.05] transition-all">
+                            {crypto.image_url ? (
+                              <img src={crypto.image_url} alt={crypto.symbol} className="h-full w-full object-cover" />
+                            ) : crypto.icon}
                           </div>
                           <div className="flex-1 text-left min-w-0">
                             <p className="text-sm font-bold text-foreground">{crypto.name}</p>
