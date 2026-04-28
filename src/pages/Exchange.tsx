@@ -13,6 +13,7 @@ interface CryptoAsset {
   symbol: string;
   name: string;
   icon: string;
+  image_url?: string;
   price: number;
   change24h: number;
 }
@@ -69,6 +70,7 @@ export default function Exchange() {
         if (settings.exchange_coins?.coins?.length) {
           list = settings.exchange_coins.coins.map((c: any) => ({
             id: c.id, symbol: c.symbol, name: c.name, icon: c.icon || c.symbol?.charAt(0) || "•",
+            image_url: c.image_url || "",
             price: 0, change24h: 0,
           }));
         }
