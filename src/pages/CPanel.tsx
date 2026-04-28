@@ -2286,7 +2286,7 @@ function SportsPromoUploaderPanel({ onBack }: { onBack: () => void }) {
 }
 
 function ExchangeAdminPanel({ onBack }: { onBack: () => void }) {
-  type Coin = { id: string; symbol: string; name: string; icon: string };
+  type Coin = { id: string; symbol: string; name: string; icon: string; image_url?: string };
   type Welcome = { enabled: boolean; title: string; message: string; banner_url: string };
 
   const DEFAULT_COINS: Coin[] = [
@@ -2317,6 +2317,7 @@ function ExchangeAdminPanel({ onBack }: { onBack: () => void }) {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [newCoin, setNewCoin] = useState<Coin>({ id: "", symbol: "", name: "", icon: "" });
+  const [coinUploadingId, setCoinUploadingId] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -2385,6 +2386,46 @@ function ExchangeAdminPanel({ onBack }: { onBack: () => void }) {
       toast.error(e?.message || "Upload failed");
     } finally {
       setUploading(false);
+    }
+  };
+
+  const uploadCoinImage = async (file: File): Promise<string | null> => {
+    if (!file.type.startsWith("image/")) { toast.error("Please select an image"); return null; }
+    if (file.size > 4 * 1024 * 1024) { toast.error("Image must be under 4MB"); return null; }
+    const ext = file.name.split(".").pop()?.toLowerCase() || "png";
+    const path = `exchange-coins/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const { error: upErr } = await supabase.storage.from("promo-banners").upload(path, file, {
+      cacheControl: "3600", upsert: true, contentType: file.type,
+    });
+    if (upErr) { toast.error(upErr.message); return null; }
+    const { data: pub } = supabase.storage.from("promo-banners").getPublicUrl(path);
+    return pub.publicUrl;
+  };
+
+  const handleUploadCoinImage = async (coinId: string, file: File) => {
+    setCoinUploadingId(coinId);
+    try {
+      const url = await uploadCoinImage(file);
+      if (!url) return;
+      const next = coins.map((c) => (c.id === coinId ? { ...c, image_url: url } : c));
+      await saveCoins(next);
+    } finally {
+      setCoinUploadingId(null);
+    }
+  };
+
+  const handleClearCoinImage = async (coinId: string) => {
+    const next = coins.map((c) => (c.id === coinId ? { ...c, image_url: "" } : c));
+    await saveCoins(next);
+  };
+
+  const handleUploadNewCoinImage = async (file: File) => {
+    setCoinUploadingId("__new__");
+    try {
+      const url = await uploadCoinImage(file);
+      if (url) setNewCoin({ ...newCoin, image_url: url });
+    } finally {
+      setCoinUploadingId(null);
     }
   };
 
