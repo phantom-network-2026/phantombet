@@ -10,7 +10,7 @@ import { BalanceDisplay } from "./BalanceDisplay";
 import { ProfileAvatar } from "./ProfileAvatar";
 import { NotificationBell } from "./NotificationBell";
 import { useLanguage, LANGUAGES } from "@/hooks/useLanguage";
-import logo from "@/assets/phantombet-logo.png";
+import logo from "@/assets/phantom-network-logo.png";
 
 export function Header() {
   const { user, profile, isAdmin, isOwner, hasStaffAccess, signOut } = useAuth();
@@ -46,15 +46,22 @@ export function Header() {
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <FakeWinsTicker />
       <div className="container flex h-14 items-center justify-between overflow-hidden">
-        <Link to="/casino" className="flex items-center gap-1.5 shrink-0">
-          <div className="overflow-hidden shrink-0" style={{ height: 48, width: 68, marginTop: -18, marginBottom: -10 }}>
-            <img src={logo} alt="PhantomBet" className="block w-full h-auto max-w-none" />
-          </div>
-          {!user && (
-            <div className="overflow-hidden shrink-0" style={{ height: 18, width: 120 }}>
-              <img src={logo} alt="PhantomBet" className="block w-full h-auto max-w-none" style={{ transform: 'translateY(-70%)' }} />
+        <Link to="/casino" className="flex items-center gap-2 shrink-0">
+          <img
+            src={logo}
+            alt="Phantom Network"
+            className="h-9 w-9 shrink-0 drop-shadow-[0_0_10px_hsl(270_70%_60%/0.6)]"
+          />
+          <div className="leading-tight">
+            <div className="font-display font-black text-sm sm:text-base tracking-wide bg-gradient-to-r from-casino-gold via-amber-200 to-casino-gold bg-clip-text text-transparent">
+              PHANTOM NETWORK
             </div>
-          )}
+            {!user && (
+              <div className="text-[9px] tracking-[0.3em] text-muted-foreground -mt-0.5">
+                CASINO
+              </div>
+            )}
+          </div>
         </Link>
 
         {/* Desktop nav */}
