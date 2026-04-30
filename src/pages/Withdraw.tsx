@@ -64,11 +64,11 @@ export default function Withdraw() {
       if (data?.status === "pending_approval") {
         toast.success("Withdrawal submitted for admin approval!");
         await refreshProfile();
-        navigate("/");
+        navigate("/casino");
       } else {
         toast.success(`Withdrawal of $${Number(amount).toFixed(2)} processed! TX: ${data.txHash?.slice(0, 12)}...`);
         await refreshProfile();
-        navigate("/");
+        navigate("/casino");
       }
     } catch (err: any) {
       toast.error(err.message || "Withdrawal failed");

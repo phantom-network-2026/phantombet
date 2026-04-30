@@ -100,7 +100,7 @@ export default function Signup() {
     });
 
     setLoading(false);
-    navigate("/");
+    navigate("/casino");
   };
 
   if (step === "verify") {

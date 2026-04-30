@@ -49,7 +49,7 @@ export default function ResetPassword() {
       setError(error.message);
     } else {
       setSuccess(true);
-      setTimeout(() => navigate("/"), 2000);
+      setTimeout(() => navigate("/casino"), 2000);
     }
   };
 

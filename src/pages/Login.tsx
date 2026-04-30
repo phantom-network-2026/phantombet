@@ -23,7 +23,7 @@ export default function Login() {
     const { error } = await signIn(username, password);
     setLoading(false);
     if (error) setError(error.message);
-    else navigate("/");
+    else navigate("/casino");
   };
 
   return (
