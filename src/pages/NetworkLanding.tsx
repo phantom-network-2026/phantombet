@@ -441,6 +441,112 @@ export default function NetworkLanding() {
           </div>
         </section>
 
+        {/* ENCRYPTION MANIFESTO */}
+        <section className="mt-12 relative rounded-3xl overflow-hidden border border-casino-gold/40 shadow-[0_0_60px_hsl(270_70%_30%/0.5)]">
+          <img
+            src={heroEncryption}
+            alt="Phantom Network — Encrypted. Uncensored. Yours."
+            loading="lazy"
+            width={1536}
+            height={768}
+            className="w-full h-auto block animate-glow-pulse"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-black/20" />
+          <div className="absolute inset-0 ring-1 ring-inset ring-casino-gold/30 rounded-3xl pointer-events-none animate-border-glow" />
+
+          <div className="absolute inset-x-0 bottom-0 p-4 sm:p-8">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-casino-gold/50 bg-black/60 backdrop-blur text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] text-casino-gold animate-glow-pulse">
+              <Lock className="w-3 h-3" /> 100% Encrypted Network
+            </div>
+            <h2 className="mt-3 font-display text-2xl sm:text-5xl font-black leading-tight">
+              <span className="bg-gradient-to-r from-casino-gold via-amber-200 to-casino-gold bg-clip-text text-transparent drop-shadow-[0_0_24px_hsl(42_95%_55%/0.6)]">
+                Take back what's yours.
+              </span>
+            </h2>
+            <p className="mt-2 max-w-2xl text-xs sm:text-base text-foreground/85">
+              Phantom Network gives you back the <span className="text-casino-gold font-semibold">control</span> and{" "}
+              <span className="text-casino-gold font-semibold">power</span> that governments and gatekeepers took from you.
+              No ID. No verification. No censorship. Just you, your keys, and an open network to{" "}
+              <span className="text-foreground">game</span>, <span className="text-foreground">trade</span> and{" "}
+              <span className="text-foreground">connect</span> on your terms.
+            </p>
+          </div>
+        </section>
+
+        {/* SECURITY HIGHLIGHTS GRID */}
+        <section className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+          {[
+            {
+              icon: <ShieldAlert className="w-5 h-5" />,
+              title: "Fully Encrypted",
+              desc: "End-to-end encryption across every Phantom service. Nothing transmitted in plaintext, ever.",
+              accent: "from-primary/30 to-purple-500/10",
+              glow: "hsl(270 80% 55% / 0.5)",
+            },
+            {
+              icon: <Fingerprint className="w-5 h-5" />,
+              title: "Non-KYC. Zero Verification.",
+              desc: "Sign up in seconds with a username — no ID, no documents, no questions asked.",
+              accent: "from-casino-pink/30 to-purple-500/10",
+              glow: "hsl(330 80% 60% / 0.5)",
+            },
+            {
+              icon: <ServerOff className="w-5 h-5" />,
+              title: "Zero Censorship",
+              desc: "No regional blocks, no shadow bans, no frozen funds. The network stays open — always.",
+              accent: "from-casino-gold/30 to-amber-500/10",
+              glow: "hsl(42 95% 60% / 0.5)",
+            },
+          ].map((c) => (
+            <div
+              key={c.title}
+              className="group relative rounded-2xl border border-border/60 bg-card/50 backdrop-blur p-4 sm:p-5 overflow-hidden transition-transform hover:-translate-y-0.5"
+              style={{ boxShadow: `0 0 24px ${c.glow}` }}
+            >
+              <div className={`absolute inset-0 bg-gradient-to-br ${c.accent} opacity-60 pointer-events-none`} />
+              <div className="absolute -top-16 -right-16 h-40 w-40 rounded-full blur-3xl opacity-50 animate-glow-pulse" style={{ background: c.glow }} />
+              <div className="relative flex items-start gap-3">
+                <div className="h-10 w-10 shrink-0 rounded-xl bg-background/70 border border-casino-gold/40 flex items-center justify-center text-casino-gold shadow-[0_0_18px_hsl(42_95%_55%/0.4)]">
+                  {c.icon}
+                </div>
+                <div>
+                  <h3 className="font-display font-black text-sm sm:text-base">{c.title}</h3>
+                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{c.desc}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </section>
+
+        {/* KEY OWNERSHIP WARNING */}
+        <section className="mt-8 relative rounded-2xl overflow-hidden border-2 border-destructive/60 bg-gradient-to-br from-[hsl(0_60%_12%)] via-[hsl(270_40%_8%)] to-black p-5 sm:p-6 animate-warning-pulse">
+          <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-destructive/30 blur-3xl animate-glow-pulse" />
+          <div className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-casino-gold/20 blur-3xl animate-glow-pulse" />
+
+          <div className="relative flex flex-col sm:flex-row items-start gap-4">
+            <div className="h-12 w-12 shrink-0 rounded-xl border-2 border-destructive/70 bg-destructive/15 flex items-center justify-center text-destructive shadow-[0_0_28px_hsl(0_84%_60%/0.6)] animate-glow-pulse">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            <div className="flex-1">
+              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full border border-destructive/60 bg-destructive/15 text-[10px] font-bold uppercase tracking-[0.2em] text-destructive">
+                Critical · Read this
+              </div>
+              <h3 className="mt-2 font-display text-lg sm:text-2xl font-black text-foreground">
+                You hold your keys. <span className="text-destructive">No one can recover them.</span>
+              </h3>
+              <p className="mt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                Because Phantom Network is fully encrypted and self-custodial, <span className="text-foreground font-semibold">only you</span>{" "}
+                hold your encryption keys and recovery phrase. We never see them, never store them, and{" "}
+                <span className="text-destructive font-semibold">cannot reset, restore, or recover</span> your account on your behalf.
+              </p>
+              <p className="mt-2 text-xs sm:text-sm text-foreground">
+                ⚠️ If you lose your encryption keys, your account, balances and assets will be{" "}
+                <span className="text-destructive font-bold">permanently lost and unobtainable</span>. Write them down. Keep them offline. Keep them safe.
+              </p>
+            </div>
+          </div>
+        </section>
+
         {/* FINAL CTA */}
         <section className="mt-12 text-center rounded-2xl border border-casino-gold/40 bg-gradient-to-br from-[hsl(270_60%_10%)] via-[hsl(265_50%_6%)] to-black p-6 shadow-[0_0_50px_hsl(270_70%_30%/0.4)]">
           <h3 className="font-display text-xl sm:text-2xl font-black">
