@@ -10,7 +10,7 @@ const navItems = [
   { icon: Home, labelKey: "home" as const, path: "/", requiresAuth: false },
   { icon: Dice5, labelKey: "games" as const, path: "/games", requiresAuth: false },
   { icon: Medal, labelKey: "home" as const, path: "/sportsbook", requiresAuth: true, label: "Sports" },
-  { icon: ArrowLeftRight, labelKey: "home" as const, path: "/exchange", requiresAuth: true, label: "Exchange" },
+  { icon: ArrowLeftRight, labelKey: "home" as const, path: "/exchange", requiresAuth: true, label: "Exchange", externalUrl: "https://www.phantomexchange.online" },
   { icon: Users, labelKey: "friends" as const, path: "/friends", requiresAuth: true, label: "Social" },
   { icon: Trophy, labelKey: "promos" as const, path: "/promotions", requiresAuth: true },
   { icon: HelpCircle, labelKey: "help" as const, path: "/help", requiresAuth: false },
@@ -52,6 +52,11 @@ export function BottomNav() {
         description: "You need to log in or create an account to access this.",
         action: { label: "Sign Up", onClick: () => navigate("/signup") },
       });
+      return;
+    }
+    const externalUrl = (item as any).externalUrl as string | undefined;
+    if (externalUrl) {
+      window.open(externalUrl, "_blank", "noopener,noreferrer");
       return;
     }
     navigate(item.path);
