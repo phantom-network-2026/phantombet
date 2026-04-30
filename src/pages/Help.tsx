@@ -133,7 +133,7 @@ export default function Help() {
       <div className="flex-1 flex flex-col container max-w-lg px-4 pb-20">
         {/* Top bar */}
         <div className="flex items-center gap-3 py-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
+          <Button variant="ghost" size="icon" onClick={() => navigate("/casino")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="font-display text-xl font-black text-casino-gold flex items-center gap-2">

@@ -228,7 +228,7 @@ export default function Profile() {
       <Header />
       <div className="container max-w-lg py-6 px-4 space-y-6">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
+          <Button variant="ghost" size="icon" onClick={() => navigate("/casino")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="font-display text-2xl font-black text-gold flex items-center gap-2">
