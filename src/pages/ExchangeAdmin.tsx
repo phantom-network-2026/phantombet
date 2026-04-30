@@ -129,7 +129,7 @@ export default function ExchangeAdmin() {
       supabase.from("exchange_audit_log").select("id,action,target_type,target_id,created_at,metadata").order("created_at", { ascending: false }).limit(50),
     ]);
     if (coinsRes.error) toast.error(coinsRes.error.message);
-    setCoins((coinsRes.data as Coin[]) ?? []);
+    setCoins(((coinsRes.data ?? []) as unknown) as Coin[]);
     if (settingsRes.data?.value) setSettings({ ...DEFAULT_SETTINGS, ...(settingsRes.data.value as Settings) });
     setAuditLog((auditRes.data as any) ?? []);
     setLoading(false);
@@ -196,15 +196,17 @@ export default function ExchangeAdmin() {
     if (editingId === "__new__") {
       const { data, error } = await supabase.from("exchange_coins").insert(payload as any).select(COIN_COLUMNS).single();
       if (error) { toast.error(error.message); return; }
-      setCoins((prev) => [...prev, data as Coin]);
-      await logAction("coin_create", "exchange_coin", (data as Coin).id, { symbol: (data as Coin).symbol });
-      toast.success(`${(data as Coin).symbol} listed`);
+      const coin = (data as unknown) as Coin;
+      setCoins((prev) => [...prev, coin]);
+      await logAction("coin_create", "exchange_coin", coin.id, { symbol: coin.symbol });
+      toast.success(`${coin.symbol} listed`);
     } else {
       const { data, error } = await supabase.from("exchange_coins").update(payload as any).eq("id", editingId!).select(COIN_COLUMNS).single();
       if (error) { toast.error(error.message); return; }
-      setCoins((prev) => prev.map((c) => c.id === editingId ? (data as Coin) : c));
-      await logAction("coin_update", "exchange_coin", (data as Coin).id, { symbol: (data as Coin).symbol });
-      toast.success(`${(data as Coin).symbol} updated`);
+      const coin = (data as unknown) as Coin;
+      setCoins((prev) => prev.map((c) => c.id === editingId ? coin : c));
+      await logAction("coin_update", "exchange_coin", coin.id, { symbol: coin.symbol });
+      toast.success(`${coin.symbol} updated`);
     }
     cancelEdit();
   };
@@ -221,7 +223,8 @@ export default function ExchangeAdmin() {
   const updateCoinField = async (coin: Coin, patch: Partial<Coin>) => {
     const { data, error } = await supabase.from("exchange_coins").update(patch as any).eq("id", coin.id).select(COIN_COLUMNS).single();
     if (error) { toast.error(error.message); return; }
-    setCoins((prev) => prev.map((c) => c.id === coin.id ? (data as Coin) : c));
+    const updated = (data as unknown) as Coin;
+    setCoins((prev) => prev.map((c) => c.id === coin.id ? updated : c));
     await logAction("coin_update", "exchange_coin", coin.id, { symbol: coin.symbol, patch });
   };
 
@@ -269,7 +272,7 @@ export default function ExchangeAdmin() {
       rows.push(cols.map((k) => {
         const v = (c as any)[k];
         if (v === null || v === undefined) return "";
-        const s = String(v).replaceAll('"', '""');
+        const s = String(v).split('"').join('""');
         return /[",\n]/.test(s) ? `"${s}"` : s;
       }).join(","));
     }
