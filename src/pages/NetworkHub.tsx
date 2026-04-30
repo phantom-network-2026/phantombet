@@ -9,6 +9,7 @@ type App = {
   name: string;
   tagline: string;
   to: string;
+  external?: boolean;
   featured?: boolean;
   icon: React.ReactNode;
   status?: "live" | "soon";
@@ -20,7 +21,8 @@ const APPS: App[] = [
     id: "exchange",
     name: "Phantom Exchange",
     tagline: "Trade, swap & launch tokens across the Phantom ecosystem.",
-    to: "/exchange",
+    to: "https://www.phantomexchange.online/exchange",
+    external: true,
     featured: true,
     icon: <TrendingUp className="w-7 h-7" />,
     status: "live",
@@ -96,7 +98,9 @@ export default function NetworkHub() {
         {APPS.filter((a) => a.featured).map((app) => (
           <button
             key={app.id}
-            onClick={() => navigate(app.to)}
+            onClick={() =>
+              app.external ? window.location.assign(app.to) : navigate(app.to)
+            }
             className="group relative w-full text-left rounded-3xl border border-primary/40 bg-card/70 backdrop-blur-xl p-6 overflow-hidden hover:border-casino-gold/60 transition-all shadow-[0_0_40px_hsl(270_70%_30%/0.4)]"
           >
             <div
@@ -125,7 +129,9 @@ export default function NetworkHub() {
           {APPS.filter((a) => !a.featured).map((app) => (
             <button
               key={app.id}
-              onClick={() => navigate(app.to)}
+              onClick={() =>
+                app.external ? window.location.assign(app.to) : navigate(app.to)
+              }
               className="group relative text-left rounded-2xl border border-border/60 bg-card/60 backdrop-blur p-4 overflow-hidden hover:border-primary/60 transition-all"
             >
               <div className={`absolute inset-0 bg-gradient-to-br ${app.accent} opacity-20 group-hover:opacity-40 transition-opacity`} />
