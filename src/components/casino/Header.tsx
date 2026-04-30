@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { LogOut, Shield, Menu, X, ArrowDownToLine, User, Gamepad2, Settings, ChevronDown, Wallet } from "lucide-react";
+import { LogOut, Shield, Menu, X, ArrowDownToLine, User, Gamepad2, Settings, ChevronDown, Wallet, TrendingUp } from "lucide-react";
 import { Globe } from "lucide-react";
 import { FakeWinsTicker } from "./FakeWinsTicker";
 import { BalanceDisplay } from "./BalanceDisplay";
@@ -68,6 +68,9 @@ export function Header() {
               <Button variant="pink" size="sm" onClick={() => navigate("/withdraw")}>
                 <ArrowDownToLine className="h-4 w-4 mr-1" /> {t("withdraw")}
               </Button>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/exchange")} className="text-casino-gold">
+                <TrendingUp className="h-4 w-4 mr-1" /> Exchange
+              </Button>
               {hasStaffAccess && showCpanelLink && (
                 <Button variant="ghost" size="sm" onClick={() => navigate("/cpanel")} className="text-casino-pink">
                   <Shield className="h-4 w-4 mr-1" /> cPanel
@@ -95,6 +98,9 @@ export function Header() {
             <>
               <Button variant="ghost" size="sm" className="text-xs h-8 px-2" onClick={() => navigate("/login")}>
                 {t("login")}
+              </Button>
+              <Button variant="ghost" size="sm" className="text-xs h-8 px-2 text-casino-gold" onClick={() => navigate("/exchange")}>
+                <TrendingUp className="h-4 w-4 mr-1" /> Exchange
               </Button>
               <Button variant="gold" size="sm" className="text-xs h-8 px-3" onClick={() => navigate("/signup")}>
                 {t("signup")}
@@ -155,6 +161,9 @@ export function Header() {
                   <ArrowDownToLine className="h-4 w-4 mr-1" /> {t("withdraw")}
                 </Button>
               </div>
+              <Button variant="outline" className="w-full text-casino-gold" onClick={() => { navigate("/exchange"); setMenuOpen(false); }}>
+                <TrendingUp className="h-4 w-4 mr-1" /> Exchange
+              </Button>
               {hasStaffAccess && (showAdminLink || showCpanelLink || showSlotLink) && (
                 <div className="space-y-1">
                   <Button
@@ -230,6 +239,9 @@ export function Header() {
               </Button>
               <Button variant="gold" className="w-full" onClick={() => { navigate("/signup"); setMenuOpen(false); }}>
                 {t("signup")}
+              </Button>
+              <Button variant="outline" className="w-full text-casino-gold" onClick={() => { navigate("/exchange"); setMenuOpen(false); }}>
+                <TrendingUp className="h-4 w-4 mr-1" /> Exchange
               </Button>
 
               {/* Language Selector for guests */}
