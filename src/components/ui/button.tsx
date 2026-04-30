@@ -16,6 +16,8 @@ const buttonVariants = cva(
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
         gold: "gradient-gold text-accent-foreground font-bold hover:opacity-90 glow-gold",
+        pink: "gradient-pink text-white font-bold hover:opacity-90 glow-pink",
+        glass: "glass-panel border border-border text-foreground hover:border-primary/60 hover:text-primary",
         pink: "gradient-pink text-primary-foreground font-bold hover:opacity-90 glow-pink",
         casino: "gradient-purple text-primary-foreground font-bold hover:opacity-90 glow-purple",
       },

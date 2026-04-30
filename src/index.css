@@ -105,6 +105,14 @@
     box-shadow: 0 0 20px hsl(270 60% 50% / 0.3);
   }
 
+  /* Phantom Exchange utilities */
+  .glass-panel { background: hsl(var(--exchange-glass) / 0.78); backdrop-filter: blur(18px); }
+  .text-profit { color: hsl(var(--casino-green)); }
+  .text-loss { color: hsl(var(--exchange-red)); }
+  .text-cyan { color: hsl(var(--exchange-cyan)); }
+  @keyframes slide-up-px { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .animate-slide-up { animation: slide-up-px 0.35s ease-out both; }
+
   @keyframes marquee {
     0% { transform: translateX(0); }
     100% { transform: translateX(-50%); }
