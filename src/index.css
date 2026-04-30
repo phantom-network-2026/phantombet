@@ -45,6 +45,13 @@
     --casino-surface: 265 45% 15%;
     --casino-surface-hover: 265 45% 20%;
 
+    /* Phantom Exchange tokens */
+    --exchange-cyan: 188 90% 58%;
+    --exchange-red: 355 84% 60%;
+    --exchange-glass: 265 45% 12%;
+    --shadow-gold: 0 0 20px hsl(42 90% 55% / 0.3), 0 0 60px hsl(42 90% 55% / 0.1);
+    --shadow-pink: 0 0 20px hsl(330 85% 55% / 0.3), 0 0 60px hsl(330 85% 55% / 0.1);
+
     --sidebar-background: 265 50% 6%;
     --sidebar-foreground: 0 0% 98%;
     --sidebar-primary: 270 60% 50%;
@@ -97,6 +104,14 @@
   .glow-purple {
     box-shadow: 0 0 20px hsl(270 60% 50% / 0.3);
   }
+
+  /* Phantom Exchange utilities */
+  .glass-panel { background: hsl(var(--exchange-glass) / 0.78); backdrop-filter: blur(18px); }
+  .text-profit { color: hsl(var(--casino-green)); }
+  .text-loss { color: hsl(var(--exchange-red)); }
+  .text-cyan { color: hsl(var(--exchange-cyan)); }
+  @keyframes slide-up-px { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .animate-slide-up { animation: slide-up-px 0.35s ease-out both; }
 
   @keyframes marquee {
     0% { transform: translateX(0); }
