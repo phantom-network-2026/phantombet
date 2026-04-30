@@ -38,7 +38,7 @@ export function LightningOverlay() {
   }, []);
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+    <div className="pointer-events-none fixed inset-0 z-[60] overflow-hidden mix-blend-screen">
       <svg
         key={flash}
         className="absolute inset-0 w-full h-full animate-bolt-global"
