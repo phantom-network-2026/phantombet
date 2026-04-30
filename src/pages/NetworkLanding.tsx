@@ -621,6 +621,24 @@ export default function NetworkLanding() {
           100% { transform: translateY(-110vh) translateX(20px); opacity: 0; }
         }
         .animate-spark { animation-name: spark; animation-timing-function: linear; animation-iteration-count: infinite; }
+
+        @keyframes glow-pulse {
+          0%, 100% { filter: brightness(1) saturate(1); opacity: 0.95; }
+          50% { filter: brightness(1.15) saturate(1.2); opacity: 1; }
+        }
+        .animate-glow-pulse { animation: glow-pulse 3.5s ease-in-out infinite; }
+
+        @keyframes border-glow {
+          0%, 100% { box-shadow: inset 0 0 24px hsl(42 95% 55% / 0.25), 0 0 30px hsl(270 70% 40% / 0.4); }
+          50% { box-shadow: inset 0 0 40px hsl(42 95% 55% / 0.5), 0 0 60px hsl(270 80% 50% / 0.6); }
+        }
+        .animate-border-glow { animation: border-glow 4s ease-in-out infinite; }
+
+        @keyframes warning-pulse {
+          0%, 100% { box-shadow: 0 0 30px hsl(0 84% 60% / 0.25); }
+          50% { box-shadow: 0 0 55px hsl(0 84% 60% / 0.55); }
+        }
+        .animate-warning-pulse { animation: warning-pulse 2.8s ease-in-out infinite; }
       `}</style>
     </div>
   );
