@@ -9,6 +9,7 @@ import heroNetwork from "@/assets/phantom-network-hero.png";
 import heroExchange from "@/assets/phantom-exchange-hero.png";
 import heroCasino from "@/assets/phantombet-casino-hero.png";
 import heroWallet from "@/assets/phantom-wallet-hero.png";
+import heroEncryption from "@/assets/phantom-encryption-hero.jpg";
 import { LanguagePicker } from "@/components/casino/LanguagePicker";
 import {
   ArrowRight,
@@ -23,6 +24,10 @@ import {
   Globe2,
   Sparkles,
   EyeOff,
+  ShieldAlert,
+  AlertTriangle,
+  Fingerprint,
+  ServerOff,
 } from "lucide-react";
 
 const SERVICES = [
