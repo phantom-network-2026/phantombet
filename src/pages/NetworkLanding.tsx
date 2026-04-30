@@ -443,7 +443,6 @@ export default function NetworkLanding() {
 
         {/* FINAL CTA */}
         <section className="mt-12 text-center rounded-2xl border border-casino-gold/40 bg-gradient-to-br from-[hsl(270_60%_10%)] via-[hsl(265_50%_6%)] to-black p-6 shadow-[0_0_50px_hsl(270_70%_30%/0.4)]">
-        {/* placeholder to be replaced */}
           <h3 className="font-display text-xl sm:text-2xl font-black">
             Game. Trade. Earn. <span className="bg-gradient-to-r from-casino-gold to-amber-200 bg-clip-text text-transparent">All connected.</span>
           </h3>
