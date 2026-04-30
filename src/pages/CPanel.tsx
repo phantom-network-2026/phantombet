@@ -2755,6 +2755,7 @@ export default function CPanel() {
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1">
                 <ToolCard icon={<Coins className="h-6 w-6" />} label="Listed Coins" onClick={() => setActivePanel("exchange-admin")} active={activePanel === "exchange-admin"} />
                 <ToolCard icon={<Megaphone className="h-6 w-6" />} label="Welcome Banner" onClick={() => setActivePanel("exchange-admin")} />
+                <ToolCard icon={<ArrowLeftRight className="h-6 w-6" />} label="Exchange cPanel" onClick={() => navigate("/cpanel/exchange")} />
               </div>
             </CpanelSection>
 

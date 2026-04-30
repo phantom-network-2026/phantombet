@@ -10,7 +10,7 @@ const navItems = [
   { icon: Home, labelKey: "home" as const, path: "/", requiresAuth: false },
   { icon: Dice5, labelKey: "games" as const, path: "/games", requiresAuth: false },
   { icon: Medal, labelKey: "home" as const, path: "/sportsbook", requiresAuth: true, label: "Sports" },
-  { icon: ArrowLeftRight, labelKey: "home" as const, path: "/exchange", requiresAuth: false, label: "Exchange", externalUrl: "https://phantomexchange.online" },
+  { icon: ArrowLeftRight, labelKey: "home" as const, path: "/exchange", requiresAuth: true, label: "Exchange" },
   { icon: Users, labelKey: "friends" as const, path: "/friends", requiresAuth: true, label: "Social" },
   { icon: Trophy, labelKey: "promos" as const, path: "/promotions", requiresAuth: true },
   { icon: HelpCircle, labelKey: "help" as const, path: "/help", requiresAuth: false },
