@@ -74,6 +74,7 @@ import AztecGold from "./pages/games/AztecGold.tsx";
 import GalacticSpins from "./pages/games/GalacticSpins.tsx";
 import SweetBonanza from "./pages/games/SweetBonanza.tsx";
 import Sportsbook from "./pages/Sportsbook.tsx";
+import { LightningOverlay } from "./components/LightningOverlay";
 const queryClient = new QueryClient();
 
 function PresenceTracker({ children }: { children: React.ReactNode }) {
@@ -90,6 +91,7 @@ const App = () => (
         <LanguageProvider>
         <AuthProvider>
           <PresenceTracker>
+            <LightningOverlay />
             <Routes>
               <Route path="/" element={<NetworkLanding />} />
               <Route path="/hub" element={<NetworkHub />} />
