@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -94,37 +94,8 @@ export default function NetworkLanding() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [flash, setFlash] = useState(0);
   const { signIn, user, isAdmin, isOwner, hasStaffAccess } = useAuth();
   const navigate = useNavigate();
-  const audioCtxRef = useRef<AudioContext | null>(null);
-
-  useEffect(() => {
-    let timeout: number;
-    const trigger = () => {
-      setFlash((f) => f + 1);
-      try {
-        if (!audioCtxRef.current) {
-          // @ts-ignore
-          audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-        }
-        const ctx = audioCtxRef.current!;
-        const o = ctx.createOscillator();
-        const g = ctx.createGain();
-        o.type = "sawtooth";
-        o.frequency.setValueAtTime(60 + Math.random() * 30, ctx.currentTime);
-        g.gain.setValueAtTime(0.0001, ctx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.05, ctx.currentTime + 0.02);
-        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.6);
-        o.connect(g).connect(ctx.destination);
-        o.start();
-        o.stop(ctx.currentTime + 0.65);
-      } catch {}
-      timeout = window.setTimeout(trigger, 5000 + Math.random() * 7000);
-    };
-    timeout = window.setTimeout(trigger, 3000);
-    return () => window.clearTimeout(timeout);
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -171,40 +142,6 @@ export default function NetworkLanding() {
           />
         ))}
       </div>
-
-      {/* Lightning */}
-      <svg
-        key={flash}
-        className="pointer-events-none absolute inset-0 w-full h-full animate-bolt"
-        viewBox="0 0 400 800"
-        preserveAspectRatio="none"
-      >
-        <defs>
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="3" result="b" />
-            <feMerge>
-              <feMergeNode in="b" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-        <path
-          d={`M${80 + Math.random() * 240} 0 L${100 + Math.random() * 200} 180 L${80 + Math.random() * 200} 200 L${120 + Math.random() * 180} 420 L${90 + Math.random() * 200} 440 L${130 + Math.random() * 160} 800`}
-          stroke="hsl(42 95% 70%)"
-          strokeWidth="2"
-          fill="none"
-          filter="url(#glow)"
-          opacity="0.85"
-        />
-      </svg>
-      <div
-        key={`f-${flash}`}
-        className="pointer-events-none absolute inset-0 animate-storm-glow"
-        style={{
-          background:
-            "radial-gradient(ellipse at 50% 30%, hsl(270 80% 55% / 0.28), transparent 60%)",
-        }}
-      />
 
       {/* HEADER */}
       <header className="relative z-20 flex items-center justify-between px-4 py-3">

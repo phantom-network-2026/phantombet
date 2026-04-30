@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Dice5, Trophy, Users, HelpCircle, Medal, ArrowLeftRight } from "lucide-react";
+import { Home, Dice5, Trophy, Users, HelpCircle, Medal, ArrowLeftRight, Network } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage, type LanguageCode } from "@/hooks/useLanguage";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 const navItems = [
+  { icon: Network, labelKey: "home" as const, path: "/hub", requiresAuth: false, label: "Hub" },
   { icon: Home, labelKey: "home" as const, path: "/", requiresAuth: false },
   { icon: Dice5, labelKey: "games" as const, path: "/games", requiresAuth: false },
   { icon: Medal, labelKey: "home" as const, path: "/sportsbook", requiresAuth: true, label: "Sports" },
@@ -63,7 +64,7 @@ export function BottomNav() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 backdrop-blur md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 backdrop-blur">
       <div className="flex items-center justify-around py-2">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
