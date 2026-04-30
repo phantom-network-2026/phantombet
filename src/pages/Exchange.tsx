@@ -1,308 +1,308 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Header } from "@/components/casino/Header";
 import { BottomNav } from "@/components/casino/BottomNav";
 import { AuthGuard } from "@/components/casino/AuthGuard";
+import { FakeTradesTicker } from "@/components/casino/FakeTradesTicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowDownUp, TrendingUp, TrendingDown, Minus, Search, Clock, BadgeCheck } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
+import {
+  Activity, ArrowDownUp, BarChart3, Boxes, ChevronDown, Crown, Gauge,
+  Globe, Rocket, Search, Shield, Zap,
+} from "lucide-react";
+import { toast } from "sonner";
 
-interface CryptoAsset {
-  id: string;
-  symbol: string;
-  name: string;
-  icon: string;
-  image_url?: string;
-  price: number;
-  change24h: number;
-}
-
-const DEFAULT_CRYPTO_LIST: CryptoAsset[] = [
-  { id: "bitcoin", symbol: "BTC", name: "Bitcoin", icon: "₿", price: 0, change24h: 0 },
-  { id: "ethereum", symbol: "ETH", name: "Ethereum", icon: "Ξ", price: 0, change24h: 0 },
-  { id: "binancecoin", symbol: "BNB", name: "BNB", icon: "⬡", price: 0, change24h: 0 },
-  { id: "solana", symbol: "SOL", name: "Solana", icon: "◎", price: 0, change24h: 0 },
-  { id: "ripple", symbol: "XRP", name: "XRP", icon: "✕", price: 0, change24h: 0 },
-  { id: "cardano", symbol: "ADA", name: "Cardano", icon: "₳", price: 0, change24h: 0 },
-  { id: "dogecoin", symbol: "DOGE", name: "Dogecoin", icon: "Ð", price: 0, change24h: 0 },
-  { id: "polkadot", symbol: "DOT", name: "Polkadot", icon: "●", price: 0, change24h: 0 },
-  { id: "avalanche-2", symbol: "AVAX", name: "Avalanche", icon: "▲", price: 0, change24h: 0 },
-  { id: "chainlink", symbol: "LINK", name: "Chainlink", icon: "⬡", price: 0, change24h: 0 },
-  { id: "matic-network", symbol: "MATIC", name: "Polygon", icon: "⬡", price: 0, change24h: 0 },
-  { id: "litecoin", symbol: "LTC", name: "Litecoin", icon: "Ł", price: 0, change24h: 0 },
-  { id: "tron", symbol: "TRX", name: "TRON", icon: "◈", price: 0, change24h: 0 },
-  { id: "shiba-inu", symbol: "SHIB", name: "Shiba Inu", icon: "🐕", price: 0, change24h: 0 },
+const markets = [
+  ["PHX/USDT", "$0.0521", "+28.4%", "148M", "Listed"],
+  ["SHDW/ETH", "$1.86", "+7.8%", "32M", "Incubating"],
+  ["WRAITH/USDT", "$0.0084", "-3.2%", "81M", "Watch"],
+  ["GHOST/USDT", "$0.114", "+14.6%", "17M", "Listed"],
 ];
 
-interface WelcomeConfig {
-  enabled: boolean;
-  title: string;
-  message: string;
-  banner_url: string;
-}
+const platformDirectory = [
+  { symbol: "BTC", name: "Bitcoin", network: "Bitcoin", price: "$63,420", change: "+2.1%", volume: "912M", status: "Listed", risk: 8, sector: "Majors" },
+  { symbol: "ETH", name: "Ethereum", network: "Ethereum", price: "$3,180", change: "+3.6%", volume: "744M", status: "Listed", risk: 12, sector: "Majors" },
+  { symbol: "SOL", name: "Solana", network: "Solana", price: "$142.60", change: "+6.4%", volume: "268M", status: "Listed", risk: 22, sector: "Layer 1" },
+  { symbol: "BNB", name: "BNB", network: "BNB Chain", price: "$586.20", change: "+1.7%", volume: "118M", status: "Listed", risk: 18, sector: "Layer 1" },
+  { symbol: "XRP", name: "XRP", network: "XRPL", price: "$0.61", change: "+4.2%", volume: "96M", status: "Listed", risk: 28, sector: "Payments" },
+  { symbol: "DOGE", name: "Dogecoin", network: "Dogecoin", price: "$0.14", change: "+8.8%", volume: "82M", status: "Listed", risk: 42, sector: "Meme" },
+  { symbol: "USDT", name: "Tether", network: "Multi-chain", price: "$1.00", change: "+0.0%", volume: "1.8B", status: "Listed", risk: 20, sector: "Stablecoin" },
+  { symbol: "USDC", name: "USD Coin", network: "Multi-chain", price: "$1.00", change: "+0.0%", volume: "1.1B", status: "Listed", risk: 14, sector: "Stablecoin" },
+  { symbol: "PHX", name: "Phantom Exchange", network: "Ethereum", price: "$0.0521", change: "+28.4%", volume: "148M", status: "Listed", risk: 18, sector: "Phantom" },
+  { symbol: "GHOST", name: "Ghost Protocol", network: "Base", price: "$0.114", change: "+14.6%", volume: "17M", status: "Listed", risk: 31, sector: "Phantom" },
+  { symbol: "SHDW", name: "Shadow Coin", network: "Ethereum", price: "$1.86", change: "+7.8%", volume: "32M", status: "Incubating", risk: 47, sector: "Launchpad" },
+  { symbol: "WRAITH", name: "Wraith", network: "Polygon", price: "$0.0084", change: "-3.2%", volume: "81M", status: "Watch", risk: 66, sector: "High Risk" },
+];
 
-const DEFAULT_WELCOME: WelcomeConfig = {
-  enabled: true,
-  title: "Exchange — Launching in a couple of weeks!",
-  message: "Every coin listed below has been approved for listing at launch. Get ready to swap directly on PhantomBet.",
-  banner_url: "",
-};
+const exchangeMenus = [
+  { id: "trade", label: "Trade", icon: ArrowDownUp, options: ["Instant swap", "Limit orders", "Stop-loss", "TWAP", "Recurring buys", "Copy trade", "P2P desk", "OTC quote"] },
+  { id: "markets", label: "Markets", icon: BarChart3, options: ["All coins", "New listings", "Top gainers", "High volume", "Stablecoins", "Meme coins", "Layer 1", "Watchlist"] },
+  { id: "launch", label: "Launch", icon: Rocket, options: ["Coin installer", "Pool architect", "Source audit", "Tokenomics", "Vesting", "Airdrops", "Presale", "Listing queue"] },
+  { id: "analytics", label: "Analytics", icon: Gauge, options: ["Depth", "Liquidity", "Holder map", "Whale alerts", "Integrity scanner", "Fee simulator", "PnL", "Tax export"] },
+  { id: "security", label: "Security", icon: Shield, options: ["KYC status", "Withdrawal locks", "Device sessions", "API keys", "2FA", "Cold wallet", "Contract checks", "Report scam"] },
+];
+
+const orderBook: [string, string, "buy" | "sell"][] = [
+  ["0.0528", "21,500", "sell"], ["0.0525", "18,420", "sell"], ["0.0522", "9,880", "sell"],
+  ["0.0519", "12,140", "buy"], ["0.0516", "27,910", "buy"], ["0.0512", "34,805", "buy"],
+];
+
+const activity = [
+  "Pool Architect seeded SHDW with 42 ETH",
+  "Integrity scanner cleared PHX audit band",
+  "Maker fee tier reduced for Apex traders",
+  "Cold wallet quorum signed withdrawal batch",
+];
+
+import exchangeBanner from "@/assets/phantom-exchange-banner.png";
 
 export default function Exchange() {
-  const [coinList, setCoinList] = useState<CryptoAsset[]>(DEFAULT_CRYPTO_LIST);
-  const [cryptos, setCryptos] = useState<CryptoAsset[]>(DEFAULT_CRYPTO_LIST);
-  const [selected, setSelected] = useState<CryptoAsset | null>(null);
-  const [amount, setAmount] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [welcome, setWelcome] = useState<WelcomeConfig>(DEFAULT_WELCOME);
+  const [fromAmount, setFromAmount] = useState("250");
+  const [activeMenu, setActiveMenu] = useState("trade");
+  const [assetFilter, setAssetFilter] = useState("All");
+  const [assetSearch, setAssetSearch] = useState("");
 
-  useEffect(() => {
-    (async () => {
-      // Fetch admin-configured coin list & welcome banner
-      let list = DEFAULT_CRYPTO_LIST;
-      try {
-        const { data } = await supabase.functions.invoke("get-public-settings", {
-          body: { keys: ["exchange_coins", "exchange_welcome"] },
-        });
-        const settings = (data as any)?.settings || {};
-        if (settings.exchange_coins?.coins?.length) {
-          list = settings.exchange_coins.coins.map((c: any) => ({
-            id: c.id, symbol: c.symbol, name: c.name, icon: c.icon || c.symbol?.charAt(0) || "•",
-            image_url: c.image_url || "",
-            price: 0, change24h: 0,
-          }));
-        }
-        if (settings.exchange_welcome) {
-          setWelcome({ ...DEFAULT_WELCOME, ...settings.exchange_welcome });
-        }
-      } catch { /* fall back to defaults */ }
-      setCoinList(list);
-      setCryptos(list);
-
-      // Fetch live prices
-      try {
-        const ids = list.map((c) => c.id).join(",");
-        const res = await fetch(
-          `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`
-        );
-        const priceData = await res.json();
-        setCryptos(
-          list.map((c) => ({
-            ...c,
-            price: priceData[c.id]?.usd ?? 0,
-            change24h: priceData[c.id]?.usd_24h_change ?? 0,
-          }))
-        );
-      } catch { /* keep zeros */ }
-      setLoading(false);
-    })();
-  }, []);
-
-  const filtered = cryptos.filter(
-    (c) =>
-      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.symbol.toLowerCase().includes(searchQuery.toLowerCase())
+  const estimate = useMemo(
+    () => (Number(fromAmount || 0) / 0.0521).toLocaleString(undefined, { maximumFractionDigits: 2 }),
+    [fromAmount]
   );
-
-  const usdtValue = selected && amount ? parseFloat(amount) * selected.price : 0;
+  const sectors = useMemo(
+    () => ["All", ...Array.from(new Set(platformDirectory.map((c) => c.sector)))],
+    []
+  );
+  const listedAssets = useMemo(() => platformDirectory.filter((coin) => {
+    const matchesSector = assetFilter === "All" || coin.sector === assetFilter;
+    const needle = assetSearch.trim().toLowerCase();
+    const matchesSearch = !needle || coin.symbol.toLowerCase().includes(needle) || coin.name.toLowerCase().includes(needle) || coin.network.toLowerCase().includes(needle);
+    return matchesSector && matchesSearch;
+  }), [assetFilter, assetSearch]);
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      <FakeTradesTicker />
       <AuthGuard>
-        <div className="container max-w-lg mx-auto px-4 pt-4 pb-24 space-y-5">
-          {/* Page header */}
-          <div>
-            <h1 className="font-display text-2xl font-black text-foreground">Exchange</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">Trade crypto to USDT instantly</p>
-          </div>
+        <div className="container relative px-3 py-4 md:py-7 space-y-4 md:space-y-6 pb-24">
+          {/* Banner */}
+          <section className="relative overflow-hidden rounded-xl border border-primary/30 bg-card shadow-[0_20px_80px_hsl(var(--casino-gold)/0.10)] animate-slide-up">
+            <img
+              src={exchangeBanner}
+              alt="Welcome to PHANTOM EXCHANGE non-KYC crypto trading banner"
+              className="block aspect-[2.4/1] w-full object-cover object-center sm:aspect-[2.8/1] lg:aspect-[3.2/1]"
+            />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-background/85 to-transparent" />
+          </section>
 
-          {/* Coming soon banner */}
-          {welcome.enabled && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.97 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="rounded-xl border border-[hsl(var(--casino-gold))/0.25] bg-[hsl(var(--casino-gold))/0.06] overflow-hidden"
-          >
-            {welcome.banner_url && (
-              <img src={welcome.banner_url} alt="Exchange launch" className="w-full h-32 object-cover" />
-            )}
-            <div className="p-4 flex items-start gap-3">
-              <motion.div
-                animate={{ rotate: [0, 10, -10, 0] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                className="shrink-0 rounded-lg bg-[hsl(var(--casino-gold))/0.12] p-2"
-              >
-                <Clock className="h-5 w-5 text-[hsl(var(--casino-gold))]" />
-              </motion.div>
-              <div className="flex-1">
-                <p className="text-sm font-bold text-[hsl(var(--casino-gold))]">{welcome.title}</p>
-                <p className="text-[11px] text-muted-foreground leading-relaxed mt-0.5 whitespace-pre-line">
-                  {welcome.message}
-                </p>
-                <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[hsl(var(--casino-green))/0.12] border border-[hsl(var(--casino-green))/0.3] px-2 py-0.5">
-                  <BadgeCheck className="h-3 w-3 text-[hsl(var(--casino-green))]" />
-                  <span className="text-[10px] font-semibold text-[hsl(var(--casino-green))]">All coins below approved for listing at launch</span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-          )}
-
-          {/* Swap card */}
-          <AnimatePresence mode="wait">
-            {selected ? (
-              <motion.div
-                key="swap"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="rounded-2xl border border-border bg-card p-5 space-y-4"
-              >
-                <div className="flex items-center justify-between">
+          {/* Menu tabs */}
+          <section className="glass-panel overflow-hidden rounded-xl border border-border animate-slide-up">
+            <div className="grid grid-cols-2 gap-2 border-b border-border p-2 min-[380px]:grid-cols-3 sm:flex sm:overflow-x-auto">
+              {exchangeMenus.map((menu) => {
+                const Icon = menu.icon;
+                const active = activeMenu === menu.id;
+                return (
                   <button
-                    onClick={() => setSelected(null)}
-                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    key={menu.id}
+                    onClick={() => setActiveMenu(menu.id)}
+                    className={`flex min-w-0 items-center justify-center gap-1 rounded-lg px-2 py-2 text-[11px] font-bold transition min-[380px]:text-xs sm:shrink-0 sm:gap-2 sm:px-3 sm:text-sm ${
+                      active
+                        ? "gradient-gold text-primary-foreground"
+                        : "bg-secondary/70 text-muted-foreground hover:text-foreground"
+                    }`}
                   >
-                    ← Back to list
+                    <Icon className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{menu.label}</span>
                   </button>
-                  <span className="text-[10px] text-muted-foreground">
-                    1 {selected.symbol} = ${selected.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                );
+              })}
+            </div>
+            <div className="grid gap-2 p-3 sm:grid-cols-2 lg:grid-cols-4">
+              {exchangeMenus.find((m) => m.id === activeMenu)?.options.map((option, index) => (
+                <button
+                  key={option}
+                  onClick={() => toast.info(`${option} module ready for activation`)}
+                  className="group flex min-h-16 items-center justify-between rounded-lg border border-border bg-secondary/70 p-3 text-left transition hover:border-primary/60 hover:bg-casino-surface-hover"
+                >
+                  <span>
+                    <b className="block text-sm">{option}</b>
+                    <span className="text-[11px] text-muted-foreground">{index < 3 ? "Live panel" : "Queued workspace"}</span>
                   </span>
-                </div>
+                  <ChevronDown className="h-4 w-4 -rotate-90 text-primary transition group-hover:translate-x-0.5" />
+                </button>
+              ))}
+            </div>
+          </section>
 
-                {/* From */}
-                <div className="rounded-xl bg-secondary/60 border border-border/50 p-4 space-y-2">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">You send</p>
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[hsl(var(--casino-gold))] to-[hsl(var(--casino-gold))/0.6] flex items-center justify-center text-background font-bold text-lg shrink-0 overflow-hidden">
-                      {selected.image_url ? (
-                        <img src={selected.image_url} alt={selected.symbol} className="h-full w-full object-cover" />
-                      ) : selected.icon}
+          <section className="grid gap-4 xl:grid-cols-[.78fr_1.22fr_.62fr] items-start">
+            {/* Left column: Instant Swap */}
+            <div className="space-y-4">
+              <section className="glass-panel border border-border rounded-xl p-4 space-y-4">
+                <h2 className="font-display text-xl font-black flex items-center gap-2">
+                  <ArrowDownUp className="text-primary" /> Instant Swap
+                </h2>
+                <div className="rounded-lg border border-border bg-secondary/80 p-3">
+                  <p className="text-xs text-muted-foreground">From USDT</p>
+                  <Input value={fromAmount} onChange={(e) => setFromAmount(e.target.value)} className="mt-2 text-xl font-bold" />
+                </div>
+                <div className="mx-auto grid h-10 w-10 place-items-center rounded-full border border-primary/40 bg-primary/10">
+                  <ArrowDownUp className="h-4 w-4 text-primary" />
+                </div>
+                <div className="rounded-lg border border-border bg-secondary/80 p-3">
+                  <p className="text-xs text-muted-foreground">To PHX</p>
+                  <p className="mt-2 text-xl font-bold text-gold">{estimate}</p>
+                </div>
+                <Button variant="pink" className="w-full">Preview Swap</Button>
+              </section>
+            </div>
+
+            {/* Middle column: Markets, Pool, Portfolio, Listed */}
+            <div className="space-y-4">
+              <section className="glass-panel border border-border rounded-xl overflow-hidden">
+                <div className="flex items-center justify-between gap-3 p-4 border-b border-border">
+                  <h2 className="font-display text-xl font-black flex items-center gap-2">
+                    <BarChart3 className="text-primary" /> Markets
+                  </h2>
+                  <Button variant="glass" size="sm">Pro View <ChevronDown /></Button>
+                </div>
+                <div className="grid grid-cols-5 gap-2 px-4 py-2 text-[10px] uppercase text-muted-foreground">
+                  <span>Pair</span><span>Price</span><span>24h</span><span>Volume</span><span>Status</span>
+                </div>
+                <div className="divide-y divide-border">
+                  {markets.map(([pair, price, change, volume, status]) => (
+                    <button key={pair} className="grid w-full grid-cols-5 gap-2 px-4 py-3 text-left text-sm hover:bg-secondary/60 transition">
+                      <b>{pair}</b>
+                      <span>{price}</span>
+                      <span className={change.startsWith("-") ? "text-loss" : "text-profit"}>{change}</span>
+                      <span className="text-muted-foreground">{volume}</span>
+                      <span className="text-primary">{status}</span>
+                    </button>
+                  ))}
+                </div>
+              </section>
+
+              <section className="grid gap-4 md:grid-cols-2">
+                <div className="glass-panel border border-border rounded-xl p-4 space-y-4">
+                  <h2 className="font-display text-xl font-black flex items-center gap-2">
+                    <Boxes className="text-primary" /> Pool Architect
+                  </h2>
+                  <div className="rounded-lg border border-primary/30 bg-primary/10 p-3">
+                    <p className="font-bold">Zero-value incubation</p>
+                    <p className="text-sm text-muted-foreground">Seed reserves, set a bonding curve, then let the first market price discover itself.</p>
+                  </div>
+                  {["Base reserve: 42 ETH", "Curve: constant product", "Integrity score: 91/100"].map((x) => (
+                    <div key={x} className="flex items-center justify-between rounded-lg bg-secondary px-3 py-2 text-sm">
+                      <span>{x}</span>
+                      <Shield className="h-4 w-4 text-profit" />
                     </div>
-                    <div className="flex-1">
-                      <Input
-                        type="number"
-                        placeholder="0.00"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        className="bg-transparent border-none text-xl font-bold p-0 h-auto focus-visible:ring-0"
-                      />
+                  ))}
+                  <Button variant="gold" className="w-full">Launch Pool</Button>
+                </div>
+                <div className="glass-panel border border-border rounded-xl p-4 space-y-4">
+                  <h2 className="font-display text-xl font-black flex items-center gap-2">
+                    <Crown className="text-primary" /> Portfolio
+                  </h2>
+                  {[["PHX", "42,880", "+$2,180"], ["SHDW", "7,400", "+$840"], ["USDT", "3,250", "$0"]].map(([asset, qty, pnl]) => (
+                    <div key={asset} className="flex items-center justify-between rounded-lg bg-secondary p-3">
+                      <div>
+                        <b>{asset}</b>
+                        <p className="text-xs text-muted-foreground">{qty} available</p>
+                      </div>
+                      <span className="text-profit">{pnl}</span>
                     </div>
-                    <span className="text-sm font-bold text-muted-foreground">{selected.symbol}</span>
+                  ))}
+                </div>
+              </section>
+
+              <section className="glass-panel border border-border rounded-xl overflow-hidden">
+                <div className="flex flex-col gap-3 border-b border-border p-4 md:flex-row md:items-center md:justify-between">
+                  <h2 className="font-display text-xl font-black flex items-center gap-2">
+                    <Globe className="text-cyan" /> Listed Cryptocurrencies
+                  </h2>
+                  <div className="relative md:w-72">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input value={assetSearch} onChange={(e) => setAssetSearch(e.target.value)} placeholder="Search coins, symbols, networks" className="pl-9" />
                   </div>
                 </div>
-
-                {/* Arrow */}
-                <div className="flex justify-center">
-                  <div className="h-9 w-9 rounded-full bg-[hsl(var(--casino-gold))/0.15] border border-[hsl(var(--casino-gold))/0.3] flex items-center justify-center">
-                    <ArrowDownUp className="h-4 w-4 text-[hsl(var(--casino-gold))]" />
-                  </div>
+                <div className="flex flex-wrap gap-2 p-3">
+                  {sectors.map((sector) => (
+                    <button
+                      key={sector}
+                      onClick={() => setAssetFilter(sector)}
+                      className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-bold transition ${
+                        assetFilter === sector
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-secondary text-muted-foreground"
+                      }`}
+                    >
+                      {sector}
+                    </button>
+                  ))}
                 </div>
+                <div className="hidden grid-cols-7 gap-2 px-4 py-2 text-[10px] uppercase text-muted-foreground sm:grid">
+                  <span className="col-span-2">Asset</span><span>Network</span><span>Price</span><span>24h</span><span>Risk</span><span>Status</span>
+                </div>
+                <div className="max-h-[420px] overflow-auto divide-y divide-border">
+                  {listedAssets.map((coin) => (
+                    <button key={coin.symbol} className="grid w-full grid-cols-[1fr_auto] items-center gap-3 px-4 py-3 text-left text-xs transition hover:bg-secondary/60 sm:grid-cols-7 sm:gap-2 sm:text-sm">
+                      <span className="flex min-w-0 items-center gap-2 sm:col-span-2">
+                        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary/15 font-display font-black text-primary">{coin.symbol.slice(0, 2)}</span>
+                        <span className="min-w-0">
+                          <b className="block truncate">{coin.symbol}</b>
+                          <span className="block truncate text-muted-foreground">{coin.name}</span>
+                        </span>
+                      </span>
+                      <span className="justify-self-end rounded-full bg-secondary px-2 py-1 text-primary sm:justify-self-auto sm:bg-transparent sm:p-0">{coin.status}</span>
+                      <span className="truncate text-muted-foreground">{coin.network}</span>
+                      <span>{coin.price}</span>
+                      <span className={coin.change.startsWith("-") ? "text-loss" : "text-profit"}>{coin.change}</span>
+                      <span className={coin.risk > 55 ? "text-loss" : coin.risk > 30 ? "text-primary" : "text-profit"}>{coin.risk}/100</span>
+                    </button>
+                  ))}
+                </div>
+              </section>
+            </div>
 
-                {/* To */}
-                <div className="rounded-xl bg-secondary/60 border border-border/50 p-4 space-y-2">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">You receive</p>
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[hsl(var(--casino-green))] to-[hsl(var(--casino-green))/0.6] flex items-center justify-center text-background font-bold text-sm shrink-0">
-                      ₮
+            {/* Right column: Order Book + Integrity */}
+            <div className="space-y-4">
+              <section className="glass-panel border border-border rounded-xl p-4 space-y-3">
+                <h2 className="font-display text-xl font-black flex items-center gap-2">
+                  <Activity className="text-cyan" /> Order Book
+                </h2>
+                <div className="grid grid-cols-2 text-xs text-muted-foreground">
+                  <span>Price</span><span className="text-right">Qty</span>
+                </div>
+                {orderBook.map(([price, qty, side]) => (
+                  <div key={`${price}-${qty}`} className="relative grid grid-cols-2 overflow-hidden rounded-md px-2 py-1.5 text-sm">
+                    <span className={side === "buy" ? "text-profit" : "text-loss"}>{price}</span>
+                    <span className="text-right text-muted-foreground">{qty}</span>
+                    <span
+                      className={`absolute inset-y-0 right-0 -z-10 ${side === "buy" ? "bg-casino-green/10" : "bg-[hsl(var(--exchange-red)/0.1)]"}`}
+                      style={{ width: `${Math.min(92, Number(qty.replace(/,/g, "")) / 420)}%` }}
+                    />
+                  </div>
+                ))}
+              </section>
+
+              <section className="glass-panel border border-border rounded-xl p-4 space-y-4">
+                <h2 className="font-display text-xl font-black flex items-center gap-2">
+                  <Gauge className="text-primary" /> Integrity
+                </h2>
+                <div className="grid gap-2">
+                  {[["Maker", "0.08%"], ["Taker", "0.18%"], ["Withdrawal", "0.35%"]].map(([k, v]) => (
+                    <div key={k} className="rounded-lg bg-secondary p-3">
+                      <p className="text-xs text-muted-foreground">{k} fee</p>
+                      <b className="text-lg text-gold">{v}</b>
                     </div>
-                    <p className="text-xl font-bold text-foreground flex-1">
-                      {usdtValue > 0 ? usdtValue.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "0.00"}
-                    </p>
-                    <span className="text-sm font-bold text-muted-foreground">USDT</span>
-                  </div>
+                  ))}
                 </div>
-
-                <Button variant="gold" className="w-full" disabled={!amount || usdtValue <= 0}>
-                  Swap to USDT
-                </Button>
-
-                <p className="text-[10px] text-center text-muted-foreground">
-                  Exchange rates are estimates. Final rate confirmed at swap time.
-                </p>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="list"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              >
-                {/* Search */}
-                <div className="relative mb-3">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search coins..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 bg-secondary border-border rounded-xl h-10"
-                  />
-                </div>
-
-                {/* Crypto list */}
                 <div className="space-y-2">
-                  {loading
-                    ? Array.from({ length: 6 }).map((_, i) => (
-                        <div key={i} className="rounded-xl bg-card border border-border p-4 animate-pulse">
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-full bg-secondary" />
-                            <div className="flex-1 space-y-2">
-                              <div className="h-3 w-20 bg-secondary rounded" />
-                              <div className="h-2.5 w-12 bg-secondary rounded" />
-                            </div>
-                            <div className="h-3 w-16 bg-secondary rounded" />
-                          </div>
-                        </div>
-                      ))
-                    : filtered.map((crypto, i) => (
-                        <motion.div
-                          key={crypto.id}
-                          initial={{ opacity: 0, y: 8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: i * 0.03 }}
-                          className="w-full rounded-xl bg-card border border-border p-4 flex items-center gap-3 opacity-60 cursor-not-allowed"
-                        >
-                          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-secondary to-secondary/60 flex items-center justify-center text-lg font-bold text-foreground shrink-0 overflow-hidden group-hover:from-[hsl(var(--casino-gold))/0.2] group-hover:to-[hsl(var(--casino-gold))/0.05] transition-all">
-                            {crypto.image_url ? (
-                              <img src={crypto.image_url} alt={crypto.symbol} className="h-full w-full object-cover" />
-                            ) : crypto.icon}
-                          </div>
-                          <div className="flex-1 text-left min-w-0">
-                            <p className="text-sm font-bold text-foreground">{crypto.name}</p>
-                            <p className="text-[11px] text-muted-foreground">{crypto.symbol}</p>
-                          </div>
-                          <div className="text-right shrink-0">
-                            <p className="text-sm font-bold text-foreground">
-                              ${crypto.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                            </p>
-                            <div className={`flex items-center justify-end gap-0.5 text-[11px] font-semibold ${
-                              crypto.change24h > 0
-                                ? "text-[hsl(var(--casino-green))]"
-                                : crypto.change24h < 0
-                                ? "text-destructive"
-                                : "text-muted-foreground"
-                            }`}>
-                              {crypto.change24h > 0 ? (
-                                <TrendingUp className="h-3 w-3" />
-                              ) : crypto.change24h < 0 ? (
-                                <TrendingDown className="h-3 w-3" />
-                              ) : (
-                                <Minus className="h-3 w-3" />
-                              )}
-                              {Math.abs(crypto.change24h).toFixed(2)}%
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))}
-                  {!loading && filtered.length === 0 && (
-                    <p className="text-center text-sm text-muted-foreground py-8">No coins found</p>
-                  )}
+                  {activity.slice(0, 3).map((item) => (
+                    <div key={item} className="flex items-start gap-2 text-xs text-muted-foreground">
+                      <Zap className="mt-0.5 h-4 w-4 shrink-0 text-primary" /> {item}
+                    </div>
+                  ))}
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              </section>
+            </div>
+          </section>
         </div>
       </AuthGuard>
       <BottomNav />
