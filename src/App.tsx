@@ -9,6 +9,8 @@ import { usePresence } from "@/hooks/usePresence";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Login from "./pages/Login.tsx";
+import NetworkLanding from "./pages/NetworkLanding.tsx";
+import NetworkHub from "./pages/NetworkHub.tsx";
 import Signup from "./pages/Signup.tsx";
 import ForgotPassword from "./pages/ForgotPassword.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
@@ -89,8 +91,11 @@ const App = () => (
         <AuthProvider>
           <PresenceTracker>
             <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
+              <Route path="/" element={<NetworkLanding />} />
+              <Route path="/hub" element={<NetworkHub />} />
+              <Route path="/casino" element={<Index />} />
+              <Route path="/login" element={<NetworkLanding />} />
+              <Route path="/login-classic" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
