@@ -238,6 +238,147 @@ export type Database = {
         }
         Relationships: []
       }
+      exchange_audit_log: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          id: string
+          metadata: Json
+          target_id: string | null
+          target_type: string
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          target_id?: string | null
+          target_type: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          target_id?: string | null
+          target_type?: string
+        }
+        Relationships: []
+      }
+      exchange_coins: {
+        Row: {
+          change_24h: number
+          circulating_supply: number
+          coingecko_id: string | null
+          cold_wallet_address: string | null
+          contract_address: string | null
+          created_at: string
+          daily_withdraw_limit: number
+          description: string | null
+          display_order: number
+          fallback_icon: string | null
+          hot_wallet_address: string | null
+          id: string
+          is_deposit_enabled: boolean
+          is_featured: boolean
+          is_trading_enabled: boolean
+          is_withdraw_enabled: boolean
+          kyc_tier_required: number
+          logo_url: string | null
+          market_cap: number
+          max_supply: number | null
+          name: string
+          network: string
+          price_usd: number
+          risk_score: number
+          scheduled_listing_at: string | null
+          sector: string
+          status: string
+          symbol: string
+          updated_at: string
+          volume_24h: number
+          website_url: string | null
+          whitepaper_url: string | null
+          withdrawal_fee: number
+          withdrawal_min: number
+        }
+        Insert: {
+          change_24h?: number
+          circulating_supply?: number
+          coingecko_id?: string | null
+          cold_wallet_address?: string | null
+          contract_address?: string | null
+          created_at?: string
+          daily_withdraw_limit?: number
+          description?: string | null
+          display_order?: number
+          fallback_icon?: string | null
+          hot_wallet_address?: string | null
+          id?: string
+          is_deposit_enabled?: boolean
+          is_featured?: boolean
+          is_trading_enabled?: boolean
+          is_withdraw_enabled?: boolean
+          kyc_tier_required?: number
+          logo_url?: string | null
+          market_cap?: number
+          max_supply?: number | null
+          name: string
+          network?: string
+          price_usd?: number
+          risk_score?: number
+          scheduled_listing_at?: string | null
+          sector?: string
+          status?: string
+          symbol: string
+          updated_at?: string
+          volume_24h?: number
+          website_url?: string | null
+          whitepaper_url?: string | null
+          withdrawal_fee?: number
+          withdrawal_min?: number
+        }
+        Update: {
+          change_24h?: number
+          circulating_supply?: number
+          coingecko_id?: string | null
+          cold_wallet_address?: string | null
+          contract_address?: string | null
+          created_at?: string
+          daily_withdraw_limit?: number
+          description?: string | null
+          display_order?: number
+          fallback_icon?: string | null
+          hot_wallet_address?: string | null
+          id?: string
+          is_deposit_enabled?: boolean
+          is_featured?: boolean
+          is_trading_enabled?: boolean
+          is_withdraw_enabled?: boolean
+          kyc_tier_required?: number
+          logo_url?: string | null
+          market_cap?: number
+          max_supply?: number | null
+          name?: string
+          network?: string
+          price_usd?: number
+          risk_score?: number
+          scheduled_listing_at?: string | null
+          sector?: string
+          status?: string
+          symbol?: string
+          updated_at?: string
+          volume_24h?: number
+          website_url?: string | null
+          whitepaper_url?: string | null
+          withdrawal_fee?: number
+          withdrawal_min?: number
+        }
+        Relationships: []
+      }
       football_bets: {
         Row: {
           id: string
