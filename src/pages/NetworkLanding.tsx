@@ -65,9 +65,9 @@ export default function NetworkLanding() {
     <div className="relative min-h-screen overflow-hidden flex items-center justify-center p-4 bg-[hsl(265_60%_4%)]">
       {/* Storm clouds gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-[hsl(265_50%_8%)] via-[hsl(270_60%_6%)] to-black" />
-      {/* Animated grid */}
+      {/* Drifting animated grid */}
       <div
-        className="absolute inset-0 opacity-20"
+        className="absolute inset-0 opacity-20 animate-grid-drift"
         style={{
           backgroundImage:
             "linear-gradient(hsl(270 60% 50% / 0.25) 1px, transparent 1px), linear-gradient(90deg, hsl(270 60% 50% / 0.25) 1px, transparent 1px)",
@@ -76,7 +76,31 @@ export default function NetworkLanding() {
         }}
       />
 
-      {/* Lightning bolt SVGs */}
+      {/* Drifting nebula orbs */}
+      <div className="pointer-events-none absolute -top-32 -left-32 h-96 w-96 rounded-full bg-primary/30 blur-3xl animate-orb-a" />
+      <div className="pointer-events-none absolute -bottom-32 -right-24 h-[28rem] w-[28rem] rounded-full bg-casino-gold/15 blur-3xl animate-orb-b" />
+      <div className="pointer-events-none absolute top-1/3 right-1/4 h-72 w-72 rounded-full bg-casino-pink/20 blur-3xl animate-orb-c" />
+
+      {/* Floating spark particles */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        {Array.from({ length: 22 }).map((_, i) => (
+          <span
+            key={i}
+            className="absolute block rounded-full bg-casino-gold/70 animate-spark"
+            style={{
+              left: `${(i * 53) % 100}%`,
+              bottom: `-${10 + (i % 5) * 6}px`,
+              width: `${2 + (i % 3)}px`,
+              height: `${2 + (i % 3)}px`,
+              animationDuration: `${8 + (i % 7)}s`,
+              animationDelay: `${(i * 0.6) % 8}s`,
+              boxShadow: "0 0 8px hsl(42 90% 60% / 0.9)",
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Lightning bolt SVGs (no white screen flash) */}
       <svg
         key={flash}
         className="pointer-events-none absolute inset-0 w-full h-full animate-bolt"
@@ -110,10 +134,14 @@ export default function NetworkLanding() {
         />
       </svg>
 
-      {/* White flash overlay */}
+      {/* Subtle purple glow pulse where the bolt struck (replaces white flash) */}
       <div
         key={`f-${flash}`}
-        className="pointer-events-none absolute inset-0 bg-white animate-thunder-flash"
+        className="pointer-events-none absolute inset-0 animate-storm-glow"
+        style={{
+          background:
+            "radial-gradient(ellipse at 50% 30%, hsl(270 80% 55% / 0.35), transparent 60%)",
+        }}
       />
 
       <div className="absolute top-4 right-4 z-20">
@@ -192,15 +220,13 @@ export default function NetworkLanding() {
       </div>
 
       <style>{`
-        @keyframes thunder-flash {
+        @keyframes storm-glow {
           0% { opacity: 0; }
-          5% { opacity: 0.85; }
-          10% { opacity: 0.1; }
-          15% { opacity: 0.6; }
-          25% { opacity: 0; }
+          15% { opacity: 1; }
+          60% { opacity: 0.3; }
           100% { opacity: 0; }
         }
-        .animate-thunder-flash { animation: thunder-flash 0.8s ease-out; }
+        .animate-storm-glow { animation: storm-glow 1.2s ease-out; }
 
         @keyframes bolt {
           0% { opacity: 0; }
@@ -216,7 +242,44 @@ export default function NetworkLanding() {
           0%, 100% { filter: drop-shadow(0 0 30px hsl(270 70% 50% / 0.7)); transform: scale(1); }
           50% { filter: drop-shadow(0 0 50px hsl(42 90% 55% / 0.6)); transform: scale(1.02); }
         }
-        .animate-logo-pulse { animation: logo-pulse 4s ease-in-out infinite; }
+        .animate-logo-pulse { animation: logo-pulse 4s ease-in-out infinite, logo-float 7s ease-in-out infinite; }
+
+        @keyframes logo-float {
+          0%, 100% { transform: translateY(0) rotate(0deg); }
+          50% { transform: translateY(-10px) rotate(0.6deg); }
+        }
+
+        @keyframes grid-drift {
+          0% { background-position: 0 0, 0 0; }
+          100% { background-position: 60px 60px, 60px 60px; }
+        }
+        .animate-grid-drift { animation: grid-drift 18s linear infinite; }
+
+        @keyframes orb-a {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(60px, 40px) scale(1.15); }
+        }
+        .animate-orb-a { animation: orb-a 14s ease-in-out infinite; }
+
+        @keyframes orb-b {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(-80px, -50px) scale(1.1); }
+        }
+        .animate-orb-b { animation: orb-b 18s ease-in-out infinite; }
+
+        @keyframes orb-c {
+          0%, 100% { transform: translate(0, 0) scale(0.95); opacity: 0.5; }
+          50% { transform: translate(-40px, 60px) scale(1.2); opacity: 0.85; }
+        }
+        .animate-orb-c { animation: orb-c 12s ease-in-out infinite; }
+
+        @keyframes spark {
+          0% { transform: translateY(0) translateX(0); opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 0.8; }
+          100% { transform: translateY(-110vh) translateX(20px); opacity: 0; }
+        }
+        .animate-spark { animation-name: spark; animation-timing-function: linear; animation-iteration-count: infinite; }
       `}</style>
     </div>
   );
