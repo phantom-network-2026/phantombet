@@ -45,6 +45,13 @@
     --casino-surface: 265 45% 15%;
     --casino-surface-hover: 265 45% 20%;
 
+    /* Phantom Exchange tokens */
+    --exchange-cyan: 188 90% 58%;
+    --exchange-red: 355 84% 60%;
+    --exchange-glass: 265 45% 12%;
+    --shadow-gold: 0 0 20px hsl(42 90% 55% / 0.3), 0 0 60px hsl(42 90% 55% / 0.1);
+    --shadow-pink: 0 0 20px hsl(330 85% 55% / 0.3), 0 0 60px hsl(330 85% 55% / 0.1);
+
     --sidebar-background: 265 50% 6%;
     --sidebar-foreground: 0 0% 98%;
     --sidebar-primary: 270 60% 50%;
