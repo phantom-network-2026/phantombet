@@ -29,12 +29,10 @@ import Profile from "./pages/Profile.tsx";
 import GamesPage from "./pages/Games.tsx";
 import PrizeReel from "./pages/PrizeReel.tsx";
 import CPanel from "./pages/CPanel.tsx";
-import ExchangeAdmin from "./pages/ExchangeAdmin.tsx";
 import OwnerPanel from "./pages/OwnerPanel.tsx";
 import StaffPanel from "./pages/StaffPanel.tsx";
 import PennyRoulette from "./pages/PennyRoulette.tsx";
 import Help from "./pages/Help.tsx";
-import Exchange from "./pages/Exchange.tsx";
 import Wallet from "./pages/Wallet.tsx";
 import UserProfile from "./pages/UserProfile.tsx";
 import PlayGame from "./pages/PlayGame.tsx";
@@ -113,12 +111,10 @@ const App = () => (
               <Route path="/user/:userId" element={<UserProfile />} />
               <Route path="/prize-reel" element={<PrizeReel />} />
               <Route path="/cpanel" element={<CPanel />} />
-              <Route path="/cpanel/exchange" element={<ExchangeAdmin />} />
               <Route path="/owner-panel" element={<OwnerPanel />} />
               <Route path="/staff-panel" element={<StaffPanel />} />
               <Route path="/penny-roulette" element={<PennyRoulette />} />
               <Route path="/help" element={<Help />} />
-              <Route path="/exchange" element={<Exchange />} />
               <Route path="/wallet" element={<Wallet />} />
               <Route path="/sportsbook" element={<Sportsbook />} />
               {/* New HTML5 games */}
