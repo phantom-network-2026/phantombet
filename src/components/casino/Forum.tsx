@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -7,8 +7,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ProfileAvatar } from "@/components/casino/ProfileAvatar";
 import { toast } from "sonner";
-import { MessageSquare, Plus, Pin, Lock, Clock, ArrowLeft, Send, Search, Eye, Heart, Flame, TrendingUp, Trash2 } from "lucide-react";
+import { MessageSquare, Plus, Pin, Lock, Clock, ArrowLeft, Send, Search, Eye, Heart, Flame, TrendingUp, Trash2, Image as ImageIcon, Bookmark, X as XIcon } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { ReactionBar } from "@/components/casino/forum/ReactionBar";
+import { TrendingSidebar } from "@/components/casino/forum/TrendingSidebar";
+import { MentionText } from "@/components/casino/forum/MentionText";
 
 type Prefix =
   | "tutorial" | "question" | "release" | "issue" | "discussion"
@@ -77,11 +80,16 @@ export default function Forum() {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState<Thread | null>(null);
   const [likedThreads, setLikedThreads] = useState<Set<string>>(new Set());
+  const [bookmarked, setBookmarked] = useState<Set<string>>(new Set());
+  const [showSavedOnly, setShowSavedOnly] = useState(false);
+  const [attachments, setAttachments] = useState<Record<string, string[]>>({});
 
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [prefix, setPrefix] = useState<Prefix>("discussion");
   const [posting, setPosting] = useState(false);
+  const [pendingImages, setPendingImages] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadThreads = async () => {
     let q = supabase
@@ -99,7 +107,30 @@ export default function Forum() {
 
     const { data, error } = await q;
     if (error) { toast.error(error.message); return; }
-    setThreads((data as Thread[]) || []);
+    let rows = (data as Thread[]) || [];
+    if (showSavedOnly && user) {
+      const { data: bm } = await supabase
+        .from("forum_bookmarks")
+        .select("thread_id")
+        .eq("user_id", user.id);
+      const savedSet = new Set((bm || []).map((b: any) => b.thread_id));
+      rows = rows.filter((r) => savedSet.has(r.id));
+    }
+    setThreads(rows);
+
+    // Load attachments for visible threads
+    if (rows.length) {
+      const { data: atts } = await supabase
+        .from("forum_attachments")
+        .select("thread_id,url")
+        .in("thread_id", rows.map((r) => r.id));
+      const map: Record<string, string[]> = {};
+      (atts || []).forEach((a: any) => {
+        (map[a.thread_id] ||= []).push(a.url);
+      });
+      setAttachments(map);
+    }
+
     const ids = Array.from(new Set((data || []).map((t: any) => t.author_id)));
     if (ids.length) {
       const { data: profs } = await supabase
@@ -112,29 +143,79 @@ export default function Forum() {
     }
 
     if (user && (data || []).length) {
-      const { data: likes } = await supabase
+      const [{ data: likes }, { data: bm }] = await Promise.all([
+        supabase
         .from("forum_likes")
         .select("thread_id")
         .eq("user_id", user.id)
-        .in("thread_id", (data as any[]).map((t) => t.id));
+        .in("thread_id", (data as any[]).map((t) => t.id)),
+        supabase
+        .from("forum_bookmarks")
+        .select("thread_id")
+        .eq("user_id", user.id)
+        .in("thread_id", (data as any[]).map((t) => t.id)),
+      ]);
       setLikedThreads(new Set((likes || []).map((l: any) => l.thread_id)));
+      setBookmarked(new Set((bm || []).map((l: any) => l.thread_id)));
     }
   };
 
-  useEffect(() => { loadThreads(); /* eslint-disable-next-line */ }, [filter, sort, search]);
+  useEffect(() => { loadThreads(); /* eslint-disable-next-line */ }, [filter, sort, search, showSavedOnly]);
 
   const submitThread = async () => {
     if (!user) { toast.error("Sign in required"); return; }
     if (!title.trim() || !body.trim()) { toast.error("Title and body are required"); return; }
     setPosting(true);
-    const { error } = await supabase.from("forum_threads").insert({
-      author_id: user.id, title: title.trim(), body: body.trim(), prefix,
-    });
+    const { data: inserted, error } = await supabase
+      .from("forum_threads")
+      .insert({ author_id: user.id, title: title.trim(), body: body.trim(), prefix })
+      .select("id")
+      .single();
+    if (error || !inserted) {
+      setPosting(false);
+      toast.error(error?.message || "Failed to post");
+      return;
+    }
+
+    // Upload attachments if any
+    if (pendingImages.length > 0) {
+      const uploads = await Promise.all(
+        pendingImages.map(async (file) => {
+          const ext = file.name.split(".").pop()?.toLowerCase() || "png";
+          const path = `forum/${user.id}/${inserted.id}/${crypto.randomUUID()}.${ext}`;
+          const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: false });
+          if (upErr) return null;
+          const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+          return pub.publicUrl;
+        }),
+      );
+      const urls = uploads.filter((u): u is string => !!u);
+      if (urls.length > 0) {
+        await supabase.from("forum_attachments").insert(
+          urls.map((url) => ({ thread_id: inserted.id, uploaded_by: user.id, url, kind: "image" })),
+        );
+      }
+    }
+
     setPosting(false);
-    if (error) { toast.error(error.message); return; }
     toast.success("Thread posted");
-    setTitle(""); setBody(""); setPrefix("discussion"); setOpen(false);
+    setTitle(""); setBody(""); setPrefix("discussion"); setPendingImages([]); setOpen(false);
     loadThreads();
+  };
+
+  const toggleBookmark = async (threadId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user) { toast.error("Sign in to save"); return; }
+    const saved = bookmarked.has(threadId);
+    if (saved) {
+      await supabase.from("forum_bookmarks").delete().eq("user_id", user.id).eq("thread_id", threadId);
+      setBookmarked((s) => { const n = new Set(s); n.delete(threadId); return n; });
+    } else {
+      const { error } = await supabase.from("forum_bookmarks").insert({ user_id: user.id, thread_id: threadId });
+      if (error) return;
+      setBookmarked((s) => new Set(s).add(threadId));
+      toast.success("Saved");
+    }
   };
 
   const toggleLike = async (threadId: string, e: React.MouseEvent) => {
@@ -163,12 +244,19 @@ export default function Forum() {
   };
 
   if (active) {
-    return <ThreadView thread={active} onBack={() => { setActive(null); loadThreads(); }} authorProfile={profiles[active.author_id]} />;
+    return (
+      <ThreadView
+        thread={active}
+        onBack={() => { setActive(null); loadThreads(); }}
+        authorProfile={profiles[active.author_id]}
+        attachments={attachments[active.id] || []}
+      />
+    );
   }
 
   return (
-    <div className="space-y-3">
-      {/* header + new thread */}
+    <div className="grid gap-4 lg:grid-cols-[1fr_240px] items-start">
+      <div className="space-y-3 min-w-0">
       <div className="flex items-center justify-between gap-2">
         <div>
           <h2 className="font-display text-lg font-black flex items-center gap-2">
@@ -194,7 +282,44 @@ export default function Forum() {
                 ))}
               </div>
               <Input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={140} />
-              <Textarea placeholder="Write your post... (markdown-friendly)" value={body} onChange={(e) => setBody(e.target.value)} rows={6} maxLength={5000} />
+              <Textarea placeholder="Write your post... use @username to mention" value={body} onChange={(e) => setBody(e.target.value)} rows={6} maxLength={5000} />
+
+              {/* Image picker */}
+              <div className="space-y-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  hidden
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || []).slice(0, 4);
+                    const valid = files.filter((f) => f.size <= 5 * 1024 * 1024);
+                    if (valid.length < files.length) toast.error("Some images skipped (max 5MB each)");
+                    setPendingImages((prev) => [...prev, ...valid].slice(0, 4));
+                    if (fileInputRef.current) fileInputRef.current.value = "";
+                  }}
+                />
+                <Button type="button" variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()}
+                  className="w-full border border-dashed border-border">
+                  <ImageIcon className="h-4 w-4 mr-1.5" /> Attach images ({pendingImages.length}/4)
+                </Button>
+                {pendingImages.length > 0 && (
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {pendingImages.map((f, i) => (
+                      <div key={i} className="relative aspect-square rounded-md overflow-hidden border border-border">
+                        <img src={URL.createObjectURL(f)} alt="" className="h-full w-full object-cover" />
+                        <button type="button"
+                          onClick={() => setPendingImages((prev) => prev.filter((_, idx) => idx !== i))}
+                          className="absolute top-0.5 right-0.5 bg-black/70 rounded-full p-0.5 text-white">
+                          <XIcon className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <Button variant="gold" className="w-full" onClick={submitThread} disabled={posting}>
                 {posting ? "Posting..." : "Post Thread"}
               </Button>
@@ -224,6 +349,20 @@ export default function Forum() {
             </button>
           ))}
         </div>
+        {user && (
+          <button
+            onClick={() => setShowSavedOnly((v) => !v)}
+            className={`shrink-0 px-2.5 h-9 rounded-md border text-[10px] font-bold inline-flex items-center gap-1 transition ${
+              showSavedOnly
+                ? "bg-casino-gold text-accent-foreground border-casino-gold"
+                : "bg-secondary/60 text-muted-foreground border-border hover:text-foreground"
+            }`}
+            aria-pressed={showSavedOnly}
+            title="Saved threads"
+          >
+            <Bookmark className={`h-3 w-3 ${showSavedOnly ? "fill-current" : ""}`} /> Saved
+          </button>
+        )}
       </div>
 
       {/* prefix filter chips */}
@@ -271,6 +410,11 @@ export default function Forum() {
                   <ProfileAvatar avatarUrl={prof?.avatar_url} username={prof?.username} borderStyle={prof?.border_style}
                     hasAnimatedBorder={prof?.has_animated_border} hasAnimatedAvatar={prof?.has_animated_avatar} size="sm" />
                   <span className="text-[11px] text-muted-foreground truncate">{prof?.username || "Unknown"}</span>
+                    {(attachments[t.id]?.length || 0) > 0 && (
+                      <span className="inline-flex items-center gap-0.5 text-[10px] text-casino-gold/80 ml-1">
+                        <ImageIcon className="h-3 w-3" /> {attachments[t.id].length}
+                      </span>
+                    )}
                 </div>
                 <div className="flex items-center gap-3 text-[11px] text-muted-foreground shrink-0">
                   <span className="inline-flex items-center gap-1"><Eye className="h-3 w-3" />{t.view_count}</span>
@@ -282,17 +426,41 @@ export default function Forum() {
                   >
                     <Heart className={`h-3 w-3 ${liked ? "fill-casino-pink" : ""}`} />{t.like_count}
                   </span>
+                    <span
+                      role="button"
+                      onClick={(e) => toggleBookmark(t.id, e)}
+                      className={`inline-flex items-center transition ${bookmarked.has(t.id) ? "text-casino-gold" : "hover:text-casino-gold"}`}
+                      aria-label="Bookmark"
+                    >
+                      <Bookmark className={`h-3 w-3 ${bookmarked.has(t.id) ? "fill-casino-gold" : ""}`} />
+                    </span>
                 </div>
               </div>
             </button>
           );
         })}
       </div>
+      </div>
+
+      {/* Trending sidebar (desktop only) */}
+      <aside className="hidden lg:block sticky top-20 space-y-3">
+        <TrendingSidebar onPick={(id) => {
+          const t = threads.find((x) => x.id === id);
+          if (t) setActive(t);
+          else {
+            // fetch single
+            supabase.from("forum_threads")
+              .select("id,author_id,title,body,prefix,is_pinned,is_locked,reply_count,view_count,like_count,last_activity_at,created_at")
+              .eq("id", id).maybeSingle()
+              .then(({ data }) => { if (data) setActive(data as Thread); });
+          }
+        }} />
+      </aside>
     </div>
   );
 }
 
-function ThreadView({ thread, authorProfile, onBack }: { thread: Thread; authorProfile?: Profile; onBack: () => void }) {
+function ThreadView({ thread, authorProfile, onBack, attachments = [] }: { thread: Thread; authorProfile?: Profile; onBack: () => void; attachments?: string[] }) {
   const { user } = useAuth();
   const [replies, setReplies] = useState<Reply[]>([]);
   const [profiles, setProfiles] = useState<Record<string, Profile>>(authorProfile ? { [authorProfile.user_id]: authorProfile } : {});
@@ -403,12 +571,22 @@ function ThreadView({ thread, authorProfile, onBack }: { thread: Thread; authorP
           <span>{formatDistanceToNow(new Date(thread.created_at), { addSuffix: true })}</span>
         </div>
         <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed">{thread.body}</p>
+        {attachments.length > 0 && (
+          <div className={`mt-3 grid gap-2 ${attachments.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
+            {attachments.map((url, i) => (
+              <a key={i} href={url} target="_blank" rel="noreferrer" className="block rounded-lg overflow-hidden border border-border hover:border-casino-gold/60 transition">
+                <img src={url} alt="thread attachment" loading="lazy" className="w-full h-auto max-h-80 object-cover" />
+              </a>
+            ))}
+          </div>
+        )}
         <div className="mt-3 pt-3 border-t border-border/50 flex items-center gap-2">
           <Button size="sm" variant={threadLiked ? "default" : "ghost"}
             className={threadLiked ? "bg-casino-pink/20 text-casino-pink hover:bg-casino-pink/30" : ""}
             onClick={toggleThreadLike}>
             <Heart className={`h-4 w-4 mr-1 ${threadLiked ? "fill-casino-pink" : ""}`} /> {threadLikes}
           </Button>
+          <ReactionBar threadId={thread.id} />
         </div>
       </div>
 
@@ -431,12 +609,13 @@ function ThreadView({ thread, authorProfile, onBack }: { thread: Thread; authorP
                   </button>
                 )}
               </div>
-              <p className="text-sm whitespace-pre-wrap">{r.body}</p>
-              <div className="mt-2">
+              <MentionText text={r.body} className="text-sm whitespace-pre-wrap block" />
+              <div className="mt-2 flex items-center gap-2 flex-wrap">
                 <button onClick={() => toggleReplyLike(r.id)}
                   className={`text-[11px] inline-flex items-center gap-1 transition ${liked ? "text-casino-pink" : "text-muted-foreground hover:text-casino-pink"}`}>
                   <Heart className={`h-3 w-3 ${liked ? "fill-casino-pink" : ""}`} /> {r.like_count}
                 </button>
+                <ReactionBar replyId={r.id} compact />
               </div>
             </div>
           );

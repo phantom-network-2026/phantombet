@@ -541,6 +541,70 @@ export type Database = {
         }
         Relationships: []
       }
+      forum_attachments: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          thread_id: string
+          uploaded_by: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind?: string
+          thread_id: string
+          uploaded_by: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          thread_id?: string
+          uploaded_by?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_attachments_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "forum_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forum_bookmarks: {
+        Row: {
+          created_at: string
+          id: string
+          thread_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          thread_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          thread_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_bookmarks_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "forum_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       forum_likes: {
         Row: {
           created_at: string
@@ -573,6 +637,48 @@ export type Database = {
           },
           {
             foreignKeyName: "forum_likes_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "forum_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forum_reactions: {
+        Row: {
+          created_at: string
+          id: string
+          reaction: string
+          reply_id: string | null
+          thread_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reaction: string
+          reply_id?: string | null
+          thread_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reaction?: string
+          reply_id?: string | null
+          thread_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_reactions_reply_id_fkey"
+            columns: ["reply_id"]
+            isOneToOne: false
+            referencedRelation: "forum_replies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "forum_reactions_thread_id_fkey"
             columns: ["thread_id"]
             isOneToOne: false
             referencedRelation: "forum_threads"
