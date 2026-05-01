@@ -18,6 +18,7 @@ import { PromotionsManager } from "@/components/casino/PromotionsManager";
 import DevConsole from "@/components/casino/DevConsole";
 import AiAgentPanel from "@/components/casino/AiAgentPanel";
 import { HelpListingAdminPanel } from "@/components/casino/HelpListingAdminPanel";
+import { SimulatedActivityPanel } from "@/components/casino/SimulatedActivityPanel";
 import { AdminInner } from "./Admin";
 import {
   ArrowLeft, FolderOpen, Database, Settings, Upload, Trash2, Download,
@@ -2572,7 +2573,7 @@ function ExchangeAdminPanel({ onBack }: { onBack: () => void }) {
   );
 }
 
-type ActivePanel = null | "users" | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "bonus-probability" | "slots-config" | "promotions" | "wallet-mode" | "deposits-withdrawals" | "welcome-config" | "ghost-users" | "broadcasts" | "dev-console" | "ai-agent" | "sports-promos" | "exchange-admin" | "help-listings";
+type ActivePanel = null | "users" | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "bonus-probability" | "slots-config" | "promotions" | "wallet-mode" | "deposits-withdrawals" | "welcome-config" | "ghost-users" | "broadcasts" | "dev-console" | "ai-agent" | "sports-promos" | "exchange-admin" | "help-listings" | "simulated-activity";
 
 export default function CPanel() {
   const { isAdmin, isOwner, loading, profile } = useAuth();
@@ -2638,6 +2639,11 @@ export default function CPanel() {
           {activePanel === "sports-promos" && <SportsPromoUploaderPanel onBack={back} />}
          {activePanel === "exchange-admin" && <ExchangeAdminPanel onBack={back} />}
           {activePanel === "help-listings" && <HelpListingAdminPanel onBack={back} />}
+          {activePanel === "simulated-activity" && (
+            <PanelView title="Simulated Activity" onBack={back}>
+              <SimulatedActivityPanel />
+            </PanelView>
+          )}
         </div>
       </div>
     );
