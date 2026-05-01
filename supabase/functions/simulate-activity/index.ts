@@ -193,6 +193,19 @@ async function getGhostUsernames(): Promise<string[]> {
   return Array.isArray(cfg.usernames) ? cfg.usernames : [];
 }
 
+// In-process cache so we don't hammer the DB upserting the same ghost profile
+const ensuredGhosts = new Set<string>();
+async function ensureGhostProfile(username: string) {
+  if (ensuredGhosts.has(username)) return;
+  const uid = ghostUserId(username);
+  const { error } = await admin.from("profiles").upsert(
+    { user_id: uid, username, balance: 0, real_balance: 0 },
+    { onConflict: "user_id", ignoreDuplicates: true },
+  );
+  if (error) console.error("ensureGhostProfile failed:", username, error.message);
+  ensuredGhosts.add(username);
+}
+
 // ── Run actions ─────────────────────────────────────────────────
 async function runForum(cfg: FakeForumConfig, ghostNames: string[], counts: Record<string, number>) {
   console.log("runForum cfg:", { enabled: cfg.enabled, threads: cfg.threads_per_run, replies: cfg.replies_per_run, ghosts: ghostNames.length, use_ai: cfg.use_ai });
