@@ -460,7 +460,7 @@ export default function Forum() {
   );
 }
 
-function ThreadView({ thread, authorProfile, onBack }: { thread: Thread; authorProfile?: Profile; onBack: () => void }) {
+function ThreadView({ thread, authorProfile, onBack, attachments = [] }: { thread: Thread; authorProfile?: Profile; onBack: () => void; attachments?: string[] }) {
   const { user } = useAuth();
   const [replies, setReplies] = useState<Reply[]>([]);
   const [profiles, setProfiles] = useState<Record<string, Profile>>(authorProfile ? { [authorProfile.user_id]: authorProfile } : {});
@@ -571,12 +571,22 @@ function ThreadView({ thread, authorProfile, onBack }: { thread: Thread; authorP
           <span>{formatDistanceToNow(new Date(thread.created_at), { addSuffix: true })}</span>
         </div>
         <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed">{thread.body}</p>
+        {attachments.length > 0 && (
+          <div className={`mt-3 grid gap-2 ${attachments.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
+            {attachments.map((url, i) => (
+              <a key={i} href={url} target="_blank" rel="noreferrer" className="block rounded-lg overflow-hidden border border-border hover:border-casino-gold/60 transition">
+                <img src={url} alt="thread attachment" loading="lazy" className="w-full h-auto max-h-80 object-cover" />
+              </a>
+            ))}
+          </div>
+        )}
         <div className="mt-3 pt-3 border-t border-border/50 flex items-center gap-2">
           <Button size="sm" variant={threadLiked ? "default" : "ghost"}
             className={threadLiked ? "bg-casino-pink/20 text-casino-pink hover:bg-casino-pink/30" : ""}
             onClick={toggleThreadLike}>
             <Heart className={`h-4 w-4 mr-1 ${threadLiked ? "fill-casino-pink" : ""}`} /> {threadLikes}
           </Button>
+          <ReactionBar threadId={thread.id} />
         </div>
       </div>
 
@@ -599,12 +609,13 @@ function ThreadView({ thread, authorProfile, onBack }: { thread: Thread; authorP
                   </button>
                 )}
               </div>
-              <p className="text-sm whitespace-pre-wrap">{r.body}</p>
-              <div className="mt-2">
+              <MentionText text={r.body} className="text-sm whitespace-pre-wrap block" />
+              <div className="mt-2 flex items-center gap-2 flex-wrap">
                 <button onClick={() => toggleReplyLike(r.id)}
                   className={`text-[11px] inline-flex items-center gap-1 transition ${liked ? "text-casino-pink" : "text-muted-foreground hover:text-casino-pink"}`}>
                   <Heart className={`h-3 w-3 ${liked ? "fill-casino-pink" : ""}`} /> {r.like_count}
                 </button>
+                <ReactionBar replyId={r.id} compact />
               </div>
             </div>
           );
