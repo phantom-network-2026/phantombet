@@ -93,7 +93,7 @@ const App = () => (
           <PresenceTracker>
             <LightningOverlay />
             <Routes>
-              <Route path="/" element={<NetworkLanding />} />
+              <Route path="/" element={<Navigate to="/hub" replace />} />
               <Route path="/hub" element={<NetworkHub />} />
               <Route path="/casino" element={<Index />} />
               <Route path="/login" element={<NetworkLanding />} />
