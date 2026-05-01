@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -7,8 +7,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ProfileAvatar } from "@/components/casino/ProfileAvatar";
 import { toast } from "sonner";
-import { MessageSquare, Plus, Pin, Lock, Clock, ArrowLeft, Send, Search, Eye, Heart, Flame, TrendingUp, Trash2 } from "lucide-react";
+import { MessageSquare, Plus, Pin, Lock, Clock, ArrowLeft, Send, Search, Eye, Heart, Flame, TrendingUp, Trash2, Image as ImageIcon, Bookmark, X as XIcon } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { ReactionBar } from "@/components/casino/forum/ReactionBar";
+import { TrendingSidebar } from "@/components/casino/forum/TrendingSidebar";
+import { MentionText } from "@/components/casino/forum/MentionText";
 
 type Prefix =
   | "tutorial" | "question" | "release" | "issue" | "discussion"
@@ -77,11 +80,16 @@ export default function Forum() {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState<Thread | null>(null);
   const [likedThreads, setLikedThreads] = useState<Set<string>>(new Set());
+  const [bookmarked, setBookmarked] = useState<Set<string>>(new Set());
+  const [showSavedOnly, setShowSavedOnly] = useState(false);
+  const [attachments, setAttachments] = useState<Record<string, string[]>>({});
 
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [prefix, setPrefix] = useState<Prefix>("discussion");
   const [posting, setPosting] = useState(false);
+  const [pendingImages, setPendingImages] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadThreads = async () => {
     let q = supabase
@@ -99,7 +107,30 @@ export default function Forum() {
 
     const { data, error } = await q;
     if (error) { toast.error(error.message); return; }
-    setThreads((data as Thread[]) || []);
+    let rows = (data as Thread[]) || [];
+    if (showSavedOnly && user) {
+      const { data: bm } = await supabase
+        .from("forum_bookmarks")
+        .select("thread_id")
+        .eq("user_id", user.id);
+      const savedSet = new Set((bm || []).map((b: any) => b.thread_id));
+      rows = rows.filter((r) => savedSet.has(r.id));
+    }
+    setThreads(rows);
+
+    // Load attachments for visible threads
+    if (rows.length) {
+      const { data: atts } = await supabase
+        .from("forum_attachments")
+        .select("thread_id,url")
+        .in("thread_id", rows.map((r) => r.id));
+      const map: Record<string, string[]> = {};
+      (atts || []).forEach((a: any) => {
+        (map[a.thread_id] ||= []).push(a.url);
+      });
+      setAttachments(map);
+    }
+
     const ids = Array.from(new Set((data || []).map((t: any) => t.author_id)));
     if (ids.length) {
       const { data: profs } = await supabase
@@ -112,29 +143,79 @@ export default function Forum() {
     }
 
     if (user && (data || []).length) {
-      const { data: likes } = await supabase
+      const [{ data: likes }, { data: bm }] = await Promise.all([
+        supabase
         .from("forum_likes")
         .select("thread_id")
         .eq("user_id", user.id)
-        .in("thread_id", (data as any[]).map((t) => t.id));
+        .in("thread_id", (data as any[]).map((t) => t.id)),
+        supabase
+        .from("forum_bookmarks")
+        .select("thread_id")
+        .eq("user_id", user.id)
+        .in("thread_id", (data as any[]).map((t) => t.id)),
+      ]);
       setLikedThreads(new Set((likes || []).map((l: any) => l.thread_id)));
+      setBookmarked(new Set((bm || []).map((l: any) => l.thread_id)));
     }
   };
 
-  useEffect(() => { loadThreads(); /* eslint-disable-next-line */ }, [filter, sort, search]);
+  useEffect(() => { loadThreads(); /* eslint-disable-next-line */ }, [filter, sort, search, showSavedOnly]);
 
   const submitThread = async () => {
     if (!user) { toast.error("Sign in required"); return; }
     if (!title.trim() || !body.trim()) { toast.error("Title and body are required"); return; }
     setPosting(true);
-    const { error } = await supabase.from("forum_threads").insert({
-      author_id: user.id, title: title.trim(), body: body.trim(), prefix,
-    });
+    const { data: inserted, error } = await supabase
+      .from("forum_threads")
+      .insert({ author_id: user.id, title: title.trim(), body: body.trim(), prefix })
+      .select("id")
+      .single();
+    if (error || !inserted) {
+      setPosting(false);
+      toast.error(error?.message || "Failed to post");
+      return;
+    }
+
+    // Upload attachments if any
+    if (pendingImages.length > 0) {
+      const uploads = await Promise.all(
+        pendingImages.map(async (file) => {
+          const ext = file.name.split(".").pop()?.toLowerCase() || "png";
+          const path = `forum/${user.id}/${inserted.id}/${crypto.randomUUID()}.${ext}`;
+          const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: false });
+          if (upErr) return null;
+          const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+          return pub.publicUrl;
+        }),
+      );
+      const urls = uploads.filter((u): u is string => !!u);
+      if (urls.length > 0) {
+        await supabase.from("forum_attachments").insert(
+          urls.map((url) => ({ thread_id: inserted.id, uploaded_by: user.id, url, kind: "image" })),
+        );
+      }
+    }
+
     setPosting(false);
-    if (error) { toast.error(error.message); return; }
     toast.success("Thread posted");
-    setTitle(""); setBody(""); setPrefix("discussion"); setOpen(false);
+    setTitle(""); setBody(""); setPrefix("discussion"); setPendingImages([]); setOpen(false);
     loadThreads();
+  };
+
+  const toggleBookmark = async (threadId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user) { toast.error("Sign in to save"); return; }
+    const saved = bookmarked.has(threadId);
+    if (saved) {
+      await supabase.from("forum_bookmarks").delete().eq("user_id", user.id).eq("thread_id", threadId);
+      setBookmarked((s) => { const n = new Set(s); n.delete(threadId); return n; });
+    } else {
+      const { error } = await supabase.from("forum_bookmarks").insert({ user_id: user.id, thread_id: threadId });
+      if (error) return;
+      setBookmarked((s) => new Set(s).add(threadId));
+      toast.success("Saved");
+    }
   };
 
   const toggleLike = async (threadId: string, e: React.MouseEvent) => {
