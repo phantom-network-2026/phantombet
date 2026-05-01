@@ -360,8 +360,10 @@ function FakeChatSection() {
           <Switch checked={cfg.reply_to_real_users} onCheckedChange={(v) => save({ ...cfg, reply_to_real_users: v })} />
         </div>
         <div>
-          <Label className="text-xs">Messages per run</Label>
-          <Input type="number" min={0} max={50} value={cfg.messages_per_run} onChange={(e) => save({ ...cfg, messages_per_run: Number(e.target.value) })} />
+          <Label className="text-xs">Messages / hour</Label>
+          <Input type="number" min={0} max={200} value={cfg.messages_per_run * 4}
+            onChange={(e) => save({ ...cfg, messages_per_run: Math.max(0, Math.round(Number(e.target.value) / 4)) })} />
+          <p className="text-[10px] text-muted-foreground mt-1">Auto-runs every 15 min. We divide by 4 per run.</p>
         </div>
         <div>
           <Label className="text-xs">Game rooms (comma sep)</Label>
