@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Dice5, Trophy, Users, HelpCircle, Medal, ArrowLeftRight, Network } from "lucide-react";
+import { Dice5, Trophy, Users, HelpCircle, Medal, ArrowLeftRight, Network } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage, type LanguageCode } from "@/hooks/useLanguage";
 import { supabase } from "@/integrations/supabase/client";
