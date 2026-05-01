@@ -29,6 +29,8 @@ import {
   AlertTriangle,
   Fingerprint,
   ServerOff,
+  Users,
+  MessageSquare,
 } from "lucide-react";
 
 const SERVICES = [
@@ -64,6 +66,28 @@ const SERVICES = [
     icon: <WalletIcon className="w-5 h-5" />,
     accent: "from-emerald-400/40 via-primary/30 to-cyan-400/30",
     border: "border-emerald-400/40",
+  },
+  {
+    id: "social",
+    name: "Phantom Social",
+    tagline: "Add friends, send DMs and join live parties across the network.",
+    cta: "Open Social",
+    to: "/friends",
+    img: heroCasino,
+    icon: <Users className="w-5 h-5" />,
+    accent: "from-fuchsia-500/50 via-purple-500/30 to-pink-400/30",
+    border: "border-fuchsia-400/40",
+  },
+  {
+    id: "forum",
+    name: "Phantom Forum",
+    tagline: "Threads, guides and drops — discuss strategies with the community.",
+    cta: "Open Forum",
+    to: "/friends?tab=forum",
+    img: heroExchange,
+    icon: <MessageSquare className="w-5 h-5" />,
+    accent: "from-amber-400/40 via-primary/30 to-rose-400/30",
+    border: "border-amber-400/40",
   },
 ];
 
