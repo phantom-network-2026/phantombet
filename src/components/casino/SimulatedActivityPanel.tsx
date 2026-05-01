@@ -217,6 +217,7 @@ function FakeTradesSection() {
           onChange={(e) => setCfg({ ...cfg, pairs: e.target.value.split("\n").map((s) => s.trim()).filter(Boolean) })}
           onBlur={() => save(cfg)} className="text-xs font-mono" />
         <Label className="text-xs">Trader Usernames (one per line)</Label>
+        <p className="text-[10px] text-muted-foreground">When the shared <strong>Ghost Users</strong> pool has names, traders are pulled from that pool so the same fake users appear across the online list, wins, trades, forum, and chat.</p>
         <Textarea rows={5} value={cfg.usernames.join("\n")}
           onChange={(e) => setCfg({ ...cfg, usernames: e.target.value.split("\n").map((s) => s.trim()).filter(Boolean) })}
           onBlur={() => save(cfg)} className="text-xs font-mono" />
@@ -276,18 +277,24 @@ function FakeForumSection() {
           <Switch checked={cfg.reply_to_real_users} onCheckedChange={(v) => save({ ...cfg, reply_to_real_users: v })} />
         </div>
       </div>
-      <div className="rounded-xl border border-border bg-card p-4 grid grid-cols-3 gap-3">
-        <div>
-          <Label className="text-xs">Threads / run</Label>
-          <Input type="number" min={0} max={20} value={cfg.threads_per_run} onChange={(e) => save({ ...cfg, threads_per_run: Number(e.target.value) })} />
-        </div>
-        <div>
-          <Label className="text-xs">Replies / run</Label>
-          <Input type="number" min={0} max={50} value={cfg.replies_per_run} onChange={(e) => save({ ...cfg, replies_per_run: Number(e.target.value) })} />
-        </div>
-        <div>
-          <Label className="text-xs">Likes / run</Label>
-          <Input type="number" min={0} max={100} value={cfg.likes_per_run} onChange={(e) => save({ ...cfg, likes_per_run: Number(e.target.value) })} />
+      <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+        <p className="text-[10px] text-muted-foreground">Auto-runs every 15 min (4 runs/hr). Set values per hour — we divide by 4 per run.</p>
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <Label className="text-xs">Threads / hour</Label>
+            <Input type="number" min={0} max={80} value={cfg.threads_per_run * 4}
+              onChange={(e) => save({ ...cfg, threads_per_run: Math.max(0, Math.round(Number(e.target.value) / 4)) })} />
+          </div>
+          <div>
+            <Label className="text-xs">Replies / hour</Label>
+            <Input type="number" min={0} max={200} value={cfg.replies_per_run * 4}
+              onChange={(e) => save({ ...cfg, replies_per_run: Math.max(0, Math.round(Number(e.target.value) / 4)) })} />
+          </div>
+          <div>
+            <Label className="text-xs">Likes / hour</Label>
+            <Input type="number" min={0} max={400} value={cfg.likes_per_run * 4}
+              onChange={(e) => save({ ...cfg, likes_per_run: Math.max(0, Math.round(Number(e.target.value) / 4)) })} />
+          </div>
         </div>
       </div>
       <div className="rounded-xl border border-border bg-card p-4 space-y-2">
@@ -354,8 +361,10 @@ function FakeChatSection() {
           <Switch checked={cfg.reply_to_real_users} onCheckedChange={(v) => save({ ...cfg, reply_to_real_users: v })} />
         </div>
         <div>
-          <Label className="text-xs">Messages per run</Label>
-          <Input type="number" min={0} max={50} value={cfg.messages_per_run} onChange={(e) => save({ ...cfg, messages_per_run: Number(e.target.value) })} />
+          <Label className="text-xs">Messages / hour</Label>
+          <Input type="number" min={0} max={200} value={cfg.messages_per_run * 4}
+            onChange={(e) => save({ ...cfg, messages_per_run: Math.max(0, Math.round(Number(e.target.value) / 4)) })} />
+          <p className="text-[10px] text-muted-foreground mt-1">Auto-runs every 15 min. We divide by 4 per run.</p>
         </div>
         <div>
           <Label className="text-xs">Game rooms (comma sep)</Label>
