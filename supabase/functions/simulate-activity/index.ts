@@ -193,6 +193,19 @@ async function getGhostUsernames(): Promise<string[]> {
   return Array.isArray(cfg.usernames) ? cfg.usernames : [];
 }
 
+// In-process cache so we don't hammer the DB upserting the same ghost profile
+const ensuredGhosts = new Set<string>();
+async function ensureGhostProfile(username: string) {
+  if (ensuredGhosts.has(username)) return;
+  const uid = ghostUserId(username);
+  const { error } = await admin.from("profiles").upsert(
+    { user_id: uid, username, balance: 0, real_balance: 0 },
+    { onConflict: "user_id", ignoreDuplicates: true },
+  );
+  if (error) console.error("ensureGhostProfile failed:", username, error.message);
+  ensuredGhosts.add(username);
+}
+
 // ── Run actions ─────────────────────────────────────────────────
 async function runForum(cfg: FakeForumConfig, ghostNames: string[], counts: Record<string, number>) {
   if (!cfg.enabled || ghostNames.length === 0) return;
@@ -200,6 +213,7 @@ async function runForum(cfg: FakeForumConfig, ghostNames: string[], counts: Reco
   // Threads
   for (let i = 0; i < cfg.threads_per_run; i++) {
     const username = pick(ghostNames);
+    await ensureGhostProfile(username);
     const personality = pick(cfg.personalities);
     const topic = pick(cfg.topics);
     let title: string, body: string;
@@ -215,7 +229,11 @@ async function runForum(cfg: FakeForumConfig, ghostNames: string[], counts: Reco
       p_author_id: ghostUserId(username),
       p_title: title, p_body: body, p_prefix: prefix,
     });
-    if (!error) counts.threads++;
+    if (error) {
+      console.error("sim_post_forum_thread failed:", error.message, { prefix, title: title.slice(0, 60) });
+    } else {
+      counts.threads++;
+    }
   }
 
   // Replies — pick recent threads (real or ghost) and reply
@@ -237,6 +255,7 @@ async function runForum(cfg: FakeForumConfig, ghostNames: string[], counts: Reco
   for (let i = 0; i < cfg.replies_per_run && recent.length > 0; i++) {
     const t = pick(recent);
     const username = pick(ghostNames);
+    await ensureGhostProfile(username);
     const personality = pick(cfg.personalities);
     let body: string | null = cfg.use_ai ? await aiReply(t.title, t.body, personality) : null;
     if (!body) body = pick(REPLY_TEMPLATES);
@@ -244,15 +263,24 @@ async function runForum(cfg: FakeForumConfig, ghostNames: string[], counts: Reco
       p_author_id: ghostUserId(username),
       p_thread_id: t.id, p_body: body,
     });
-    if (!error) counts.replies++;
+    if (error) {
+      console.error("sim_post_forum_reply failed:", error.message);
+    } else {
+      counts.replies++;
+    }
   }
 
   // Likes
   for (let i = 0; i < cfg.likes_per_run && recent.length > 0; i++) {
     const t = pick(recent);
     const username = pick(ghostNames);
-    await admin.rpc("sim_like", { p_user_id: ghostUserId(username), p_thread_id: t.id, p_reply_id: null });
-    counts.likes++;
+    await ensureGhostProfile(username);
+    const { error } = await admin.rpc("sim_like", { p_user_id: ghostUserId(username), p_thread_id: t.id, p_reply_id: null });
+    if (error) {
+      console.error("sim_like failed:", error.message);
+    } else {
+      counts.likes++;
+    }
   }
 }
 
