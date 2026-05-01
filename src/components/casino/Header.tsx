@@ -53,13 +53,15 @@ export function Header() {
             className="h-9 w-9 shrink-0 drop-shadow-[0_0_10px_hsl(270_70%_60%/0.6)]"
           />
           <div className="leading-tight">
-            <div className="font-display font-black text-sm sm:text-base tracking-wide bg-gradient-to-r from-casino-gold via-amber-200 to-casino-gold bg-clip-text text-transparent">
-              PHANTOM NETWORK
-            </div>
             {!user && (
-              <div className="text-[9px] tracking-[0.3em] text-muted-foreground -mt-0.5">
-                CASINO
-              </div>
+              <>
+                <div className="font-display font-black text-sm sm:text-base tracking-wide bg-gradient-to-r from-casino-gold via-amber-200 to-casino-gold bg-clip-text text-transparent">
+                  PHANTOM NETWORK
+                </div>
+                <div className="text-[9px] tracking-[0.3em] text-muted-foreground -mt-0.5">
+                  CASINO
+                </div>
+              </>
             )}
           </div>
         </Link>
