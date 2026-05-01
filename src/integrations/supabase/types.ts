@@ -475,12 +475,52 @@ export type Database = {
         }
         Relationships: []
       }
+      forum_likes: {
+        Row: {
+          created_at: string
+          id: string
+          reply_id: string | null
+          thread_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reply_id?: string | null
+          thread_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reply_id?: string | null
+          thread_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_likes_reply_id_fkey"
+            columns: ["reply_id"]
+            isOneToOne: false
+            referencedRelation: "forum_replies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "forum_likes_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "forum_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       forum_replies: {
         Row: {
           author_id: string
           body: string
           created_at: string
           id: string
+          like_count: number
           thread_id: string
         }
         Insert: {
@@ -488,6 +528,7 @@ export type Database = {
           body: string
           created_at?: string
           id?: string
+          like_count?: number
           thread_id: string
         }
         Update: {
@@ -495,6 +536,7 @@ export type Database = {
           body?: string
           created_at?: string
           id?: string
+          like_count?: number
           thread_id?: string
         }
         Relationships: [
@@ -516,10 +558,12 @@ export type Database = {
           is_locked: boolean
           is_pinned: boolean
           last_activity_at: string
+          like_count: number
           prefix: Database["public"]["Enums"]["forum_prefix"]
           reply_count: number
           title: string
           updated_at: string
+          view_count: number
         }
         Insert: {
           author_id: string
@@ -529,10 +573,12 @@ export type Database = {
           is_locked?: boolean
           is_pinned?: boolean
           last_activity_at?: string
+          like_count?: number
           prefix?: Database["public"]["Enums"]["forum_prefix"]
           reply_count?: number
           title: string
           updated_at?: string
+          view_count?: number
         }
         Update: {
           author_id?: string
@@ -542,10 +588,12 @@ export type Database = {
           is_locked?: boolean
           is_pinned?: boolean
           last_activity_at?: string
+          like_count?: number
           prefix?: Database["public"]["Enums"]["forum_prefix"]
           reply_count?: number
           title?: string
           updated_at?: string
+          view_count?: number
         }
         Relationships: []
       }
@@ -1411,6 +1459,10 @@ export type Database = {
         }[]
       }
       expire_old_bonuses: { Args: { p_user_id: string }; Returns: undefined }
+      forum_increment_view: {
+        Args: { p_thread_id: string }
+        Returns: undefined
+      }
       grant_xp: {
         Args: { p_amount: number; p_user_id: string }
         Returns: {
@@ -1447,7 +1499,18 @@ export type Database = {
         | "owner"
       football_bet_market: "home" | "draw" | "away"
       football_match_status: "upcoming" | "live" | "finished" | "cancelled"
-      forum_prefix: "tutorial" | "question" | "release" | "issue" | "discussion"
+      forum_prefix:
+        | "tutorial"
+        | "question"
+        | "release"
+        | "issue"
+        | "discussion"
+        | "announcement"
+        | "guide"
+        | "trade"
+        | "offtopic"
+        | "strategy"
+        | "news"
       free_bet_status: "pending" | "qualified" | "awarded" | "expired"
       friendship_status: "pending" | "accepted" | "rejected"
       game_category:
@@ -1601,7 +1664,19 @@ export const Constants = {
       app_role: ["admin", "user", "moderator", "staff", "active_user", "owner"],
       football_bet_market: ["home", "draw", "away"],
       football_match_status: ["upcoming", "live", "finished", "cancelled"],
-      forum_prefix: ["tutorial", "question", "release", "issue", "discussion"],
+      forum_prefix: [
+        "tutorial",
+        "question",
+        "release",
+        "issue",
+        "discussion",
+        "announcement",
+        "guide",
+        "trade",
+        "offtopic",
+        "strategy",
+        "news",
+      ],
       free_bet_status: ["pending", "qualified", "awarded", "expired"],
       friendship_status: ["pending", "accepted", "rejected"],
       game_category: [
