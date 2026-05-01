@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Header } from "@/components/casino/Header";
-import { FakeWinsControlPanel } from "@/components/casino/FakeWinsControlPanel";
 import { StaffUsername, type StaffRole } from "@/components/casino/StaffUsername";
 import { ArrowLeft, Users, DollarSign, Plus, Minus, Edit, Save, Shield, Trash2, Circle, ShieldAlert } from "lucide-react";
 import { getStatusColor, getStatusLabel } from "@/hooks/usePresence";
@@ -237,9 +236,6 @@ export function AdminInner({ embedded = false }: { embedded?: boolean }) {
           </div>
         </div>
         )}
-
-        {/* Fake Wins Ticker Control */}
-        {isAdmin && sec("admin_fake_wins") && <FakeWinsControlPanel />}
 
         {/* Force Loss Toggle */}
         {isAdmin && sec("admin_force_loss") && (
