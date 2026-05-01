@@ -217,6 +217,7 @@ function FakeTradesSection() {
           onChange={(e) => setCfg({ ...cfg, pairs: e.target.value.split("\n").map((s) => s.trim()).filter(Boolean) })}
           onBlur={() => save(cfg)} className="text-xs font-mono" />
         <Label className="text-xs">Trader Usernames (one per line)</Label>
+        <p className="text-[10px] text-muted-foreground">When the shared <strong>Ghost Users</strong> pool has names, traders are pulled from that pool so the same fake users appear across the online list, wins, trades, forum, and chat.</p>
         <Textarea rows={5} value={cfg.usernames.join("\n")}
           onChange={(e) => setCfg({ ...cfg, usernames: e.target.value.split("\n").map((s) => s.trim()).filter(Boolean) })}
           onBlur={() => save(cfg)} className="text-xs font-mono" />
