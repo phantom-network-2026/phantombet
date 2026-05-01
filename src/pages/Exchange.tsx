@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/casino/Header";
 import { BottomNav } from "@/components/casino/BottomNav";
 import { AuthGuard } from "@/components/casino/AuthGuard";
@@ -7,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Activity, ArrowDownUp, BarChart3, Boxes, ChevronDown, Crown, Gauge,
-  Globe, Rocket, Search, Shield, Zap,
+  Globe, Rocket, Search, Shield, Zap, Coins, Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -54,8 +55,10 @@ const activity = [
 ];
 
 import exchangeBanner from "@/assets/phantom-exchange-banner.png";
+import freeListingBanner from "@/assets/free-listing-banner.jpg";
 
 export default function Exchange() {
+  const navigate = useNavigate();
   const [fromAmount, setFromAmount] = useState("250");
   const [activeMenu, setActiveMenu] = useState("trade");
   const [assetFilter, setAssetFilter] = useState("All");
@@ -90,6 +93,36 @@ export default function Exchange() {
               className="block aspect-[2.4/1] w-full object-cover object-center sm:aspect-[2.8/1] lg:aspect-[3.2/1]"
             />
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-background/85 to-transparent" />
+          </section>
+
+          {/* Free Listing Banner */}
+          <section className="relative overflow-hidden rounded-xl border border-casino-gold/40 bg-card shadow-[0_20px_80px_hsl(var(--casino-pink)/0.15)] animate-slide-up group cursor-pointer"
+            onClick={() => navigate("/help?tab=list-coin")}
+            role="button"
+            aria-label="List your coin or token for free"
+          >
+            <img
+              src={freeListingBanner}
+              alt="Free coin and token listings on Phantom Exchange — building communities together"
+              loading="lazy"
+              width={1920}
+              height={1080}
+              className="block aspect-[2.8/1] w-full object-cover object-center sm:aspect-[3.2/1] lg:aspect-[3.6/1] transition-transform duration-500 group-hover:scale-[1.02]"
+            />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-background/95 via-background/40 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
+              <div>
+                <p className="text-[10px] sm:text-xs uppercase tracking-widest text-casino-gold/80 font-bold flex items-center gap-1">
+                  <Sparkles className="h-3 w-3" /> Community First
+                </p>
+                <p className="text-xs sm:text-sm text-muted-foreground max-w-md">
+                  We never charge to list your coin or token. Apply now and grow your community with us.
+                </p>
+              </div>
+              <Button variant="gold" size="sm" className="shrink-0" onClick={(e) => { e.stopPropagation(); navigate("/help?tab=list-coin"); }}>
+                <Coins className="h-4 w-4 mr-1" /> List Your Coin Free
+              </Button>
+            </div>
           </section>
 
           {/* Menu tabs */}

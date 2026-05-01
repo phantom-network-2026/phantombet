@@ -17,6 +17,7 @@ import { SlotsConfigPanel } from "@/components/casino/SlotsConfigPanel";
 import { PromotionsManager } from "@/components/casino/PromotionsManager";
 import DevConsole from "@/components/casino/DevConsole";
 import AiAgentPanel from "@/components/casino/AiAgentPanel";
+import { HelpListingAdminPanel } from "@/components/casino/HelpListingAdminPanel";
 import { AdminInner } from "./Admin";
 import {
   ArrowLeft, FolderOpen, Database, Settings, Upload, Trash2, Download,
@@ -2571,7 +2572,7 @@ function ExchangeAdminPanel({ onBack }: { onBack: () => void }) {
   );
 }
 
-type ActivePanel = null | "users" | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "bonus-probability" | "slots-config" | "promotions" | "wallet-mode" | "deposits-withdrawals" | "welcome-config" | "ghost-users" | "broadcasts" | "dev-console" | "ai-agent" | "sports-promos" | "exchange-admin";
+type ActivePanel = null | "users" | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "bonus-probability" | "slots-config" | "promotions" | "wallet-mode" | "deposits-withdrawals" | "welcome-config" | "ghost-users" | "broadcasts" | "dev-console" | "ai-agent" | "sports-promos" | "exchange-admin" | "help-listings";
 
 export default function CPanel() {
   const { isAdmin, isOwner, loading, profile } = useAuth();
@@ -2636,6 +2637,7 @@ export default function CPanel() {
           {activePanel === "ai-agent" && <AiAgentPanel onBack={back} />}
           {activePanel === "sports-promos" && <SportsPromoUploaderPanel onBack={back} />}
          {activePanel === "exchange-admin" && <ExchangeAdminPanel onBack={back} />}
+          {activePanel === "help-listings" && <HelpListingAdminPanel onBack={back} />}
         </div>
       </div>
     );
@@ -2756,6 +2758,9 @@ export default function CPanel() {
                 <ToolCard icon={<Coins className="h-6 w-6" />} label="Listed Coins" onClick={() => setActivePanel("exchange-admin")} active={activePanel === "exchange-admin"} />
                 <ToolCard icon={<Megaphone className="h-6 w-6" />} label="Welcome Banner" onClick={() => setActivePanel("exchange-admin")} />
                 <ToolCard icon={<ArrowLeftRight className="h-6 w-6" />} label="Exchange cPanel" onClick={() => navigate("/cpanel/exchange")} />
+                <ToolCard icon={<Coins className="h-6 w-6" />} label="Listing Applications" onClick={() => setActivePanel("help-listings")} active={activePanel === "help-listings"} />
+                <ToolCard icon={<Info className="h-6 w-6" />} label="Help Info Links" onClick={() => setActivePanel("help-listings")} />
+                <ToolCard icon={<Settings className="h-6 w-6" />} label="Listing Form Fields" onClick={() => setActivePanel("help-listings")} />
               </div>
             </CpanelSection>
 
