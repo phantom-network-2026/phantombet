@@ -5,7 +5,7 @@ import logo from "@/assets/phantom-logo-ghost.jpeg";
 
 interface ConnectingSplashProps {
   onComplete: () => void;
-  duration?: number; // total ms, default 4200
+  duration?: number; // total ms, default 7000
 }
 
 const PHASES = [
@@ -23,7 +23,7 @@ function getPhaseLabel(pct: number) {
   return PHASES[PHASES.length - 1].label;
 }
 
-export default function ConnectingSplash({ onComplete, duration = 4200 }: ConnectingSplashProps) {
+export default function ConnectingSplash({ onComplete, duration = 7000 }: ConnectingSplashProps) {
   const [pct, setPct] = useState(0);
 
   useEffect(() => {
