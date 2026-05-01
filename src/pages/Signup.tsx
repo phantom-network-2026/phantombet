@@ -12,6 +12,7 @@ import logo from "@/assets/phantombet-logo.png";
 import { Copy, Shield, AlertTriangle } from "lucide-react";
 import { LanguagePicker } from "@/components/casino/LanguagePicker";
 import { toast } from "sonner";
+import ConnectingSplash from "@/components/casino/ConnectingSplash";
 
 const WORD_LIST = [
   "alpha","bravo","charlie","delta","echo","foxtrot","golf","hotel","india","juliet",
@@ -49,6 +50,7 @@ export default function Signup() {
   const [confirmed, setConfirmed] = useState(false);
   const [verifyWord, setVerifyWord] = useState("");
   const [verifyIndex, setVerifyIndex] = useState(0);
+  const [showSplash, setShowSplash] = useState(false);
   const { signUp } = useAuth();
   const navigate = useNavigate();
 
@@ -100,12 +102,15 @@ export default function Signup() {
     });
 
     setLoading(false);
-    navigate("/casino");
+    setShowSplash(true);
   };
 
   if (step === "verify") {
     return (
       <div className="relative min-h-screen gradient-casino-bg flex items-center justify-center p-4">
+        {showSplash && (
+          <ConnectingSplash onComplete={() => navigate("/casino")} />
+        )}
         <div className="absolute top-4 right-4 z-10">
           <LanguagePicker />
         </div>
