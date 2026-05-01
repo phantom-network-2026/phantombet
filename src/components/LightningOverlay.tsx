@@ -6,11 +6,14 @@ import { useEffect, useRef, useState } from "react";
  */
 export function LightningOverlay() {
   const [flash, setFlash] = useState(0);
+  const [variant, setVariant] = useState<"gold" | "blue" | "white">("gold");
   const audioCtxRef = useRef<AudioContext | null>(null);
 
   useEffect(() => {
     let timeout: number;
     const trigger = () => {
+      const variants: Array<"gold" | "blue" | "white"> = ["gold", "blue", "white", "blue", "gold"];
+      setVariant(variants[Math.floor(Math.random() * variants.length)]);
       setFlash((f) => f + 1);
       try {
         if (!audioCtxRef.current) {
@@ -31,11 +34,20 @@ export function LightningOverlay() {
           o.stop(ctx.currentTime + 0.65);
         }
       } catch {}
-      timeout = window.setTimeout(trigger, 6000 + Math.random() * 9000);
+      timeout = window.setTimeout(trigger, 2000 + Math.random() * 3500);
     };
-    timeout = window.setTimeout(trigger, 4000);
+    timeout = window.setTimeout(trigger, 1500);
     return () => window.clearTimeout(timeout);
   }, []);
+
+  const boltColor =
+    variant === "blue" ? "hsl(210 100% 65%)" : variant === "white" ? "hsl(0 0% 100%)" : "hsl(42 95% 70%)";
+  const glowColor =
+    variant === "blue"
+      ? "hsl(210 100% 60% / 0.28)"
+      : variant === "white"
+      ? "hsl(210 30% 90% / 0.25)"
+      : "hsl(270 80% 55% / 0.22)";
 
   return (
     <div
@@ -50,14 +62,15 @@ export function LightningOverlay() {
     >
       <svg
         key={flash}
-        className="absolute inset-0 w-full h-full animate-bolt-global opacity-60"
+        className="absolute inset-0 w-full h-full animate-bolt-global opacity-80"
         viewBox="0 0 400 800"
         preserveAspectRatio="none"
       >
         <defs>
           <filter id="bolt-glow-global">
-            <feGaussianBlur stdDeviation="3" result="b" />
+            <feGaussianBlur stdDeviation="4" result="b" />
             <feMerge>
+              <feMergeNode in="b" />
               <feMergeNode in="b" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
@@ -65,19 +78,18 @@ export function LightningOverlay() {
         </defs>
         <path
           d={`M${80 + Math.random() * 240} 0 L${100 + Math.random() * 200} 180 L${80 + Math.random() * 200} 200 L${120 + Math.random() * 180} 420 L${90 + Math.random() * 200} 440 L${130 + Math.random() * 160} 800`}
-          stroke="hsl(42 95% 70%)"
-          strokeWidth="2"
+          stroke={boltColor}
+          strokeWidth="2.2"
           fill="none"
           filter="url(#bolt-glow-global)"
-          opacity="0.85"
+          opacity="0.9"
         />
       </svg>
       <div
         key={`f-${flash}`}
         className="absolute inset-0 animate-storm-glow-global"
         style={{
-          background:
-            "radial-gradient(ellipse at 50% 30%, hsl(270 80% 55% / 0.22), transparent 60%)",
+          background: `radial-gradient(ellipse at 50% 30%, ${glowColor}, transparent 60%)`,
         }}
       />
       <style>{`
