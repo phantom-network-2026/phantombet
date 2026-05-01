@@ -475,6 +475,80 @@ export type Database = {
         }
         Relationships: []
       }
+      forum_replies: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          id: string
+          thread_id: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          created_at?: string
+          id?: string
+          thread_id: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_replies_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "forum_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forum_threads: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          id: string
+          is_locked: boolean
+          is_pinned: boolean
+          last_activity_at: string
+          prefix: Database["public"]["Enums"]["forum_prefix"]
+          reply_count: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          created_at?: string
+          id?: string
+          is_locked?: boolean
+          is_pinned?: boolean
+          last_activity_at?: string
+          prefix?: Database["public"]["Enums"]["forum_prefix"]
+          reply_count?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          is_locked?: boolean
+          is_pinned?: boolean
+          last_activity_at?: string
+          prefix?: Database["public"]["Enums"]["forum_prefix"]
+          reply_count?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       free_bet_progress: {
         Row: {
           award_amount: number
@@ -1373,6 +1447,7 @@ export type Database = {
         | "owner"
       football_bet_market: "home" | "draw" | "away"
       football_match_status: "upcoming" | "live" | "finished" | "cancelled"
+      forum_prefix: "tutorial" | "question" | "release" | "issue" | "discussion"
       free_bet_status: "pending" | "qualified" | "awarded" | "expired"
       friendship_status: "pending" | "accepted" | "rejected"
       game_category:
@@ -1526,6 +1601,7 @@ export const Constants = {
       app_role: ["admin", "user", "moderator", "staff", "active_user", "owner"],
       football_bet_market: ["home", "draw", "away"],
       football_match_status: ["upcoming", "live", "finished", "cancelled"],
+      forum_prefix: ["tutorial", "question", "release", "issue", "discussion"],
       free_bet_status: ["pending", "qualified", "awarded", "expired"],
       friendship_status: ["pending", "accepted", "rejected"],
       game_category: [

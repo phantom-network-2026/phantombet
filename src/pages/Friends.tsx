@@ -7,9 +7,10 @@ import { BottomNav } from "@/components/casino/BottomNav";
 import { ProfileAvatar } from "@/components/casino/ProfileAvatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Users, UserPlus, Search, MessageCircle, Check, X, Clock, Circle } from "lucide-react";
+import { Users, UserPlus, Search, MessageCircle, Check, X, Clock, Circle, MessageSquare, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import PartyChat from "@/components/casino/PartyChat";
+import Forum from "@/components/casino/Forum";
 
 interface UserResult {
   user_id: string;
@@ -30,7 +31,7 @@ interface Friendship {
 export default function Friends() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<"friends" | "party" | "online" | "requests" | "search">("friends");
+  const [tab, setTab] = useState<"forum" | "friends" | "party" | "online" | "requests" | "search">("forum");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<UserResult[]>([]);
   const [friendships, setFriendships] = useState<Friendship[]>([]);
@@ -190,16 +191,29 @@ export default function Friends() {
   const getProfile = (userId: string): UserResult => profiles[userId] || { user_id: userId, username: "Unknown" };
 
   return (
-    <div className="min-h-screen gradient-casino-bg pb-20 md:pb-0">
+    <div className="min-h-screen gradient-casino-bg pb-24">
       <Header />
-      <div className="container max-w-2xl py-6 px-4">
-        <h1 className="font-display text-2xl font-black text-gold mb-4 flex items-center gap-2">
-          <Users className="h-6 w-6" /> Social
-        </h1>
+      <div className="container max-w-3xl py-6 px-4">
+        {/* Hero */}
+        <div className="relative overflow-hidden rounded-2xl border border-primary/40 bg-gradient-to-br from-[hsl(270_55%_15%)] via-[hsl(265_50%_10%)] to-black p-5 mb-5 shadow-[0_0_40px_hsl(270_70%_30%/0.4)]">
+          <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-casino-gold/20 blur-3xl" />
+          <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-primary/30 blur-3xl" />
+          <div className="relative flex items-center gap-3">
+            <div className="h-12 w-12 rounded-2xl bg-casino-gold/15 border border-casino-gold/40 text-casino-gold flex items-center justify-center">
+              <Sparkles className="h-6 w-6" />
+            </div>
+            <div>
+              <h1 className="font-display text-2xl font-black bg-gradient-to-r from-casino-gold via-amber-200 to-casino-gold bg-clip-text text-transparent">
+                Phantom Social
+              </h1>
+              <p className="text-xs text-muted-foreground">Connect, post, party. The network where members hang out.</p>
+            </div>
+          </div>
+        </div>
 
         {/* Tabs */}
         <div className="flex gap-1 mb-6 overflow-x-auto">
-          {(["friends", "party", "online", "requests", "search"] as const).map((t) => (
+          {(["forum", "friends", "party", "online", "requests", "search"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -221,6 +235,9 @@ export default function Friends() {
             </button>
           ))}
         </div>
+
+        {/* Forum */}
+        {tab === "forum" && <Forum />}
 
         {/* Party Chat */}
         {tab === "party" && <PartyChat />}
