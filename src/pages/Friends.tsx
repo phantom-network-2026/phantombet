@@ -43,7 +43,7 @@ export default function Friends() {
   const [friendships, setFriendships] = useState<Friendship[]>([]);
   const [profiles, setProfiles] = useState<Record<string, UserResult>>({});
   const [onlineUsers, setOnlineUsers] = useState<UserResult[]>([]);
-  const [leaderboard, setLeaderboard] = useState<Array<UserResult & { level?: number; total_wagered?: number }>>([]);
+  const [leaderboard, setLeaderboard] = useState<Array<UserResult & { xp?: number }>>([]);
   const [recentDms, setRecentDms] = useState<Array<{ user_id: string; preview: string; at: string; unread: number }>>([]);
 
   useEffect(() => {
@@ -65,8 +65,8 @@ export default function Friends() {
   const fetchLeaderboard = async () => {
     const { data } = await supabase
       .from("profiles_public" as any)
-      .select("user_id, username, avatar_url, border_style, has_animated_border, has_animated_avatar, level, total_wagered")
-      .order("level", { ascending: false })
+      .select("user_id, username, avatar_url, border_style, has_animated_border, has_animated_avatar, xp")
+      .order("xp", { ascending: false })
       .limit(25) as { data: any[] | null };
     setLeaderboard((data || []) as any);
   };
@@ -410,7 +410,9 @@ export default function Friends() {
                     hasAnimatedBorder={u.has_animated_border} hasAnimatedAvatar={u.has_animated_avatar} size="md" />
                   <div className="min-w-0">
                     <p className="font-display font-bold truncate hover:text-casino-gold transition">{u.username || "Unknown"}</p>
-                    <p className="text-[11px] text-muted-foreground">Level {u.level ?? 1}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Level {Math.max(1, Math.floor((u.xp ?? 0) / 500) + 1)} • {u.xp ?? 0} XP
+                    </p>
                   </div>
                 </div>
               </div>
