@@ -136,6 +136,72 @@ export type Database = {
         }
         Relationships: []
       }
+      coin_listing_applications: {
+        Row: {
+          admin_notes: string | null
+          applicant_user_id: string | null
+          contract_address: string | null
+          created_at: string
+          description: string | null
+          email: string
+          extra_data: Json
+          id: string
+          network: string | null
+          project_name: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          social_links: string | null
+          status: string
+          symbol: string
+          team_info: string | null
+          updated_at: string
+          website: string | null
+          whitepaper_url: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          applicant_user_id?: string | null
+          contract_address?: string | null
+          created_at?: string
+          description?: string | null
+          email: string
+          extra_data?: Json
+          id?: string
+          network?: string | null
+          project_name: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          social_links?: string | null
+          status?: string
+          symbol: string
+          team_info?: string | null
+          updated_at?: string
+          website?: string | null
+          whitepaper_url?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          applicant_user_id?: string | null
+          contract_address?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string
+          extra_data?: Json
+          id?: string
+          network?: string | null
+          project_name?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          social_links?: string | null
+          status?: string
+          symbol?: string
+          team_info?: string | null
+          updated_at?: string
+          website?: string | null
+          whitepaper_url?: string | null
+        }
+        Relationships: []
+      }
       daily_spins: {
         Row: {
           id: string
@@ -1463,6 +1529,7 @@ export type Database = {
         Args: { p_thread_id: string }
         Returns: undefined
       }
+      get_public_setting: { Args: { p_key: string }; Returns: Json }
       grant_xp: {
         Args: { p_amount: number; p_user_id: string }
         Returns: {
