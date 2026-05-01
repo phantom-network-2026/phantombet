@@ -1,13 +1,16 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Header } from "@/components/casino/Header";
 import { BottomNav } from "@/components/casino/BottomNav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { CoinListingForm } from "@/components/casino/CoinListingForm";
+import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, Send, Bot, User, HelpCircle, CreditCard,
-  Wallet, Gift, Gamepad2, Shield, Loader2,
+  Wallet, Gift, Gamepad2, Shield, Loader2, Info, Coins, ExternalLink, MessageSquare,
 } from "lucide-react";
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/support-chat`;
@@ -21,6 +24,48 @@ const FAQ_ITEMS = [
   { icon: Gamepad2, label: "Game issues", q: "A game isn't loading, what should I do?" },
   { icon: Shield, label: "Account security", q: "How do I keep my account secure?" },
 ];
+
+type InfoLink = { id: string; label: string; url: string; description?: string };
+
+function InfoLinksTab() {
+  const [links, setLinks] = useState<InfoLink[]>([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.rpc("get_public_setting", { p_key: "help_info_links" });
+      const arr = (data as any)?.links;
+      if (Array.isArray(arr)) setLinks(arr);
+      setLoading(false);
+    })();
+  }, []);
+  if (loading) return <div className="py-8 text-center text-muted-foreground text-sm">Loading...</div>;
+  if (!links.length) return <div className="py-8 text-center text-muted-foreground text-sm">No info links configured yet.</div>;
+  return (
+    <div className="space-y-2 animate-fade-in">
+      <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Resources & Information</p>
+      {links.map((link) => {
+        const isExternal = link.url && link.url !== "#" && /^https?:\/\//.test(link.url);
+        const content = (
+          <div className="flex items-center gap-3 rounded-lg bg-card border border-border p-3 hover:border-casino-gold/50 transition-colors">
+            <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center shrink-0">
+              <Info className="h-4 w-4 text-casino-gold" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">{link.label}</p>
+              {link.description && <p className="text-xs text-muted-foreground truncate">{link.description}</p>}
+            </div>
+            {isExternal && <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" />}
+          </div>
+        );
+        return isExternal ? (
+          <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer" className="block">{content}</a>
+        ) : (
+          <div key={link.id}>{content}</div>
+        );
+      })}
+    </div>
+  );
+}
 
 async function streamChat({
   messages,
@@ -79,6 +124,10 @@ async function streamChat({
 
 export default function Help() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab") === "list-coin" ? "list-coin"
+    : searchParams.get("tab") === "info" ? "info" : "chat";
+  const [tab, setTab] = useState<string>(initialTab);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -141,6 +190,22 @@ export default function Help() {
           </h1>
         </div>
 
+        <Tabs value={tab} onValueChange={(v) => { setTab(v); setSearchParams(v === "chat" ? {} : { tab: v }); }} className="flex-1 flex flex-col min-h-0">
+          <TabsList className="grid grid-cols-3 mb-4 bg-card border border-border">
+            <TabsTrigger value="chat" className="text-xs gap-1"><MessageSquare className="h-3.5 w-3.5" /> Support</TabsTrigger>
+            <TabsTrigger value="info" className="text-xs gap-1"><Info className="h-3.5 w-3.5" /> Info</TabsTrigger>
+            <TabsTrigger value="list-coin" className="text-xs gap-1"><Coins className="h-3.5 w-3.5" /> List Coin</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="info" className="mt-0">
+            <InfoLinksTab />
+          </TabsContent>
+
+          <TabsContent value="list-coin" className="mt-0">
+            <CoinListingForm />
+          </TabsContent>
+
+          <TabsContent value="chat" className="flex-1 flex flex-col min-h-0 mt-0">
         {!showChat ? (
           /* FAQ Quick Actions */
           <div className="space-y-4 animate-fade-in">
@@ -242,6 +307,8 @@ export default function Help() {
             </div>
           </div>
         )}
+          </TabsContent>
+        </Tabs>
       </div>
       <BottomNav />
     </div>
