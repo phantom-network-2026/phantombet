@@ -276,18 +276,24 @@ function FakeForumSection() {
           <Switch checked={cfg.reply_to_real_users} onCheckedChange={(v) => save({ ...cfg, reply_to_real_users: v })} />
         </div>
       </div>
-      <div className="rounded-xl border border-border bg-card p-4 grid grid-cols-3 gap-3">
-        <div>
-          <Label className="text-xs">Threads / run</Label>
-          <Input type="number" min={0} max={20} value={cfg.threads_per_run} onChange={(e) => save({ ...cfg, threads_per_run: Number(e.target.value) })} />
-        </div>
-        <div>
-          <Label className="text-xs">Replies / run</Label>
-          <Input type="number" min={0} max={50} value={cfg.replies_per_run} onChange={(e) => save({ ...cfg, replies_per_run: Number(e.target.value) })} />
-        </div>
-        <div>
-          <Label className="text-xs">Likes / run</Label>
-          <Input type="number" min={0} max={100} value={cfg.likes_per_run} onChange={(e) => save({ ...cfg, likes_per_run: Number(e.target.value) })} />
+      <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+        <p className="text-[10px] text-muted-foreground">Auto-runs every 15 min (4 runs/hr). Set values per hour — we divide by 4 per run.</p>
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <Label className="text-xs">Threads / hour</Label>
+            <Input type="number" min={0} max={80} value={cfg.threads_per_run * 4}
+              onChange={(e) => save({ ...cfg, threads_per_run: Math.max(0, Math.round(Number(e.target.value) / 4)) })} />
+          </div>
+          <div>
+            <Label className="text-xs">Replies / hour</Label>
+            <Input type="number" min={0} max={200} value={cfg.replies_per_run * 4}
+              onChange={(e) => save({ ...cfg, replies_per_run: Math.max(0, Math.round(Number(e.target.value) / 4)) })} />
+          </div>
+          <div>
+            <Label className="text-xs">Likes / hour</Label>
+            <Input type="number" min={0} max={400} value={cfg.likes_per_run * 4}
+              onChange={(e) => save({ ...cfg, likes_per_run: Math.max(0, Math.round(Number(e.target.value) / 4)) })} />
+          </div>
         </div>
       </div>
       <div className="rounded-xl border border-border bg-card p-4 space-y-2">
