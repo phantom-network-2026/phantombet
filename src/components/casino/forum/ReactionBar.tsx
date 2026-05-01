@@ -28,11 +28,12 @@ export function ReactionBar({ threadId, replyId, compact }: Props) {
   const [open, setOpen] = useState(false);
 
   const load = async () => {
-    const filter = threadId ? { col: "thread_id", val: threadId } : { col: "reply_id", val: replyId! };
-    const { data } = await supabase
+    const q = supabase
       .from("forum_reactions")
-      .select("reaction,user_id")
-      .eq(filter.col, filter.val);
+      .select("reaction,user_id");
+    const { data } = threadId
+      ? await q.eq("thread_id", threadId)
+      : await q.eq("reply_id", replyId!);
     if (!data) return;
     const c: Counts = {};
     const m = new Set<ReactionKind>();
