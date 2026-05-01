@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Dice5, Trophy, Users, HelpCircle, Medal, ArrowLeftRight, Network } from "lucide-react";
+import { Dice5, Trophy, Users, Info, Medal, ArrowLeftRight, Network } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage, type LanguageCode } from "@/hooks/useLanguage";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,7 +13,7 @@ const navItems = [
   { icon: ArrowLeftRight, labelKey: "home" as const, path: "/exchange", requiresAuth: true, label: "Exchange" },
   { icon: Users, labelKey: "friends" as const, path: "/friends", requiresAuth: true, label: "Social" },
   { icon: Trophy, labelKey: "promos" as const, path: "/promotions", requiresAuth: true },
-  { icon: HelpCircle, labelKey: "help" as const, path: "/help", requiresAuth: false },
+  { icon: Info, labelKey: "help" as const, path: "/help", requiresAuth: false, label: "Info" },
 ];
 
 export function BottomNav() {
