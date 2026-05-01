@@ -8,7 +8,6 @@ import { toast } from "sonner";
 
 const navItems = [
   { icon: Network, labelKey: "home" as const, path: "/hub", requiresAuth: false, label: "Hub" },
-  { icon: Home, labelKey: "home" as const, path: "/", requiresAuth: false },
   { icon: Dice5, labelKey: "games" as const, path: "/games", requiresAuth: false },
   { icon: Medal, labelKey: "home" as const, path: "/sportsbook", requiresAuth: true, label: "Sports" },
   { icon: ArrowLeftRight, labelKey: "home" as const, path: "/exchange", requiresAuth: true, label: "Exchange" },
