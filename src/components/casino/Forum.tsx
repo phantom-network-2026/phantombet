@@ -244,12 +244,19 @@ export default function Forum() {
   };
 
   if (active) {
-    return <ThreadView thread={active} onBack={() => { setActive(null); loadThreads(); }} authorProfile={profiles[active.author_id]} />;
+    return (
+      <ThreadView
+        thread={active}
+        onBack={() => { setActive(null); loadThreads(); }}
+        authorProfile={profiles[active.author_id]}
+        attachments={attachments[active.id] || []}
+      />
+    );
   }
 
   return (
-    <div className="space-y-3">
-      {/* header + new thread */}
+    <div className="grid gap-4 lg:grid-cols-[1fr_240px] items-start">
+      <div className="space-y-3 min-w-0">
       <div className="flex items-center justify-between gap-2">
         <div>
           <h2 className="font-display text-lg font-black flex items-center gap-2">
@@ -275,7 +282,44 @@ export default function Forum() {
                 ))}
               </div>
               <Input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={140} />
-              <Textarea placeholder="Write your post... (markdown-friendly)" value={body} onChange={(e) => setBody(e.target.value)} rows={6} maxLength={5000} />
+              <Textarea placeholder="Write your post... use @username to mention" value={body} onChange={(e) => setBody(e.target.value)} rows={6} maxLength={5000} />
+
+              {/* Image picker */}
+              <div className="space-y-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  hidden
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || []).slice(0, 4);
+                    const valid = files.filter((f) => f.size <= 5 * 1024 * 1024);
+                    if (valid.length < files.length) toast.error("Some images skipped (max 5MB each)");
+                    setPendingImages((prev) => [...prev, ...valid].slice(0, 4));
+                    if (fileInputRef.current) fileInputRef.current.value = "";
+                  }}
+                />
+                <Button type="button" variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()}
+                  className="w-full border border-dashed border-border">
+                  <ImageIcon className="h-4 w-4 mr-1.5" /> Attach images ({pendingImages.length}/4)
+                </Button>
+                {pendingImages.length > 0 && (
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {pendingImages.map((f, i) => (
+                      <div key={i} className="relative aspect-square rounded-md overflow-hidden border border-border">
+                        <img src={URL.createObjectURL(f)} alt="" className="h-full w-full object-cover" />
+                        <button type="button"
+                          onClick={() => setPendingImages((prev) => prev.filter((_, idx) => idx !== i))}
+                          className="absolute top-0.5 right-0.5 bg-black/70 rounded-full p-0.5 text-white">
+                          <XIcon className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <Button variant="gold" className="w-full" onClick={submitThread} disabled={posting}>
                 {posting ? "Posting..." : "Post Thread"}
               </Button>
@@ -305,6 +349,20 @@ export default function Forum() {
             </button>
           ))}
         </div>
+        {user && (
+          <button
+            onClick={() => setShowSavedOnly((v) => !v)}
+            className={`shrink-0 px-2.5 h-9 rounded-md border text-[10px] font-bold inline-flex items-center gap-1 transition ${
+              showSavedOnly
+                ? "bg-casino-gold text-accent-foreground border-casino-gold"
+                : "bg-secondary/60 text-muted-foreground border-border hover:text-foreground"
+            }`}
+            aria-pressed={showSavedOnly}
+            title="Saved threads"
+          >
+            <Bookmark className={`h-3 w-3 ${showSavedOnly ? "fill-current" : ""}`} /> Saved
+          </button>
+        )}
       </div>
 
       {/* prefix filter chips */}
@@ -352,6 +410,11 @@ export default function Forum() {
                   <ProfileAvatar avatarUrl={prof?.avatar_url} username={prof?.username} borderStyle={prof?.border_style}
                     hasAnimatedBorder={prof?.has_animated_border} hasAnimatedAvatar={prof?.has_animated_avatar} size="sm" />
                   <span className="text-[11px] text-muted-foreground truncate">{prof?.username || "Unknown"}</span>
+                    {(attachments[t.id]?.length || 0) > 0 && (
+                      <span className="inline-flex items-center gap-0.5 text-[10px] text-casino-gold/80 ml-1">
+                        <ImageIcon className="h-3 w-3" /> {attachments[t.id].length}
+                      </span>
+                    )}
                 </div>
                 <div className="flex items-center gap-3 text-[11px] text-muted-foreground shrink-0">
                   <span className="inline-flex items-center gap-1"><Eye className="h-3 w-3" />{t.view_count}</span>
@@ -363,12 +426,36 @@ export default function Forum() {
                   >
                     <Heart className={`h-3 w-3 ${liked ? "fill-casino-pink" : ""}`} />{t.like_count}
                   </span>
+                    <span
+                      role="button"
+                      onClick={(e) => toggleBookmark(t.id, e)}
+                      className={`inline-flex items-center transition ${bookmarked.has(t.id) ? "text-casino-gold" : "hover:text-casino-gold"}`}
+                      aria-label="Bookmark"
+                    >
+                      <Bookmark className={`h-3 w-3 ${bookmarked.has(t.id) ? "fill-casino-gold" : ""}`} />
+                    </span>
                 </div>
               </div>
             </button>
           );
         })}
       </div>
+      </div>
+
+      {/* Trending sidebar (desktop only) */}
+      <aside className="hidden lg:block sticky top-20 space-y-3">
+        <TrendingSidebar onPick={(id) => {
+          const t = threads.find((x) => x.id === id);
+          if (t) setActive(t);
+          else {
+            // fetch single
+            supabase.from("forum_threads")
+              .select("id,author_id,title,body,prefix,is_pinned,is_locked,reply_count,view_count,like_count,last_activity_at,created_at")
+              .eq("id", id).maybeSingle()
+              .then(({ data }) => { if (data) setActive(data as Thread); });
+          }
+        }} />
+      </aside>
     </div>
   );
 }
