@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Dice5, Trophy, Users, HelpCircle, Medal, ArrowLeftRight, Network } from "lucide-react";
+import { Dice5, Trophy, Users, HelpCircle, Medal, ArrowLeftRight, Network } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage, type LanguageCode } from "@/hooks/useLanguage";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,7 +8,6 @@ import { toast } from "sonner";
 
 const navItems = [
   { icon: Network, labelKey: "home" as const, path: "/hub", requiresAuth: false, label: "Hub" },
-  { icon: Home, labelKey: "home" as const, path: "/", requiresAuth: false },
   { icon: Dice5, labelKey: "games" as const, path: "/games", requiresAuth: false },
   { icon: Medal, labelKey: "home" as const, path: "/sportsbook", requiresAuth: true, label: "Sports" },
   { icon: ArrowLeftRight, labelKey: "home" as const, path: "/exchange", requiresAuth: true, label: "Exchange" },

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/casino/Header";
@@ -7,7 +7,7 @@ import { BottomNav } from "@/components/casino/BottomNav";
 import { ProfileAvatar } from "@/components/casino/ProfileAvatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Users, UserPlus, Search, MessageCircle, Check, X, Clock, Circle, MessageSquare, Sparkles } from "lucide-react";
+import { Users, UserPlus, Search, MessageCircle, Check, X, Clock, Circle, MessageSquare, Sparkles, Trophy, Inbox, PartyPopper } from "lucide-react";
 import { toast } from "sonner";
 import PartyChat from "@/components/casino/PartyChat";
 import Forum from "@/components/casino/Forum";
@@ -35,18 +35,75 @@ interface Friendship {
 export default function Friends() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<"forum" | "friends" | "party" | "online" | "requests" | "search">("forum");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = (searchParams.get("tab") as any) || "forum";
+  const [tab, setTab] = useState<"forum" | "friends" | "party" | "online" | "requests" | "search" | "messages" | "leaderboard">(initialTab);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<UserResult[]>([]);
   const [friendships, setFriendships] = useState<Friendship[]>([]);
   const [profiles, setProfiles] = useState<Record<string, UserResult>>({});
   const [onlineUsers, setOnlineUsers] = useState<UserResult[]>([]);
+  const [leaderboard, setLeaderboard] = useState<Array<UserResult & { xp?: number }>>([]);
+  const [recentDms, setRecentDms] = useState<Array<{ user_id: string; preview: string; at: string; unread: number }>>([]);
 
   useEffect(() => {
     if (!user) { navigate("/login"); return; }
     fetchFriendships();
     fetchOnlineUsers();
   }, [user]);
+
+  useEffect(() => {
+    if (tab === "leaderboard") fetchLeaderboard();
+    if (tab === "messages") fetchRecentDms();
+    // keep URL in sync
+    const sp = new URLSearchParams(searchParams);
+    sp.set("tab", tab);
+    setSearchParams(sp, { replace: true });
+    // eslint-disable-next-line
+  }, [tab]);
+
+  const fetchLeaderboard = async () => {
+    const { data } = await supabase
+      .from("profiles_public" as any)
+      .select("user_id, username, avatar_url, border_style, has_animated_border, has_animated_avatar, xp")
+      .order("xp", { ascending: false })
+      .limit(25) as { data: any[] | null };
+    setLeaderboard((data || []) as any);
+  };
+
+  const fetchRecentDms = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("messages")
+      .select("sender_id,receiver_id,content,created_at,is_read")
+      .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+      .order("created_at", { ascending: false })
+      .limit(80) as { data: any[] | null };
+    if (!data) { setRecentDms([]); return; }
+    const map = new Map<string, { user_id: string; preview: string; at: string; unread: number }>();
+    for (const m of data) {
+      const other = m.sender_id === user.id ? m.receiver_id : m.sender_id;
+      const existing = map.get(other);
+      const unreadInc = m.receiver_id === user.id && !m.is_read ? 1 : 0;
+      if (!existing) {
+        map.set(other, { user_id: other, preview: m.content, at: m.created_at, unread: unreadInc });
+      } else {
+        existing.unread += unreadInc;
+      }
+    }
+    const list = Array.from(map.values());
+    const ids = list.map((l) => l.user_id);
+    if (ids.length) {
+      const { data: profs } = await supabase
+        .from("profiles_public" as any)
+        .select("user_id, username, avatar_url, border_style, has_animated_border, has_animated_avatar")
+        .in("user_id", ids) as { data: any[] | null };
+      const map2: Record<string, UserResult> = {};
+      (profs || []).forEach((p: any) => { map2[p.user_id] = p; });
+      setProfiles((prev) => ({ ...prev, ...map2 }));
+    }
+    setRecentDms(list);
+  };
 
   const fetchFriendships = async () => {
     if (!user) return;
@@ -230,11 +287,13 @@ export default function Friends() {
 
       <div className="container max-w-3xl py-4 px-4">
         {/* Quick-pick image tiles */}
-        <div className="grid grid-cols-3 gap-3 mb-5">
+        <div className="grid grid-cols-5 gap-2 mb-4">
           {[
-            { id: "forum", label: "Forum", img: tileForum, count: undefined as number | undefined },
-            { id: "friends", label: "Friends", img: tileFriends, count: accepted.length },
-            { id: "party", label: "Party", img: tileParty, count: undefined },
+            { id: "forum",       label: "Forum",   img: tileForum,   icon: MessageSquare, count: undefined as number | undefined },
+            { id: "friends",     label: "Friends", img: tileFriends, icon: Users,         count: accepted.length },
+            { id: "messages",    label: "DMs",     img: tileFriends, icon: Inbox,         count: undefined },
+            { id: "party",       label: "Party",   img: tileParty,   icon: PartyPopper,   count: undefined },
+            { id: "leaderboard", label: "Top",     img: tileParty,   icon: Trophy,        count: undefined },
           ].map((tile) => (
             <button
               key={tile.id}
@@ -245,15 +304,18 @@ export default function Friends() {
                   : "border-border hover:border-casino-gold/60"
               }`}
             >
-              <img src={tile.img} alt={tile.label} className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" width={512} height={512} />
+              <img src={tile.img} alt={tile.label} className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-70" loading="lazy" width={512} height={512} />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
               {tab === tile.id && (
                 <div className="absolute inset-0 ring-2 ring-inset ring-casino-gold/70 animate-pulse" />
               )}
-              <div className="absolute bottom-0 inset-x-0 p-2 text-left">
-                <p className="font-display font-black text-sm text-white drop-shadow">{tile.label}</p>
+              <div className="absolute top-1.5 right-1.5 h-6 w-6 rounded-md bg-black/60 border border-casino-gold/30 text-casino-gold flex items-center justify-center backdrop-blur">
+                <tile.icon className="h-3 w-3" />
+              </div>
+              <div className="absolute bottom-0 inset-x-0 p-1.5 text-left">
+                <p className="font-display font-black text-[11px] text-white drop-shadow leading-none">{tile.label}</p>
                 {typeof tile.count === "number" && tile.count > 0 && (
-                  <p className="text-[10px] text-casino-gold">{tile.count} active</p>
+                  <p className="text-[9px] text-casino-gold mt-0.5">{tile.count} active</p>
                 )}
               </div>
             </button>
@@ -262,7 +324,7 @@ export default function Friends() {
 
         {/* Secondary tab pills */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
-          {(["forum", "friends", "party", "online", "requests", "search"] as const).map((t) => (
+          {(["forum", "friends", "messages", "party", "online", "leaderboard", "requests", "search"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -292,6 +354,71 @@ export default function Friends() {
 
         {/* Party Chat */}
         {tab === "party" && <PartyChat />}
+
+        {/* Messages list */}
+        {tab === "messages" && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-display font-bold text-sm flex items-center gap-2"><Inbox className="h-4 w-4 text-casino-gold" /> Direct Messages</h3>
+              <Button variant="ghost" size="sm" onClick={() => setTab("friends")}>Start new</Button>
+            </div>
+            {recentDms.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8 text-sm">No conversations yet — message a friend to get started.</p>
+            ) : recentDms.map((dm) => {
+              const prof = getProfile(dm.user_id);
+              return (
+                <button key={dm.user_id} onClick={() => navigate(`/messages/${dm.user_id}`)}
+                  className="w-full flex items-center gap-3 rounded-xl bg-card border border-border p-3 hover:border-casino-gold/50 transition text-left">
+                  <ProfileAvatar avatarUrl={prof.avatar_url} username={prof.username} borderStyle={prof.border_style}
+                    hasAnimatedBorder={prof.has_animated_border} hasAnimatedAvatar={prof.has_animated_avatar} size="md" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-display font-bold truncate">{prof.username || "Unknown"}</p>
+                      <span className="text-[10px] text-muted-foreground shrink-0">
+                        {new Date(dm.at).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground truncate">{dm.preview}</p>
+                  </div>
+                  {dm.unread > 0 && (
+                    <span className="h-5 min-w-5 px-1.5 inline-flex items-center justify-center rounded-full bg-casino-pink text-[10px] font-bold text-white">
+                      {dm.unread}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Leaderboard */}
+        {tab === "leaderboard" && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-display font-bold text-sm flex items-center gap-2"><Trophy className="h-4 w-4 text-casino-gold" /> Network Leaderboard</h3>
+              <span className="text-[10px] text-muted-foreground">Top 25 by level</span>
+            </div>
+            {leaderboard.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8 text-sm">Loading rankings...</p>
+            ) : leaderboard.map((u, i) => (
+              <div key={u.user_id} className="flex items-center gap-3 rounded-xl bg-card border border-border p-3">
+                <span className={`w-7 text-center font-display font-black text-sm ${
+                  i === 0 ? "text-casino-gold" : i === 1 ? "text-zinc-300" : i === 2 ? "text-amber-700" : "text-muted-foreground"
+                }`}>#{i + 1}</span>
+                <div className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer" onClick={() => navigate(`/user/${u.user_id}`)}>
+                  <ProfileAvatar avatarUrl={u.avatar_url} username={u.username} borderStyle={u.border_style}
+                    hasAnimatedBorder={u.has_animated_border} hasAnimatedAvatar={u.has_animated_avatar} size="md" />
+                  <div className="min-w-0">
+                    <p className="font-display font-bold truncate hover:text-casino-gold transition">{u.username || "Unknown"}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Level {Math.max(1, Math.floor((u.xp ?? 0) / 500) + 1)} • {u.xp ?? 0} XP
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Friends List */}
         {tab === "friends" && (

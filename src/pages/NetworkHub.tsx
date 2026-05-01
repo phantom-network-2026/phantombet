@@ -15,6 +15,8 @@ import {
   Zap,
   Lock,
   Globe,
+  Users,
+  MessageSquare,
 } from "lucide-react";
 
 type App = {
@@ -32,7 +34,7 @@ const APPS: App[] = [
   {
     id: "exchange",
     name: "Phantom Exchange",
-    tagline: "Trade, swap & launch tokens across the Phantom ecosystem.",
+    tagline: "Trade, swap & launch tokens.",
     to: "https://www.phantomexchange.online/exchange",
     external: true,
     featured: true,
@@ -42,7 +44,7 @@ const APPS: App[] = [
   {
     id: "phantombet",
     name: "PhantomBet",
-    tagline: "Casino, slots, sportsbook and live games.",
+    tagline: "Casino, slots & sportsbook.",
     to: "/casino",
     image: betImg,
     status: "live",
@@ -50,8 +52,24 @@ const APPS: App[] = [
   {
     id: "wallet",
     name: "Phantom Wallet",
-    tagline: "Multi-crypto self-custody wallet.",
+    tagline: "Multi-chain self-custody.",
     to: "/wallet",
+    image: walletImg,
+    status: "live",
+  },
+  {
+    id: "social",
+    name: "Phantom Social",
+    tagline: "Friends, parties & DMs.",
+    to: "/friends",
+    image: betImg,
+    status: "live",
+  },
+  {
+    id: "forum",
+    name: "Phantom Forum",
+    tagline: "Threads, guides & releases.",
+    to: "/friends?tab=forum",
     image: walletImg,
     status: "live",
   },
@@ -129,45 +147,44 @@ export default function NetworkHub() {
         )}
       </header>
 
-      <main className="relative z-10 max-w-5xl mx-auto px-4 py-6 space-y-10">
-        {/* HERO */}
-        <section className="relative rounded-3xl overflow-hidden border border-primary/40 shadow-[0_0_60px_hsl(270_70%_30%/0.5)]">
+      <main className="relative z-10 max-w-5xl mx-auto px-4 py-4 space-y-5">
+        {/* HERO — compact */}
+        <section className="relative rounded-2xl overflow-hidden border border-primary/40 shadow-[0_0_40px_hsl(270_70%_30%/0.5)]">
           <img
             src={hubHero}
             alt="Phantom Network encrypted hub"
-            className="absolute inset-0 w-full h-full object-cover opacity-70"
+            className="absolute inset-0 w-full h-full object-cover opacity-60"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/75 to-black/30" />
           <div className="absolute inset-0 animate-hub-pulse pointer-events-none" />
-          <div className="relative p-6 sm:p-10 min-h-[280px] sm:min-h-[360px] flex flex-col justify-end">
-            <div className="inline-flex items-center gap-2 self-start rounded-full border border-casino-gold/50 bg-black/50 backdrop-blur px-3 py-1 text-[10px] tracking-[0.25em] uppercase text-casino-gold mb-3">
+          <div className="relative p-4 sm:p-6 min-h-[150px] sm:min-h-[200px] flex flex-col justify-end">
+            <div className="inline-flex items-center gap-2 self-start rounded-full border border-casino-gold/50 bg-black/50 backdrop-blur px-2.5 py-0.5 text-[9px] tracking-[0.25em] uppercase text-casino-gold mb-2">
               <Zap className="w-3 h-3" /> Encrypted • Non-KYC • Uncensored
             </div>
-            <h1 className="font-display text-3xl sm:text-5xl font-black bg-gradient-to-r from-casino-gold via-amber-200 to-casino-gold bg-clip-text text-transparent leading-tight">
+            <h1 className="font-display text-2xl sm:text-4xl font-black bg-gradient-to-r from-casino-gold via-amber-200 to-casino-gold bg-clip-text text-transparent leading-tight">
               Your Network. Your Keys. Your Power.
             </h1>
-            <p className="text-sm sm:text-base text-foreground/80 mt-2 max-w-xl">
-              One account, one identity, every Phantom service. Game, trade and
-              connect on a network built to give you back the control they took.
+            <p className="text-xs sm:text-sm text-foreground/80 mt-1 max-w-xl">
+              One account. Every Phantom service. Built to give you back control.
             </p>
           </div>
         </section>
 
-        {/* SECURITY STRIP */}
+        {/* SECURITY STRIP — compact */}
         <section>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-4 gap-2">
             {SECURITY.map((s) => (
               <div
                 key={s.title}
-                className="relative rounded-2xl border border-primary/30 bg-card/50 backdrop-blur p-4 overflow-hidden group hover:border-casino-gold/50 transition"
+                className="relative rounded-xl border border-primary/30 bg-card/50 backdrop-blur p-2 sm:p-3 overflow-hidden group hover:border-casino-gold/50 transition"
               >
-                <div className="absolute -inset-px rounded-2xl pointer-events-none animate-tile-glow opacity-50 group-hover:opacity-100 transition" />
+                <div className="absolute -inset-px rounded-xl pointer-events-none animate-tile-glow opacity-50 group-hover:opacity-100 transition" />
                 <div className="relative">
-                  <div className="h-9 w-9 rounded-xl bg-casino-gold/10 border border-casino-gold/40 text-casino-gold flex items-center justify-center mb-2">
+                  <div className="h-7 w-7 rounded-lg bg-casino-gold/10 border border-casino-gold/40 text-casino-gold flex items-center justify-center mb-1">
                     {s.icon}
                   </div>
-                  <h3 className="font-display font-bold text-sm">{s.title}</h3>
-                  <p className="text-xs text-muted-foreground mt-1 leading-snug">
+                  <h3 className="font-display font-bold text-[11px] sm:text-xs leading-tight">{s.title}</h3>
+                  <p className="hidden sm:block text-[10px] text-muted-foreground mt-1 leading-snug line-clamp-2">
                     {s.body}
                   </p>
                 </div>
@@ -176,109 +193,83 @@ export default function NetworkHub() {
           </div>
         </section>
 
-        {/* SERVICES */}
-        <section className="space-y-4">
+        {/* SERVICES — compact grid */}
+        <section className="space-y-3">
           <div className="flex items-end justify-between">
-            <h2 className="font-display text-2xl sm:text-3xl font-black text-foreground">
+            <h2 className="font-display text-lg sm:text-2xl font-black text-foreground">
               Choose Your Service
             </h2>
-            <span className="text-[10px] tracking-widest uppercase text-muted-foreground">
-              All connected • One account
+            <span className="text-[9px] tracking-widest uppercase text-muted-foreground">
+              5 services • 1 account
             </span>
           </div>
 
-          {/* Featured */}
-          {APPS.filter((a) => a.featured).map((app) => (
-            <button
-              key={app.id}
-              onClick={() => open(app)}
-              className="group relative w-full text-left rounded-3xl border border-primary/40 overflow-hidden hover:border-casino-gold/60 transition-all shadow-[0_0_40px_hsl(270_70%_30%/0.4)]"
-            >
-              <img
-                src={app.image}
-                alt={app.name}
-                loading="lazy"
-                className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-90 group-hover:scale-105 transition-all duration-700"
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-black/30" />
-              <div className="relative flex items-center gap-4 p-6 min-h-[180px]">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-display font-black text-2xl">
+          {/* All 5 services in a unified compact grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+            {APPS.map((app) => {
+              const Icon = app.id === "social" ? Users : app.id === "forum" ? MessageSquare : null;
+              return (
+                <button
+                  key={app.id}
+                  onClick={() => open(app)}
+                  className={`group relative text-left rounded-xl border overflow-hidden hover:border-casino-gold/70 transition-all aspect-[4/3] ${
+                    app.featured
+                      ? "border-casino-gold/50 shadow-[0_0_25px_hsl(45_95%_55%/0.25)] col-span-2 sm:col-span-1"
+                      : "border-border/60"
+                  }`}
+                >
+                  <img
+                    src={app.image}
+                    alt={app.name}
+                    loading="lazy"
+                    className="absolute inset-0 w-full h-full object-cover opacity-55 group-hover:opacity-80 group-hover:scale-110 transition-all duration-700"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent" />
+                  {Icon && (
+                    <div className="absolute top-2 left-2 h-7 w-7 rounded-lg bg-black/60 border border-casino-gold/40 text-casino-gold flex items-center justify-center backdrop-blur">
+                      <Icon className="w-3.5 h-3.5" />
+                    </div>
+                  )}
+                  <span className="absolute top-2 right-2 text-[8px] px-1.5 py-0.5 rounded-full bg-casino-green/20 text-casino-green border border-casino-green/40 font-bold tracking-widest">
+                    LIVE
+                  </span>
+                  <div className="absolute inset-x-0 bottom-0 p-2.5">
+                    <h3 className="font-display font-black text-sm leading-tight">
                       {app.name}
                     </h3>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-casino-green/20 text-casino-green border border-casino-green/40">
-                      LIVE
-                    </span>
+                    <div className="flex items-center justify-between gap-1 mt-0.5">
+                      <p className="text-[10px] text-foreground/75 truncate">
+                        {app.tagline}
+                      </p>
+                      <ArrowRight className="w-3.5 h-3.5 text-casino-gold shrink-0 group-hover:translate-x-0.5 transition-transform" />
+                    </div>
                   </div>
-                  <p className="text-sm text-foreground/80 mt-1 max-w-md">
-                    {app.tagline}
-                  </p>
-                </div>
-                <ArrowRight className="w-7 h-7 text-casino-gold group-hover:translate-x-1 transition-transform" />
-              </div>
-            </button>
-          ))}
-
-          {/* Others */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {APPS.filter((a) => !a.featured).map((app) => (
-              <button
-                key={app.id}
-                onClick={() => open(app)}
-                className="group relative text-left rounded-2xl border border-border/60 overflow-hidden hover:border-primary/60 transition-all min-h-[160px]"
-              >
-                <img
-                  src={app.image}
-                  alt={app.name}
-                  loading="lazy"
-                  className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-700"
-                />
-                <div className="absolute inset-0 bg-gradient-to-tr from-black/90 via-black/60 to-transparent" />
-                <div className="relative p-4 h-full flex items-end gap-3">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-display font-bold text-lg">
-                      {app.name}
-                    </h3>
-                    <p className="text-xs text-foreground/80 line-clamp-2">
-                      {app.tagline}
-                    </p>
-                  </div>
-                  <ArrowRight className="w-5 h-5 text-casino-gold group-hover:translate-x-1 transition-transform" />
-                </div>
-              </button>
-            ))}
+                </button>
+              );
+            })}
           </div>
         </section>
 
-        {/* KEY WARNING */}
-        <section className="relative rounded-2xl border border-destructive/60 bg-destructive/10 p-5 overflow-hidden">
+        {/* KEY WARNING — compact */}
+        <section className="relative rounded-xl border border-destructive/60 bg-destructive/10 p-3 overflow-hidden">
           <div className="absolute inset-0 animate-warn-pulse pointer-events-none" />
-          <div className="relative flex items-start gap-3">
-            <div className="h-10 w-10 rounded-xl bg-destructive/20 border border-destructive/60 flex items-center justify-center text-destructive shrink-0">
-              <Lock className="w-5 h-5" />
+          <div className="relative flex items-start gap-2.5">
+            <div className="h-8 w-8 rounded-lg bg-destructive/20 border border-destructive/60 flex items-center justify-center text-destructive shrink-0">
+              <Lock className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-display font-black text-base text-destructive">
+              <h3 className="font-display font-black text-xs sm:text-sm text-destructive">
                 Warning — You Are Your Own Bank
               </h3>
-              <p className="text-xs sm:text-sm text-foreground/80 mt-1">
-                Phantom Network is fully self-custodial. If you lose your{" "}
-                <span className="font-bold text-foreground">
-                  10-word encryption key
-                </span>
-                , your account and all assets within it will be{" "}
-                <span className="font-bold text-destructive">
-                  permanently lost and unrecoverable
-                </span>
-                . There is no support team, no reset link, no exception. Store
-                it offline, store it safely.
+              <p className="text-[11px] sm:text-xs text-foreground/80 mt-0.5 leading-snug">
+                Lose your <span className="font-bold text-foreground">10-word key</span> and your account is{" "}
+                <span className="font-bold text-destructive">permanently lost</span>. Store it offline, store it safe.
               </p>
             </div>
           </div>
         </section>
 
-        <p className="text-center text-[10px] tracking-widest uppercase text-muted-foreground/60 pt-2">
+        <p className="text-center text-[9px] tracking-widest uppercase text-muted-foreground/60">
           More services joining the network soon
         </p>
       </main>
