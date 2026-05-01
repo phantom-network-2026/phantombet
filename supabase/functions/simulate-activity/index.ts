@@ -215,7 +215,11 @@ async function runForum(cfg: FakeForumConfig, ghostNames: string[], counts: Reco
       p_author_id: ghostUserId(username),
       p_title: title, p_body: body, p_prefix: prefix,
     });
-    if (!error) counts.threads++;
+    if (error) {
+      console.error("sim_post_forum_thread failed:", error.message, { prefix, title: title.slice(0, 60) });
+    } else {
+      counts.threads++;
+    }
   }
 
   // Replies — pick recent threads (real or ghost) and reply
@@ -244,15 +248,23 @@ async function runForum(cfg: FakeForumConfig, ghostNames: string[], counts: Reco
       p_author_id: ghostUserId(username),
       p_thread_id: t.id, p_body: body,
     });
-    if (!error) counts.replies++;
+    if (error) {
+      console.error("sim_post_forum_reply failed:", error.message);
+    } else {
+      counts.replies++;
+    }
   }
 
   // Likes
   for (let i = 0; i < cfg.likes_per_run && recent.length > 0; i++) {
     const t = pick(recent);
     const username = pick(ghostNames);
-    await admin.rpc("sim_like", { p_user_id: ghostUserId(username), p_thread_id: t.id, p_reply_id: null });
-    counts.likes++;
+    const { error } = await admin.rpc("sim_like", { p_user_id: ghostUserId(username), p_thread_id: t.id, p_reply_id: null });
+    if (error) {
+      console.error("sim_like failed:", error.message);
+    } else {
+      counts.likes++;
+    }
   }
 }
 
