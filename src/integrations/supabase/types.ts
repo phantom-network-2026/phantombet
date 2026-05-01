@@ -1555,6 +1555,32 @@ export type Database = {
           streak: number
         }[]
       }
+      sim_like: {
+        Args: { p_reply_id?: string; p_thread_id?: string; p_user_id: string }
+        Returns: undefined
+      }
+      sim_post_forum_reply: {
+        Args: { p_author_id: string; p_body: string; p_thread_id: string }
+        Returns: string
+      }
+      sim_post_forum_thread: {
+        Args: {
+          p_author_id: string
+          p_body: string
+          p_prefix?: string
+          p_title: string
+        }
+        Returns: string
+      }
+      sim_post_game_chat: {
+        Args: {
+          p_content: string
+          p_game_room: string
+          p_user_id: string
+          p_username: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       app_role:
