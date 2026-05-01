@@ -2758,6 +2758,9 @@ export default function CPanel() {
                 <ToolCard icon={<Coins className="h-6 w-6" />} label="Listed Coins" onClick={() => setActivePanel("exchange-admin")} active={activePanel === "exchange-admin"} />
                 <ToolCard icon={<Megaphone className="h-6 w-6" />} label="Welcome Banner" onClick={() => setActivePanel("exchange-admin")} />
                 <ToolCard icon={<ArrowLeftRight className="h-6 w-6" />} label="Exchange cPanel" onClick={() => navigate("/cpanel/exchange")} />
+                <ToolCard icon={<Coins className="h-6 w-6" />} label="Listing Applications" onClick={() => setActivePanel("help-listings")} active={activePanel === "help-listings"} />
+                <ToolCard icon={<Info className="h-6 w-6" />} label="Help Info Links" onClick={() => setActivePanel("help-listings")} />
+                <ToolCard icon={<Settings className="h-6 w-6" />} label="Listing Form Fields" onClick={() => setActivePanel("help-listings")} />
               </div>
             </CpanelSection>
 
