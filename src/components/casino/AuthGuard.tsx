@@ -1,7 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Header } from "@/components/casino/Header";
 import { BottomNav } from "@/components/casino/BottomNav";
 import { Lock } from "lucide-react";
 
@@ -20,7 +19,6 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   if (!user) {
     return (
       <div className="min-h-screen gradient-casino-bg pb-20 md:pb-0">
-        <Header />
         <div className="container max-w-md py-16 px-4 text-center space-y-6">
           <div className="mx-auto w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
             <Lock className="h-8 w-8 text-primary" />
