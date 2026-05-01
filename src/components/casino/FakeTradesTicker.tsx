@@ -41,11 +41,29 @@ export const TRADES_SETTINGS_KEY = "fake_trades_config";
 
 export async function fetchFakeTradesConfig(): Promise<FakeTradesConfig> {
   try {
-    const { data } = await supabase.functions.invoke("get-public-settings", {
-      body: { keys: [TRADES_SETTINGS_KEY] },
-    });
+    const [settingsRes, profilesRes] = await Promise.all([
+      supabase.functions.invoke("get-public-settings", {
+        body: { keys: [TRADES_SETTINGS_KEY, "ghost_users"] },
+      }),
+      supabase.from("profiles").select("username").not("username", "is", null),
+    ]);
+    const data = settingsRes.data;
+    const realUsernames = new Set(
+      (profilesRes.data || []).map((p: any) => (p.username as string).toLowerCase())
+    );
+
+    let cfg: FakeTradesConfig = DEFAULT_TRADES_CONFIG;
     const v = data?.settings?.[TRADES_SETTINGS_KEY];
-    if (v) return { ...DEFAULT_TRADES_CONFIG, ...(v as Partial<FakeTradesConfig>) };
+    if (v) cfg = { ...DEFAULT_TRADES_CONFIG, ...(v as Partial<FakeTradesConfig>) };
+
+    // Sync usernames from shared ghost pool when populated
+    const ghostConfig = data?.settings?.["ghost_users"];
+    if (ghostConfig?.usernames?.length > 0) {
+      cfg = { ...cfg, usernames: ghostConfig.usernames };
+    }
+    cfg.usernames = (cfg.usernames || []).filter((n) => !realUsernames.has(n.toLowerCase()));
+    if (cfg.usernames.length === 0) cfg.usernames = DEFAULT_USERNAMES;
+    return cfg;
   } catch {}
   return DEFAULT_TRADES_CONFIG;
 }
