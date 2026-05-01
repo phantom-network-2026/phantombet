@@ -66,22 +66,59 @@ Deno.serve(async (req) => {
         });
       }
 
-      return new Response(JSON.stringify({ verified: true, user_id: profile.user_id }), {
+      // Issue short-lived single-use reset nonce (10 minutes)
+      const nonceBytes = new Uint8Array(32);
+      crypto.getRandomValues(nonceBytes);
+      const nonce = Array.from(nonceBytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+
+      const { error: nonceErr } = await supabaseAdmin
+        .from("password_reset_nonces")
+        .insert({ nonce, user_id: profile.user_id, expires_at: expiresAt });
+
+      if (nonceErr) {
+        return new Response(JSON.stringify({ error: "Failed to issue reset token" }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(JSON.stringify({ verified: true, reset_token: nonce }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     // Action: reset password after seed verification
     if (action === "reset_password") {
-      const { user_id, new_password } = body;
-      if (!user_id || !new_password) {
-        return new Response(JSON.stringify({ error: "user_id and new_password required" }), {
+      const { reset_token, new_password } = body;
+      if (!reset_token || !new_password) {
+        return new Response(JSON.stringify({ error: "reset_token and new_password required" }), {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      const { error } = await supabaseAdmin.auth.admin.updateUserById(user_id, { password: new_password });
+      // Validate nonce: must exist, not used, not expired
+      const { data: nonceRow, error: nonceLookupErr } = await supabaseAdmin
+        .from("password_reset_nonces")
+        .select("user_id, used, expires_at")
+        .eq("nonce", reset_token)
+        .maybeSingle();
+
+      if (nonceLookupErr || !nonceRow || nonceRow.used || new Date(nonceRow.expires_at) < new Date()) {
+        return new Response(JSON.stringify({ error: "Invalid or expired reset token" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Mark nonce as used immediately (single-use)
+      await supabaseAdmin
+        .from("password_reset_nonces")
+        .update({ used: true })
+        .eq("nonce", reset_token);
+
+      const { error } = await supabaseAdmin.auth.admin.updateUserById(nonceRow.user_id, { password: new_password });
       if (error) {
         return new Response(JSON.stringify({ error: "Failed to update password" }), {
           status: 400,

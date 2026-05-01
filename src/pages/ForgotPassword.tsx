@@ -15,7 +15,7 @@ export default function ForgotPassword() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<"enter-key" | "new-password" | "done">("enter-key");
-  const [verifiedUserId, setVerifiedUserId] = useState("");
+  const [resetToken, setResetToken] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
@@ -35,7 +35,7 @@ export default function ForgotPassword() {
         return;
       }
 
-      setVerifiedUserId(data.user_id);
+      setResetToken(data.reset_token);
       setStep("new-password");
     } catch {
       setError("Something went wrong. Please try again.");
@@ -59,7 +59,7 @@ export default function ForgotPassword() {
     setLoading(true);
     try {
       const { data, error: fnError } = await supabase.functions.invoke("resolve-username", {
-        body: { action: "reset_password", user_id: verifiedUserId, new_password: newPassword },
+        body: { action: "reset_password", reset_token: resetToken, new_password: newPassword },
       });
 
       if (fnError || data?.error) {
