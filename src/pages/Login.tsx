@@ -7,12 +7,14 @@ import { Label } from "@/components/ui/label";
 import WelcomeBanner from "@/components/casino/WelcomeBanner";
 import logo from "@/assets/phantombet-logo.png";
 import { LanguagePicker } from "@/components/casino/LanguagePicker";
+import ConnectingSplash from "@/components/casino/ConnectingSplash";
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showSplash, setShowSplash] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
 
@@ -23,11 +25,14 @@ export default function Login() {
     const { error } = await signIn(username, password);
     setLoading(false);
     if (error) setError(error.message);
-    else navigate("/casino");
+    else setShowSplash(true);
   };
 
   return (
     <div className="min-h-screen gradient-casino-bg flex items-center justify-center p-4">
+      {showSplash && (
+        <ConnectingSplash onComplete={() => navigate("/casino")} />
+      )}
       <div className="absolute top-4 right-4">
         <LanguagePicker />
       </div>
