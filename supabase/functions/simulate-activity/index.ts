@@ -195,6 +195,7 @@ async function getGhostUsernames(): Promise<string[]> {
 
 // ── Run actions ─────────────────────────────────────────────────
 async function runForum(cfg: FakeForumConfig, ghostNames: string[], counts: Record<string, number>) {
+  console.log("runForum cfg:", { enabled: cfg.enabled, threads: cfg.threads_per_run, replies: cfg.replies_per_run, ghosts: ghostNames.length, use_ai: cfg.use_ai });
   if (!cfg.enabled || ghostNames.length === 0) return;
 
   // Threads
