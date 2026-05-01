@@ -2718,10 +2718,16 @@ export default function CPanel() {
                 <ToolCard icon={<Activity className="h-6 w-6" />} label="Online Users" onClick={() => setActivePanel("users")} />
                 <ToolCard icon={<UserCheck className="h-6 w-6" />} label="Friendships" onClick={() => setActivePanel("database")} />
                 <ToolCard icon={<MessageSquare className="h-6 w-6" />} label="Messages" onClick={() => setActivePanel("database")} />
-                <ToolCard icon={<Users className="h-6 w-6" />} label="Ghost Users" onClick={() => setActivePanel("ghost-users")} active={activePanel === "ghost-users"} />
               </div>
             </CpanelSection>
             )}
+
+            {/* ── Activity & Simulation ────────────────── */}
+            <CpanelSection title="Activity & Simulation" icon={<Activity className="h-5 w-5" />}>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1">
+                <ToolCard icon={<Activity className="h-6 w-6" />} label="Simulated Activity" onClick={() => setActivePanel("simulated-activity")} active={activePanel === "simulated-activity"} />
+              </div>
+            </CpanelSection>
 
             {/* ── Games & Finance ────────────────────── */}
             {sec("cpanel_games") && (
