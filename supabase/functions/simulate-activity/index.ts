@@ -210,8 +210,14 @@ async function ensureGhostProfile(username: string) {
 async function runForum(cfg: FakeForumConfig, ghostNames: string[], counts: Record<string, number>) {
   if (!cfg.enabled || ghostNames.length === 0) return;
 
-  // Threads
-  for (let i = 0; i < cfg.threads_per_run; i++) {
+  // ── Threads ──
+  // Natural pacing: aim for ~1 new thread every 0–1.5h.
+  // Cron runs every ~15 min, so use a per-tick probability and occasionally
+  // post a small burst. Average ≈ 1 thread / hour.
+  const threadProb = 0.55; // chance to post at least 1 thread this tick
+  const threadsToPost = Math.random() < threadProb ? (Math.random() < 0.15 ? 2 : 1) : 0;
+
+  for (let i = 0; i < threadsToPost; i++) {
     const username = pick(ghostNames);
     await ensureGhostProfile(username);
     const personality = pick(cfg.personalities);
@@ -236,24 +242,36 @@ async function runForum(cfg: FakeForumConfig, ghostNames: string[], counts: Reco
     }
   }
 
-  // Replies — pick recent threads (real or ghost) and reply
-  let recent: any[] = [];
-  {
-    const q = admin
-      .from("forum_threads")
-      .select("id,title,body,author_id")
-      .order("last_activity_at", { ascending: false })
-      .limit(40);
-    const { data } = await q;
-    recent = data || [];
-  }
+  // ── Replies & Likes — natural drip over each thread's lifetime ──
+  // Each thread "earns" replies trickling in from 10 minutes after creation
+  // up to ~7 hours after creation. With a 15-min tick, that's ~26 chances
+  // per thread. Per-tick probability per thread keeps total replies in a
+  // realistic range (avg ~3–6 over the window).
+  const { data: threadRows } = await admin
+    .from("forum_threads")
+    .select("id,title,body,author_id,created_at")
+    .order("created_at", { ascending: false })
+    .limit(80);
+  let pool: any[] = threadRows || [];
   if (!cfg.reply_to_real_users) {
     const ghostIds = new Set(ghostNames.map(ghostUserId));
-    recent = recent.filter((t) => ghostIds.has(t.author_id));
+    pool = pool.filter((t) => ghostIds.has(t.author_id));
   }
 
-  for (let i = 0; i < cfg.replies_per_run && recent.length > 0; i++) {
-    const t = pick(recent);
+  const now = Date.now();
+  const MIN_REPLY_DELAY_MS = 10 * 60 * 1000;          // 10 minutes
+  const MAX_REPLY_DELAY_MS = 7 * 60 * 60 * 1000;       // 7 hours
+
+  // Threads currently in the "active replying" window
+  const replyEligible = pool.filter((t) => {
+    const age = now - new Date(t.created_at).getTime();
+    return age >= MIN_REPLY_DELAY_MS && age <= MAX_REPLY_DELAY_MS;
+  });
+
+  // Newer threads tend to attract more replies — weight by recency.
+  const REPLY_PROB_PER_TICK = 0.18; // per thread, per 15-min tick
+  for (const t of replyEligible) {
+    if (Math.random() > REPLY_PROB_PER_TICK) continue;
     const username = pick(ghostNames);
     await ensureGhostProfile(username);
     const personality = pick(cfg.personalities);
@@ -263,24 +281,26 @@ async function runForum(cfg: FakeForumConfig, ghostNames: string[], counts: Reco
       p_author_id: ghostUserId(username),
       p_thread_id: t.id, p_body: body,
     });
-    if (error) {
-      console.error("sim_post_forum_reply failed:", error.message);
-    } else {
-      counts.replies++;
-    }
+    if (error) console.error("sim_post_forum_reply failed:", error.message);
+    else counts.replies++;
   }
 
-  // Likes
-  for (let i = 0; i < cfg.likes_per_run && recent.length > 0; i++) {
-    const t = pick(recent);
+  // Likes: drip onto threads up to ~24h old
+  const LIKE_PROB_PER_TICK = 0.22;
+  const likeEligible = pool.filter((t) => {
+    const age = now - new Date(t.created_at).getTime();
+    return age >= MIN_REPLY_DELAY_MS && age <= 24 * 60 * 60 * 1000;
+  });
+  for (const t of likeEligible) {
+    if (Math.random() > LIKE_PROB_PER_TICK) continue;
     const username = pick(ghostNames);
     await ensureGhostProfile(username);
-    const { error } = await admin.rpc("sim_like", { p_user_id: ghostUserId(username), p_thread_id: t.id, p_reply_id: null });
-    if (error) {
-      console.error("sim_like failed:", error.message);
-    } else {
-      counts.likes++;
-    }
+    const { error } = await admin.rpc("sim_like", {
+      p_user_id: ghostUserId(username),
+      p_thread_id: t.id,
+      p_reply_id: null,
+    });
+    if (!error) counts.likes++;
   }
 }
 
