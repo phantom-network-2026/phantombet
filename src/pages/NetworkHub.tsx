@@ -249,6 +249,49 @@ export default function NetworkHub() {
           </div>
         </section>
 
+        {/* SOCIAL & FORUM BANNERS */}
+        <section className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <button
+            onClick={() => navigate("/friends")}
+            className="group relative text-left rounded-2xl border border-primary/50 overflow-hidden hover:border-casino-gold/70 transition-all min-h-[120px] shadow-[0_0_30px_hsl(280_70%_30%/0.4)]"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-[hsl(280_70%_25%)] via-[hsl(265_60%_15%)] to-black" />
+            <div className="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-fuchsia-500/30 blur-2xl group-hover:bg-fuchsia-500/50 transition" />
+            <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "radial-gradient(circle at 80% 20%, hsl(300 90% 60% / 0.5), transparent 50%)" }} />
+            <div className="relative p-4 flex items-center gap-4 h-full">
+              <div className="h-14 w-14 rounded-xl bg-fuchsia-500/20 border border-fuchsia-400/50 text-fuchsia-300 flex items-center justify-center shrink-0 backdrop-blur">
+                <Users className="w-7 h-7" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[9px] tracking-[0.25em] uppercase text-fuchsia-300/80 mb-0.5">Phantom Social</div>
+                <h3 className="font-display font-black text-base sm:text-lg leading-tight">Connect. Chat. Party.</h3>
+                <p className="text-[11px] text-foreground/70 mt-0.5 line-clamp-2">Add friends, send DMs and join live parties across the network.</p>
+              </div>
+              <ArrowRight className="w-5 h-5 text-casino-gold shrink-0 group-hover:translate-x-1 transition" />
+            </div>
+          </button>
+
+          <button
+            onClick={() => navigate("/friends?tab=forum")}
+            className="group relative text-left rounded-2xl border border-primary/50 overflow-hidden hover:border-casino-gold/70 transition-all min-h-[120px] shadow-[0_0_30px_hsl(45_70%_30%/0.35)]"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-[hsl(45_70%_20%)] via-[hsl(265_60%_12%)] to-black" />
+            <div className="absolute -left-6 -bottom-6 h-32 w-32 rounded-full bg-amber-500/30 blur-2xl group-hover:bg-amber-500/50 transition" />
+            <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "radial-gradient(circle at 20% 80%, hsl(45 95% 60% / 0.5), transparent 50%)" }} />
+            <div className="relative p-4 flex items-center gap-4 h-full">
+              <div className="h-14 w-14 rounded-xl bg-amber-500/15 border border-casino-gold/50 text-casino-gold flex items-center justify-center shrink-0 backdrop-blur">
+                <MessageSquare className="w-7 h-7" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[9px] tracking-[0.25em] uppercase text-casino-gold/80 mb-0.5">Phantom Forum</div>
+                <h3 className="font-display font-black text-base sm:text-lg leading-tight">Threads. Guides. Drops.</h3>
+                <p className="text-[11px] text-foreground/70 mt-0.5 line-clamp-2">Discuss strategies, post guides and stay ahead with the community.</p>
+              </div>
+              <ArrowRight className="w-5 h-5 text-casino-gold shrink-0 group-hover:translate-x-1 transition" />
+            </div>
+          </button>
+        </section>
+
         {/* KEY WARNING — compact */}
         <section className="relative rounded-xl border border-destructive/60 bg-destructive/10 p-3 overflow-hidden">
           <div className="absolute inset-0 animate-warn-pulse pointer-events-none" />
