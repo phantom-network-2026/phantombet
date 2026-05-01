@@ -38,10 +38,19 @@ export function LightningOverlay() {
   }, []);
 
   return (
-    <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+    <div
+      className="pointer-events-none fixed inset-0 z-[1] overflow-hidden"
+      style={{
+        // Fade bolts away from the center so they never sit on top of content.
+        WebkitMaskImage:
+          "radial-gradient(ellipse 60% 70% at 50% 50%, transparent 0%, transparent 35%, rgba(0,0,0,0.6) 70%, black 100%)",
+        maskImage:
+          "radial-gradient(ellipse 60% 70% at 50% 50%, transparent 0%, transparent 35%, rgba(0,0,0,0.6) 70%, black 100%)",
+      }}
+    >
       <svg
         key={flash}
-        className="absolute inset-0 w-full h-full animate-bolt-global"
+        className="absolute inset-0 w-full h-full animate-bolt-global opacity-60"
         viewBox="0 0 400 800"
         preserveAspectRatio="none"
       >
