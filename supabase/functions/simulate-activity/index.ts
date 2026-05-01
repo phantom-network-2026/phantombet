@@ -208,7 +208,6 @@ async function ensureGhostProfile(username: string) {
 
 // ── Run actions ─────────────────────────────────────────────────
 async function runForum(cfg: FakeForumConfig, ghostNames: string[], counts: Record<string, number>) {
-  console.log("runForum cfg:", { enabled: cfg.enabled, threads: cfg.threads_per_run, replies: cfg.replies_per_run, ghosts: ghostNames.length, use_ai: cfg.use_ai });
   if (!cfg.enabled || ghostNames.length === 0) return;
 
   // Threads
@@ -313,18 +312,11 @@ Deno.serve(async (req) => {
     const ghostNames = await getGhostUsernames();
 
     const counts = { threads: 0, replies: 0, likes: 0, chat: 0 };
-    const debug: any = {
-      forum_enabled: forum.enabled,
-      forum_threads_per_run: forum.threads_per_run,
-      forum_use_ai: forum.use_ai,
-      chat_enabled: chat.enabled,
-      ghost_count: ghostNames.length,
-    };
 
     if (action === "tick" || action === "forum") await runForum(forum, ghostNames, counts);
     if (action === "tick" || action === "chat") await runChat(chat, ghostNames, counts);
 
-    return new Response(JSON.stringify({ ok: true, counts, debug }), {
+    return new Response(JSON.stringify({ ok: true, counts }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
