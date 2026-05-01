@@ -201,6 +201,7 @@ async function runForum(cfg: FakeForumConfig, ghostNames: string[], counts: Reco
   // Threads
   for (let i = 0; i < cfg.threads_per_run; i++) {
     const username = pick(ghostNames);
+    await ensureGhostProfile(username);
     const personality = pick(cfg.personalities);
     const topic = pick(cfg.topics);
     let title: string, body: string;
@@ -242,6 +243,7 @@ async function runForum(cfg: FakeForumConfig, ghostNames: string[], counts: Reco
   for (let i = 0; i < cfg.replies_per_run && recent.length > 0; i++) {
     const t = pick(recent);
     const username = pick(ghostNames);
+    await ensureGhostProfile(username);
     const personality = pick(cfg.personalities);
     let body: string | null = cfg.use_ai ? await aiReply(t.title, t.body, personality) : null;
     if (!body) body = pick(REPLY_TEMPLATES);
@@ -260,6 +262,7 @@ async function runForum(cfg: FakeForumConfig, ghostNames: string[], counts: Reco
   for (let i = 0; i < cfg.likes_per_run && recent.length > 0; i++) {
     const t = pick(recent);
     const username = pick(ghostNames);
+    await ensureGhostProfile(username);
     const { error } = await admin.rpc("sim_like", { p_user_id: ghostUserId(username), p_thread_id: t.id, p_reply_id: null });
     if (error) {
       console.error("sim_like failed:", error.message);
