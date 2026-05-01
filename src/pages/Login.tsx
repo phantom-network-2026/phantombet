@@ -31,7 +31,7 @@ export default function Login() {
   return (
     <div className="min-h-screen gradient-casino-bg flex items-center justify-center p-4">
       {showSplash && (
-        <ConnectingSplash onComplete={() => navigate("/casino")} />
+        <ConnectingSplash onComplete={() => navigate("/hub")} />
       )}
       <div className="absolute top-4 right-4">
         <LanguagePicker />
