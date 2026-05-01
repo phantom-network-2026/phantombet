@@ -11,6 +11,7 @@ import heroCasino from "@/assets/phantombet-casino-hero.png";
 import heroWallet from "@/assets/phantom-wallet-hero.png";
 import heroEncryption from "@/assets/phantom-encryption-hero.jpg";
 import { LanguagePicker } from "@/components/casino/LanguagePicker";
+import ConnectingSplash from "@/components/casino/ConnectingSplash";
 import {
   ArrowRight,
   Gamepad2,
@@ -94,6 +95,7 @@ export default function NetworkLanding() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showSplash, setShowSplash] = useState(false);
   const { signIn, user, isAdmin, isOwner, hasStaffAccess } = useAuth();
   const navigate = useNavigate();
 
@@ -104,11 +106,14 @@ export default function NetworkLanding() {
     const { error } = await signIn(username, password);
     setLoading(false);
     if (error) setError(error.message);
-    else navigate("/hub");
+    else setShowSplash(true);
   };
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[hsl(265_60%_4%)] text-foreground">
+      {showSplash && (
+        <ConnectingSplash onComplete={() => navigate("/hub")} />
+      )}
       {/* Atmosphere */}
       <div className="absolute inset-0 bg-gradient-to-b from-[hsl(265_50%_8%)] via-[hsl(270_60%_5%)] to-black" />
       <div
