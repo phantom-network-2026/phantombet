@@ -11,6 +11,10 @@ import { Users, UserPlus, Search, MessageCircle, Check, X, Clock, Circle, Messag
 import { toast } from "sonner";
 import PartyChat from "@/components/casino/PartyChat";
 import Forum from "@/components/casino/Forum";
+import socialHero from "@/assets/social-hero.jpg";
+import tileForum from "@/assets/social-tile-forum.jpg";
+import tileFriends from "@/assets/social-tile-friends.jpg";
+import tileParty from "@/assets/social-tile-party.jpg";
 
 interface UserResult {
   user_id: string;
@@ -193,42 +197,89 @@ export default function Friends() {
   return (
     <div className="min-h-screen gradient-casino-bg pb-24">
       <Header />
-      <div className="container max-w-3xl py-6 px-4">
-        {/* Hero */}
-        <div className="relative overflow-hidden rounded-2xl border border-primary/40 bg-gradient-to-br from-[hsl(270_55%_15%)] via-[hsl(265_50%_10%)] to-black p-5 mb-5 shadow-[0_0_40px_hsl(270_70%_30%/0.4)]">
-          <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-casino-gold/20 blur-3xl" />
-          <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-primary/30 blur-3xl" />
-          <div className="relative flex items-center gap-3">
-            <div className="h-12 w-12 rounded-2xl bg-casino-gold/15 border border-casino-gold/40 text-casino-gold flex items-center justify-center">
-              <Sparkles className="h-6 w-6" />
-            </div>
-            <div>
-              <h1 className="font-display text-2xl font-black bg-gradient-to-r from-casino-gold via-amber-200 to-casino-gold bg-clip-text text-transparent">
-                Phantom Social
-              </h1>
-              <p className="text-xs text-muted-foreground">Connect, post, party. The network where members hang out.</p>
-            </div>
+      {/* Cinematic Hero */}
+      <div className="relative w-full overflow-hidden">
+        <div className="relative h-[280px] sm:h-[340px] md:h-[400px] w-full">
+          <img
+            src={socialHero}
+            alt="Phantom Social network"
+            className="absolute inset-0 h-full w-full object-cover"
+            width={1920}
+            height={1080}
+          />
+          {/* Gradient overlays */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-background" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,hsl(var(--background))_85%)]" />
+          {/* Animated glow accents */}
+          <div className="absolute -top-16 left-1/4 h-56 w-56 rounded-full bg-casino-gold/20 blur-3xl animate-pulse" />
+          <div className="absolute -bottom-10 right-10 h-56 w-56 rounded-full bg-primary/30 blur-3xl animate-pulse" style={{ animationDelay: "1.2s" }} />
+
+          <div className="relative z-10 h-full container max-w-3xl px-4 flex flex-col justify-end pb-6">
+            <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-casino-gold/40 bg-black/50 backdrop-blur px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-casino-gold">
+              <Sparkles className="h-3 w-3" /> The Network
+            </span>
+            <h1 className="mt-3 font-display text-4xl sm:text-5xl font-black leading-none bg-gradient-to-r from-casino-gold via-amber-100 to-casino-gold bg-clip-text text-transparent drop-shadow-[0_0_25px_hsl(45_95%_55%/0.35)]">
+              Phantom Social
+            </h1>
+            <p className="mt-2 max-w-md text-sm text-muted-foreground/90">
+              Connect, post, party. The encrypted hub where the network gathers.
+            </p>
           </div>
         </div>
+      </div>
 
-        {/* Tabs */}
-        <div className="flex gap-1 mb-6 overflow-x-auto">
+      <div className="container max-w-3xl py-4 px-4">
+        {/* Quick-pick image tiles */}
+        <div className="grid grid-cols-3 gap-3 mb-5">
+          {[
+            { id: "forum", label: "Forum", img: tileForum, count: undefined as number | undefined },
+            { id: "friends", label: "Friends", img: tileFriends, count: accepted.length },
+            { id: "party", label: "Party", img: tileParty, count: undefined },
+          ].map((tile) => (
+            <button
+              key={tile.id}
+              onClick={() => setTab(tile.id as any)}
+              className={`group relative aspect-square overflow-hidden rounded-2xl border transition-all ${
+                tab === tile.id
+                  ? "border-casino-gold shadow-[0_0_25px_hsl(45_95%_55%/0.45)]"
+                  : "border-border hover:border-casino-gold/60"
+              }`}
+            >
+              <img src={tile.img} alt={tile.label} className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" width={512} height={512} />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+              {tab === tile.id && (
+                <div className="absolute inset-0 ring-2 ring-inset ring-casino-gold/70 animate-pulse" />
+              )}
+              <div className="absolute bottom-0 inset-x-0 p-2 text-left">
+                <p className="font-display font-black text-sm text-white drop-shadow">{tile.label}</p>
+                {typeof tile.count === "number" && tile.count > 0 && (
+                  <p className="text-[10px] text-casino-gold">{tile.count} active</p>
+                )}
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {/* Secondary tab pills */}
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
           {(["forum", "friends", "party", "online", "requests", "search"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`rounded-full px-4 py-2 text-sm font-display font-semibold transition-all capitalize shrink-0 ${
-                tab === t ? "gradient-gold text-accent-foreground" : "bg-secondary text-muted-foreground"
+              className={`rounded-full px-4 py-2 text-xs font-display font-semibold transition-all capitalize shrink-0 border ${
+                tab === t
+                  ? "gradient-gold text-accent-foreground border-casino-gold shadow-[0_0_15px_hsl(45_95%_55%/0.4)]"
+                  : "bg-secondary/60 text-muted-foreground border-border hover:border-casino-gold/40"
               }`}
             >
               {t}
               {t === "requests" && pendingReceived.length > 0 && (
-                <span className="ml-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-casino-pink text-[10px] text-primary-foreground">
+                <span className="ml-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-casino-pink text-[9px] text-primary-foreground">
                   {pendingReceived.length}
                 </span>
               )}
               {t === "online" && onlineUsers.length > 0 && (
-                <span className="ml-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-[10px] text-white">
+                <span className="ml-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-green-500 text-[9px] text-white">
                   {onlineUsers.length}
                 </span>
               )}
