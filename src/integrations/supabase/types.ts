@@ -1096,7 +1096,6 @@ export type Database = {
           is_public: boolean
           max_members: number
           name: string
-          password_hash: string | null
           updated_at: string
         }
         Insert: {
@@ -1107,7 +1106,6 @@ export type Database = {
           is_public?: boolean
           max_members?: number
           name: string
-          password_hash?: string | null
           updated_at?: string
         }
         Update: {
@@ -1118,7 +1116,6 @@ export type Database = {
           is_public?: boolean
           max_members?: number
           name?: string
-          password_hash?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -1150,6 +1147,32 @@ export type Database = {
             foreignKeyName: "party_lobby_members_lobby_id_fkey"
             columns: ["lobby_id"]
             isOneToOne: false
+            referencedRelation: "party_lobbies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      party_lobby_passwords: {
+        Row: {
+          created_at: string
+          lobby_id: string
+          password_hash: string
+        }
+        Insert: {
+          created_at?: string
+          lobby_id: string
+          password_hash: string
+        }
+        Update: {
+          created_at?: string
+          lobby_id?: string
+          password_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "party_lobby_passwords_lobby_id_fkey"
+            columns: ["lobby_id"]
+            isOneToOne: true
             referencedRelation: "party_lobbies"
             referencedColumns: ["id"]
           },
@@ -1888,6 +1911,23 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      party_create_lobby: {
+        Args: {
+          p_is_public: boolean
+          p_max_members: number
+          p_name: string
+          p_password_hash: string
+        }
+        Returns: string
+      }
+      party_join_lobby: {
+        Args: { p_lobby_id: string; p_password_hash?: string }
+        Returns: boolean
+      }
+      party_lobby_has_password: {
+        Args: { p_lobby_id: string }
         Returns: boolean
       }
       perform_daily_spin: {
