@@ -192,12 +192,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (username: string, password: string) => {
     try {
       const { data: fnData, error: fnError } = await supabase.functions.invoke("resolve-username", {
-        body: { username },
+        body: { action: "signin", username, password },
       });
-      if (fnError || !fnData?.email) {
-        return { error: { message: "Username not found" } };
+      if (fnError || !fnData?.session) {
+        return { error: { message: fnData?.error || "Invalid username or password" } };
       }
-      const { error } = await supabase.auth.signInWithPassword({ email: fnData.email, password });
+      const { error } = await supabase.auth.setSession({
+        access_token: fnData.session.access_token,
+        refresh_token: fnData.session.refresh_token,
+      });
       return { error };
     } catch {
       return { error: { message: "Login failed. Please try again." } };

@@ -20,12 +20,58 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { username, seed_phrase, action } = body;
+    const { username, seed_phrase, action, password } = body;
 
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
+
+    // Action: server-side sign in by username + password.
+    // This avoids exposing the user's email to unauthenticated callers,
+    // which previously enabled username -> email enumeration.
+    if (action === "signin") {
+      if (!username || !password) {
+        return new Response(JSON.stringify({ error: "Username and password required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { data: profile } = await supabaseAdmin
+        .from("profiles")
+        .select("user_id")
+        .eq("username", username)
+        .maybeSingle();
+
+      // Generic error to prevent username enumeration
+      const genericError = () =>
+        new Response(JSON.stringify({ error: "Invalid username or password" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+
+      if (!profile) return genericError();
+
+      const { data: userInfo } = await supabaseAdmin.auth.admin.getUserById(profile.user_id);
+      const email = userInfo?.user?.email;
+      if (!email) return genericError();
+
+      // Use a separate client (no service role) to perform an actual password sign-in
+      const supabasePublic = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!
+      );
+      const { data: signInData, error: signInError } =
+        await supabasePublic.auth.signInWithPassword({ email, password });
+
+      if (signInError || !signInData?.session) return genericError();
+
+      return new Response(
+        JSON.stringify({ session: signInData.session }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Action: recover by seed phrase
     if (action === "recover_by_seed") {
@@ -131,37 +177,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Default: resolve username to email
-    if (!username) {
-      return new Response(JSON.stringify({ error: "Username required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const { data: profile, error: profileError } = await supabaseAdmin
-      .from("profiles")
-      .select("user_id")
-      .eq("username", username)
-      .single();
-
-    if (profileError || !profile) {
-      return new Response(JSON.stringify({ error: "Username not found" }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.admin.getUserById(profile.user_id);
-
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: "User not found" }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    return new Response(JSON.stringify({ email: user.email }), {
+    // No matching action — never disclose user/email information from the default path.
+    return new Response(JSON.stringify({ error: "Invalid action" }), {
+      status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
