@@ -20,10 +20,10 @@
 set -euo pipefail
 
 B='\033[0;34m'; G='\033[0;32m'; Y='\033[1;33m'; R='\033[0;31m'; N='\033[0m'
-log(){ echo -e "${B}[*]${N} $*"; }
-ok(){  echo -e "${G}[v]${N} $*"; }
-warn(){echo -e "${Y}[!]${N} $*"; }
-die(){ echo -e "${R}[x]${N} $*" >&2; exit 1; }
+log()  { echo -e "${B}[*]${N} $*"; }
+ok()   { echo -e "${G}[v]${N} $*"; }
+warn() { echo -e "${Y}[!]${N} $*"; }
+die()  { echo -e "${R}[x]${N} $*" >&2; exit 1; }
 
 [[ $EUID -eq 0 ]] || die "Run with sudo:  sudo bash deploy/install.sh"
 
