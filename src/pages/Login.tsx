@@ -45,6 +45,21 @@ export default function Login() {
 
         <WelcomeBanner variant="login" />
 
+        <div className="rounded-lg border border-amber-400/40 bg-amber-500/10 p-3 text-xs text-amber-100 space-y-1.5">
+          <p className="font-bold text-amber-300 uppercase tracking-wide">🔒 VPN Notice (Once Live)</p>
+          <p>
+            Once we go live, all users on <span className="font-semibold">iPhone</span> or a{" "}
+            <span className="font-semibold">PC web browser</span> must connect through a VPN to access the network.
+          </p>
+          <p>
+            <span className="font-semibold">Android users</span> are covered automatically — our Android app ships with a
+            built-in VPN that handles country gambling regulations by default.
+          </p>
+          <p className="text-amber-200/80">
+            This is an additional security measure to protect our network and our users.
+          </p>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="username">Username</Label>
