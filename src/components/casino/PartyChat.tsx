@@ -276,7 +276,7 @@ export default function PartyChat() {
           <div className="flex items-center justify-between mb-1">
             <div>
               <h3 className="font-display font-bold text-lg flex items-center gap-2">
-                {activeLobby.password_hash && <Lock className="h-4 w-4 text-casino-gold" />}
+                {activeLobby.has_password && <Lock className="h-4 w-4 text-casino-gold" />}
                 {activeLobby.name}
               </h3>
               <p className="text-xs text-muted-foreground">{lobbyMembers.length}/{activeLobby.max_members} in voice</p>
@@ -370,7 +370,7 @@ export default function PartyChat() {
               <div key={l.id} className="flex items-center justify-between rounded-xl bg-card border border-border p-4">
                 <div className="min-w-0 flex-1">
                   <p className="font-display font-bold flex items-center gap-2 truncate">
-                    {l.password_hash && <Lock className="h-4 w-4 text-casino-gold shrink-0" />}
+                    {l.has_password && <Lock className="h-4 w-4 text-casino-gold shrink-0" />}
                     {l.name}
                   </p>
                   <p className="text-xs text-muted-foreground flex items-center gap-2">
