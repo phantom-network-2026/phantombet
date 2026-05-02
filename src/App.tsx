@@ -76,6 +76,7 @@ import GalacticSpins from "./pages/games/GalacticSpins.tsx";
 import SweetBonanza from "./pages/games/SweetBonanza.tsx";
 import Sportsbook from "./pages/Sportsbook.tsx";
 import { LightningOverlay } from "./components/LightningOverlay";
+import { TestingPhaseBanner } from "./components/TestingPhaseBanner";
 const queryClient = new QueryClient();
 
 function PresenceTracker({ children }: { children: React.ReactNode }) {
@@ -93,6 +94,7 @@ const App = () => (
         <AuthProvider>
           <PresenceTracker>
             <LightningOverlay />
+            <TestingPhaseBanner />
             <Routes>
               <Route path="/" element={<NetworkLanding />} />
               <Route path="/hub" element={<NetworkHub />} />
