@@ -1,179 +1,167 @@
-# Self-Hosting the Phantom Network Frontend on Ubuntu
+# Phantom Network — One-Command Ubuntu Installer
 
-This guide installs the **frontend** of Phantom Network on your own Ubuntu
-server. The **backend** (database, authentication, edge functions, file
-storage) keeps running on **Lovable Cloud** — no data migration, no
-Postgres to babysit, no edge runtime to maintain.
+Self-host the **entire** Phantom Network stack (frontend + database + auth +
+realtime + storage + edge functions) on your own Ubuntu server.
+No Lovable account required at runtime.
 
-> Tested on Ubuntu **22.04 LTS** and **24.04 LTS** (x86_64 and arm64).
-> Minimum server: 1 vCPU, 1 GB RAM, 10 GB disk. The build needs ~2 GB RAM —
-> add swap on tiny VPS instances if `npm run build` gets killed.
+Tested on **Ubuntu 22.04 LTS** and **24.04 LTS**.
+Minimum: 2 vCPU / 4 GB RAM / 20 GB disk.
 
 ---
 
-## 1. Get the code onto the server
+## Quick start (3 steps)
 
-**Option A — Git clone (recommended, easy updates):**
+### 1. Point DNS at your server
+At your domain registrar, create two **A records** pointing to your server's
+public IP:
+
+| Type | Name | Value |
+|------|------|-------|
+| A | `@` | `<your-server-ip>` |
+| A | `www` | `<your-server-ip>` |
+
+(Default domain baked into the installer is **`phantomnetwork.online`**.)
+
+### 2. Get the code on the server
 ```bash
-sudo apt-get update && sudo apt-get install -y git
-cd /opt
-sudo git clone <your-repo-url> phantom-network
+ssh root@your-server
+cd /root
+git clone <your-github-url> phantom-network
 cd phantom-network
 ```
 
-**Option B — rsync from your laptop:**
-```bash
-# On your local machine, from the project root:
-rsync -avz --exclude node_modules --exclude dist ./ user@your-server:/opt/phantom-network/
-ssh user@your-server
-cd /opt/phantom-network
-```
-
----
-
-## 2. Run the installer
-
+### 3. Run the installer
 ```bash
 sudo bash deploy/install.sh
 ```
 
-You will be asked for:
+Press **Enter** at every prompt to accept the defaults
+(`phantomnetwork.online`, HTTPS enabled).
 
-| Prompt | Example | Notes |
-|---|---|---|
-| Domain or hostname | `phantom.example.com` | Use `_` to accept any host (good for IP-only access) |
-| Install directory | `/var/www/phantom-network` | Where the built static files live |
-| Set up HTTPS? | `yes` | Skipped automatically when domain is `_` |
-| Lets Encrypt email | `you@example.com` | Only asked when HTTPS is enabled |
+That's it. In ~5 minutes you'll have:
 
-The script will:
-
-1. Install **Node.js 20**, **Nginx**, **rsync**, and **ufw** if missing.
-2. Run `npm ci` (or `npm install`) and `npm run build`.
-3. Copy `dist/` to your install directory.
-4. Write `/etc/nginx/sites-available/phantom-network.conf` with proper
-   **SPA fallback** (so deep links and page refresh work) and aggressive
-   caching for hashed assets.
-5. Open ports **80** and **443** in `ufw`.
-6. (Optional) Request a free Lets Encrypt certificate via Certbot and turn
-   on auto-renew.
+- ✅ Full React frontend served by Nginx
+- ✅ Self-hosted Supabase (Postgres 15, GoTrue, PostgREST, Realtime, Storage)
+- ✅ All edge functions running locally on Deno
+- ✅ Complete Phantom Network schema + seed data loaded
+- ✅ Free Let's Encrypt SSL certificate (auto-renewing)
+- ✅ Firewall configured (ports 22 / 80 / 443)
+- ✅ Studio admin UI on `http://<server-ip>:3001`
 
 ---
 
-## 3. Done
+## Fully unattended install
 
-Visit your domain (or server IP) in a browser. You're talking to your own
-Nginx, which serves the React app — and the React app talks directly to
-Lovable Cloud for data, auth, and game logic. No extra proxy required.
+Skip every prompt — useful for CI / cloud-init / Ansible:
+```bash
+sudo UNATTENDED=yes \
+     DOMAIN=phantomnetwork.online \
+     EMAIL=admin@phantomnetwork.online \
+     bash deploy/install.sh
+```
+
+## Different domain
+```bash
+sudo DOMAIN=mycasino.com EMAIL=me@mycasino.com bash deploy/install.sh
+```
+
+## HTTP only (no SSL, e.g. for local LAN)
+```bash
+sudo ENABLE_SSL=no DOMAIN=192.168.1.50 bash deploy/install.sh
+```
 
 ---
 
-## Updating later
+## What gets installed where
 
-When you publish new changes from Lovable, pull/copy the latest code to
-the server and re-run the same script:
+| Path | Purpose |
+|------|---------|
+| `/opt/phantom-network/` | Source + docker-compose stack |
+| `/var/www/phantom-network/` | Built static frontend served by Nginx |
+| `/etc/nginx/sites-available/phantom-network` | Nginx vhost (frontend + `/api/` proxy to Kong) |
+| `/opt/phantom-network/deploy/.secrets.env` | Generated Postgres / JWT / dashboard passwords (chmod 600) |
+| Docker volumes `phantom_db_data`, `phantom_storage_data` | Persistent DB + uploaded files |
+
+---
+
+## Day-2 commands
 
 ```bash
-cd /opt/phantom-network
-sudo git pull               # if you used git
-sudo bash deploy/install.sh # rebuild + redeploy
-```
+# View running containers
+cd /opt/phantom-network/deploy && docker compose ps
 
-The script is idempotent — re-running just refreshes the build and
-reloads Nginx.
+# Tail logs
+docker compose logs -f db auth functions
+
+# Restart whole stack
+docker compose restart
+
+# Stop / start
+docker compose down
+docker compose up -d
+
+# Rebuild frontend after pulling new code
+cd /opt/phantom-network && git pull
+sudo bash deploy/install.sh         # safe to re-run
+
+# Manual SSL renew (cron does this automatically)
+sudo certbot renew
+
+# Open Studio (admin DB UI) — login printed at end of install
+ssh -L 3001:localhost:3001 root@your-server
+# then visit http://localhost:3001
+```
 
 ---
 
-## Manual install (no script)
+## Database backup & restore
 
 ```bash
-# 1. Install Node 20 + Nginx
-sudo apt-get update
-sudo apt-get install -y curl nginx
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo bash -
-sudo apt-get install -y nodejs
+# Backup
+cd /opt/phantom-network/deploy
+docker compose exec -T db pg_dump -U postgres postgres | gzip > ~/phantom-$(date +%F).sql.gz
 
-# 2. Build
-cd /opt/phantom-network
-npm ci
-npm run build
-
-# 3. Deploy static files
-sudo mkdir -p /var/www/phantom-network
-sudo rsync -a --delete dist/ /var/www/phantom-network/
-sudo chown -R www-data:www-data /var/www/phantom-network
-
-# 4. Nginx site (SPA fallback is the important bit)
-sudo tee /etc/nginx/sites-available/phantom-network.conf >/dev/null <<'NGINX'
-server {
-    listen 80;
-    server_name your.domain.com;
-    root /var/www/phantom-network;
-    index index.html;
-
-    location /assets/ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
-    location = /index.html {
-        add_header Cache-Control "no-store, must-revalidate";
-    }
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-}
-NGINX
-
-sudo ln -sf /etc/nginx/sites-available/phantom-network.conf \
-            /etc/nginx/sites-enabled/phantom-network.conf
-sudo rm -f /etc/nginx/sites-enabled/default
-sudo nginx -t && sudo systemctl reload nginx
-
-# 5. (Optional) HTTPS
-sudo apt-get install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d your.domain.com
+# Restore
+gunzip -c ~/phantom-2026-05-02.sql.gz | docker compose exec -T db psql -U postgres postgres
 ```
 
 ---
 
-## How it talks to Lovable Cloud
+## What's bundled in `deploy/`
 
-The Lovable Cloud URL and **publishable** anon key are baked into the
-build at compile time from `.env`:
-
-```
-VITE_SUPABASE_URL=https://<project>.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=eyJhbGciOi...
-VITE_SUPABASE_PROJECT_ID=<project-id>
-```
-
-These are **publishable** values — safe to ship in the bundle. RLS
-policies in the database enforce all access control. **Do not** put
-service-role keys or other secrets in `.env`; those belong in Lovable
-Cloud edge function secrets.
-
-If you ever want to point a self-hosted build at a *different* backend,
-edit `.env` before running the installer and the new values will be
-baked into the build.
+| File | Description |
+|------|-------------|
+| `install.sh` | The one-shot installer (idempotent — safe to re-run) |
+| `docker-compose.yml` | The Supabase stack (db, auth, rest, realtime, storage, functions, studio, kong) |
+| `kong.yml` | API gateway routing rules (mirrors official Supabase setup) |
+| `db/01-schema.sql` | Full public schema dump (tables, RLS, functions, triggers) |
+| `db/02-seed.sql` | Seed data: site_settings, exchange_coins, games |
+| `.secrets.env` | Auto-generated on first run — keep this safe |
+| `.env` | Auto-generated docker-compose env file |
 
 ---
 
 ## Troubleshooting
 
-**`npm run build` is killed on a 1 GB VPS.** Add 2 GB swap:
+**`certbot` failed**
+DNS hasn't propagated yet. Wait a few minutes and run:
+```bash
+sudo certbot --nginx -d phantomnetwork.online -d www.phantomnetwork.online
+```
+
+**Build was killed (out of memory)**
+Add 2 GB swap on small VPS:
 ```bash
 sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile
 sudo mkswap /swapfile && sudo swapon /swapfile
 echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 ```
 
-**Page refresh on `/games/blackjack` shows 404.** Nginx is missing the
-SPA fallback. Re-run the installer, or check that
-`try_files $uri $uri/ /index.html;` is present.
+**Migrating off Lovable Cloud**
+Export your live data from Lovable Cloud → Database → export each table as
+CSV, then import via Studio (`http://<server-ip>:3001` → Table Editor →
+Import).
 
-**Certbot fails.** DNS must point at this server first. Verify with
-`dig +short your.domain.com`, then re-run `sudo certbot --nginx -d your.domain.com`.
-
-**Realtime / websockets don't connect.** The frontend talks directly to
-`*.supabase.co` over 443 — your Nginx is not in that path, so the issue
-is upstream (corporate firewall, ISP, etc.).
+**Need to point the frontend at a different backend later**
+Edit `/opt/phantom-network/.env`, change `VITE_SUPABASE_URL` /
+`VITE_SUPABASE_PUBLISHABLE_KEY`, then re-run `sudo bash deploy/install.sh`.

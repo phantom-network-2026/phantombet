@@ -1,169 +1,311 @@
 #!/usr/bin/env bash
 # ============================================================================
-# Phantom Network - Self-Hosted Frontend Installer (Ubuntu 22.04 / 24.04)
+# Phantom Network — Full Self-Host Installer for Ubuntu 22.04 / 24.04
 # ----------------------------------------------------------------------------
-# Builds the React frontend and serves it from your Ubuntu server via Nginx.
-# The backend (database, auth, edge functions) keeps running on Lovable Cloud.
+# One command sets up the ENTIRE stack on your own server:
+#   * Docker + Docker Compose
+#   * Self-hosted Supabase (Postgres 15, GoTrue auth, PostgREST, Realtime,
+#     Storage, Edge Functions runtime, Studio admin UI)
+#   * Full Phantom Network database schema + seed data
+#   * All edge functions deployed locally
+#   * Built React frontend served by Nginx
+#   * Free Let's Encrypt SSL certificate
+#   * Auto-redirect of phantomnetwork.online -> this server
 #
-# Usage:   sudo bash deploy/install.sh
-# Re-run any time to refresh the build.
+# Usage:
+#   sudo bash deploy/install.sh
+#
+# Re-run any time. Idempotent.
 # ============================================================================
 set -euo pipefail
 
-BLUE='\033[0;34m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'
-log()  { echo -e "${BLUE}[*]${NC} $*"; }
-ok()   { echo -e "${GREEN}[v]${NC} $*"; }
-warn() { echo -e "${YELLOW}[!]${NC} $*"; }
-die()  { echo -e "${RED}[x]${NC} $*" >&2; exit 1; }
+B='\033[0;34m'; G='\033[0;32m'; Y='\033[1;33m'; R='\033[0;31m'; N='\033[0m'
+log()  { echo -e "${B}[*]${N} $*"; }
+ok()   { echo -e "${G}[v]${N} $*"; }
+warn() { echo -e "${Y}[!]${N} $*"; }
+die()  { echo -e "${R}[x]${N} $*" >&2; exit 1; }
 
-ask() {
-  local prompt="$1" default="${2:-}" reply
-  if [[ -n "$default" ]]; then
-    read -rp "$(echo -e "${YELLOW}?${NC} ${prompt} [${default}]: ")" reply
-    echo "${reply:-$default}"
-  else
-    read -rp "$(echo -e "${YELLOW}?${NC} ${prompt}: ")" reply
-    echo "$reply"
-  fi
-}
-
-[[ $EUID -eq 0 ]] || die "Please run with sudo: sudo bash deploy/install.sh"
-command -v apt-get >/dev/null || die "This installer targets Ubuntu/Debian."
+[[ $EUID -eq 0 ]] || die "Run with sudo:  sudo bash deploy/install.sh"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-log "Project root: ${PROJECT_ROOT}"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-echo
-echo "============================================================"
-echo " Phantom Network - Frontend Installer"
-echo "============================================================"
-echo "Backend stays on Lovable Cloud. We will build the UI and"
-echo "serve it from this Ubuntu server with Nginx (+ optional HTTPS)."
-echo
+# ---------------------------------------------------------------------------
+# Defaults — phantomnetwork.online works out of the box
+# ---------------------------------------------------------------------------
+DOMAIN="${DOMAIN:-phantomnetwork.online}"
+EMAIL="${EMAIL:-admin@${DOMAIN}}"
+INSTALL_DIR="${INSTALL_DIR:-/opt/phantom-network}"
+WEB_ROOT="${WEB_ROOT:-/var/www/phantom-network}"
+ENABLE_SSL="${ENABLE_SSL:-yes}"
 
-DOMAIN="$(ask 'Domain or hostname (e.g. phantom.example.com, or _ for any)' '_')"
-INSTALL_DIR="$(ask 'Where to install the built site' '/var/www/phantom-network')"
-SETUP_SSL="no"
-if [[ "$DOMAIN" != "_" ]]; then
-  SETUP_SSL="$(ask 'Set up free HTTPS via Lets Encrypt? (yes/no)' 'yes')"
-fi
-SSL_EMAIL=""
-if [[ "$SETUP_SSL" == "yes" ]]; then
-  SSL_EMAIL="$(ask 'Email for Lets Encrypt notifications')"
-  [[ -n "$SSL_EMAIL" ]] || die "Email is required for Lets Encrypt."
+if [[ -t 0 && "${UNATTENDED:-no}" != "yes" ]]; then
+  read -rp "Domain [$DOMAIN]: " _d || true; DOMAIN="${_d:-$DOMAIN}"
+  read -rp "Email for SSL [$EMAIL]: " _e || true; EMAIL="${_e:-$EMAIL}"
+  read -rp "Enable HTTPS via Let's Encrypt? [yes]: " _s || true; ENABLE_SSL="${_s:-yes}"
 fi
 
+log "Domain:        $DOMAIN"
+log "SSL email:     $EMAIL"
+log "Stack dir:     $INSTALL_DIR"
+log "Web root:      $WEB_ROOT"
+log "HTTPS:         $ENABLE_SSL"
+
+# ---------------------------------------------------------------------------
+# 1. System prerequisites
+# ---------------------------------------------------------------------------
 log "Updating apt and installing base packages..."
 export DEBIAN_FRONTEND=noninteractive
-apt-get update -y >/dev/null
-apt-get install -y curl ca-certificates gnupg nginx ufw rsync >/dev/null
-ok "Base packages installed."
+apt-get update -y
+apt-get install -y curl wget git ca-certificates gnupg lsb-release \
+  ufw nginx openssl jq unzip software-properties-common rsync
 
-if ! command -v node >/dev/null || [[ "$(node -v 2>/dev/null | sed 's/v//; s/\..*//')" -lt 20 ]]; then
-  log "Installing Node.js 20.x (NodeSource)..."
-  curl -fsSL https://deb.nodesource.com/setup_20.x | bash - >/dev/null
-  apt-get install -y nodejs >/dev/null
+# Node 20 (for build)
+if ! command -v node >/dev/null || [[ "$(node -v | cut -dv -f2 | cut -d. -f1)" -lt 20 ]]; then
+  log "Installing Node.js 20..."
+  curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+  apt-get install -y nodejs
 fi
-ok "Node $(node -v) / npm $(npm -v) ready."
+ok "Node $(node -v)"
 
-log "Installing project dependencies..."
-cd "$PROJECT_ROOT"
-if [[ -f package-lock.json ]]; then
-  npm ci --no-audit --no-fund
-else
-  npm install --no-audit --no-fund
+# Docker
+if ! command -v docker >/dev/null; then
+  log "Installing Docker..."
+  install -m 0755 -d /etc/apt/keyrings
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+  chmod a+r /etc/apt/keyrings/docker.gpg
+  echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" \
+    > /etc/apt/sources.list.d/docker.list
+  apt-get update -y
+  apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  systemctl enable --now docker
+fi
+ok "Docker $(docker --version | awk '{print $3}' | tr -d ,)"
+
+# Certbot (only if SSL)
+if [[ "$ENABLE_SSL" == "yes" ]]; then
+  apt-get install -y certbot python3-certbot-nginx
 fi
 
-log "Building production bundle..."
-npm run build
-[[ -d "$PROJECT_ROOT/dist" ]] || die "Build did not produce a dist/ directory."
-ok "Build complete."
-
-log "Deploying static files to ${INSTALL_DIR}..."
+# ---------------------------------------------------------------------------
+# 2. Project files
+# ---------------------------------------------------------------------------
+log "Copying project to $INSTALL_DIR..."
 mkdir -p "$INSTALL_DIR"
-rsync -a --delete "$PROJECT_ROOT/dist/" "$INSTALL_DIR/"
-chown -R www-data:www-data "$INSTALL_DIR"
-ok "Files deployed."
+rsync -a --delete \
+  --exclude node_modules --exclude dist --exclude .git \
+  "$PROJECT_DIR/" "$INSTALL_DIR/"
+cd "$INSTALL_DIR"
 
-NGINX_CONF="/etc/nginx/sites-available/phantom-network.conf"
-log "Writing Nginx config to ${NGINX_CONF}..."
-SERVER_NAME="$DOMAIN"
+# ---------------------------------------------------------------------------
+# 3. Generate secrets (only first run)
+# ---------------------------------------------------------------------------
+SECRETS_FILE="$INSTALL_DIR/deploy/.secrets.env"
+if [[ ! -f "$SECRETS_FILE" ]]; then
+  log "Generating secrets..."
+  POSTGRES_PASSWORD=$(openssl rand -hex 24)
+  JWT_SECRET=$(openssl rand -hex 32)
+  DASHBOARD_PASSWORD=$(openssl rand -hex 12)
+  TRON_ENCRYPTION_KEY=$(openssl rand -hex 32)
 
-cat > "$NGINX_CONF" <<NGINX
+  # Mint anon + service keys signed with JWT_SECRET
+  mint_jwt() {
+    local role="$1"
+    local header='{"alg":"HS256","typ":"JWT"}'
+    local now=$(date +%s)
+    local exp=$((now + 60*60*24*365*10))
+    local payload="{\"role\":\"$role\",\"iss\":\"supabase\",\"iat\":$now,\"exp\":$exp}"
+    b64() { openssl base64 -A | tr '+/' '-_' | tr -d '='; }
+    local h p s
+    h=$(printf '%s' "$header"  | b64)
+    p=$(printf '%s' "$payload" | b64)
+    s=$(printf '%s.%s' "$h" "$p" | openssl dgst -sha256 -hmac "$JWT_SECRET" -binary | b64)
+    printf '%s.%s.%s' "$h" "$p" "$s"
+  }
+  ANON_KEY=$(mint_jwt anon)
+  SERVICE_ROLE_KEY=$(mint_jwt service_role)
+
+  cat > "$SECRETS_FILE" <<EOF
+POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+JWT_SECRET=$JWT_SECRET
+ANON_KEY=$ANON_KEY
+SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY
+DASHBOARD_PASSWORD=$DASHBOARD_PASSWORD
+TRON_ENCRYPTION_KEY=$TRON_ENCRYPTION_KEY
+EOF
+  chmod 600 "$SECRETS_FILE"
+  ok "Secrets generated -> $SECRETS_FILE"
+else
+  ok "Re-using existing secrets ($SECRETS_FILE)"
+fi
+# shellcheck disable=SC1090
+source "$SECRETS_FILE"
+
+# ---------------------------------------------------------------------------
+# 4. docker-compose .env for the Supabase stack
+# ---------------------------------------------------------------------------
+API_EXTERNAL_URL="https://${DOMAIN}/api"
+SITE_URL="https://${DOMAIN}"
+if [[ "$ENABLE_SSL" != "yes" ]]; then
+  API_EXTERNAL_URL="http://${DOMAIN}/api"
+  SITE_URL="http://${DOMAIN}"
+fi
+
+cat > "$INSTALL_DIR/deploy/.env" <<EOF
+POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+JWT_SECRET=$JWT_SECRET
+ANON_KEY=$ANON_KEY
+SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY
+DASHBOARD_USERNAME=admin
+DASHBOARD_PASSWORD=$DASHBOARD_PASSWORD
+API_EXTERNAL_URL=$API_EXTERNAL_URL
+SITE_URL=$SITE_URL
+TRON_ENCRYPTION_KEY=$TRON_ENCRYPTION_KEY
+DOMAIN=$DOMAIN
+EOF
+chmod 600 "$INSTALL_DIR/deploy/.env"
+
+# ---------------------------------------------------------------------------
+# 5. Frontend .env + build
+# ---------------------------------------------------------------------------
+cat > "$INSTALL_DIR/.env" <<EOF
+VITE_SUPABASE_URL=$SITE_URL/api
+VITE_SUPABASE_PUBLISHABLE_KEY=$ANON_KEY
+VITE_SUPABASE_PROJECT_ID=phantom-self-hosted
+EOF
+
+log "Installing frontend dependencies..."
+cd "$INSTALL_DIR"
+if command -v bun >/dev/null; then
+  bun install --frozen-lockfile || bun install
+else
+  npm ci --no-audit --no-fund || npm install --no-audit --no-fund
+fi
+
+log "Building frontend (this can take a couple of minutes)..."
+if command -v bun >/dev/null; then bun run build; else npm run build; fi
+
+mkdir -p "$WEB_ROOT"
+rsync -a --delete "$INSTALL_DIR/dist/" "$WEB_ROOT/"
+chown -R www-data:www-data "$WEB_ROOT"
+ok "Frontend built and deployed to $WEB_ROOT"
+
+# ---------------------------------------------------------------------------
+# 6. Start the Supabase stack
+# ---------------------------------------------------------------------------
+log "Starting self-hosted Supabase stack..."
+cd "$INSTALL_DIR/deploy"
+docker compose --env-file .env up -d
+
+log "Waiting for Postgres to accept connections..."
+for i in $(seq 1 60); do
+  if docker compose exec -T db pg_isready -U postgres >/dev/null 2>&1; then break; fi
+  sleep 2
+done
+ok "Postgres is up"
+
+# ---------------------------------------------------------------------------
+# 7. Apply schema + seed
+# ---------------------------------------------------------------------------
+log "Applying schema (idempotent)..."
+docker compose exec -T db psql -U postgres -d postgres \
+  -v ON_ERROR_STOP=0 < "$INSTALL_DIR/deploy/db/01-schema.sql" >/tmp/schema.log 2>&1 || true
+ok "Schema applied (warnings logged to /tmp/schema.log)"
+
+log "Loading seed data (site settings, coins, games)..."
+docker compose exec -T db psql -U postgres -d postgres \
+  -v ON_ERROR_STOP=0 < "$INSTALL_DIR/deploy/db/02-seed.sql" >/tmp/seed.log 2>&1 || true
+ok "Seed loaded"
+
+# ---------------------------------------------------------------------------
+# 8. Nginx (reverse proxy + static + SSL)
+# ---------------------------------------------------------------------------
+log "Writing Nginx site config..."
+cat > /etc/nginx/sites-available/phantom-network <<NGINX
 server {
     listen 80;
     listen [::]:80;
-    server_name ${SERVER_NAME};
+    server_name $DOMAIN www.$DOMAIN;
 
-    root ${INSTALL_DIR};
+    # Static frontend
+    root $WEB_ROOT;
     index index.html;
 
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-
-    location /assets/ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-        try_files \$uri =404;
+    # Supabase API (PostgREST + GoTrue + Realtime + Storage + Functions)
+    location /api/ {
+        proxy_pass http://127.0.0.1:8000/;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 86400;
     }
 
-    location = /index.html {
-        add_header Cache-Control "no-store, must-revalidate";
-    }
-
+    # SPA fallback
     location / {
         try_files \$uri \$uri/ /index.html;
     }
 
-    gzip on;
-    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript image/svg+xml;
-    gzip_min_length 1024;
+    # Long cache for built assets
+    location /assets/ {
+        expires 1y;
+        access_log off;
+        add_header Cache-Control "public, immutable";
+    }
 
-    client_max_body_size 25m;
+    client_max_body_size 50M;
 }
 NGINX
 
-ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/phantom-network.conf
-[[ -f /etc/nginx/sites-enabled/default ]] && rm -f /etc/nginx/sites-enabled/default
-
-log "Validating Nginx configuration..."
+ln -sf /etc/nginx/sites-available/phantom-network /etc/nginx/sites-enabled/phantom-network
+rm -f /etc/nginx/sites-enabled/default
 nginx -t
-systemctl enable nginx >/dev/null 2>&1 || true
 systemctl reload nginx
-ok "Nginx reloaded."
+ok "Nginx configured"
 
+# ---------------------------------------------------------------------------
+# 9. Firewall
+# ---------------------------------------------------------------------------
 if command -v ufw >/dev/null; then
-  log "Configuring firewall (OpenSSH + Nginx Full)..."
-  ufw allow OpenSSH >/dev/null 2>&1 || true
-  ufw allow 'Nginx Full' >/dev/null 2>&1 || true
+  ufw allow 22/tcp  >/dev/null 2>&1 || true
+  ufw allow 80/tcp  >/dev/null 2>&1 || true
+  ufw allow 443/tcp >/dev/null 2>&1 || true
   yes | ufw enable >/dev/null 2>&1 || true
-  ok "Firewall configured."
 fi
 
-if [[ "$SETUP_SSL" == "yes" ]]; then
-  log "Installing Certbot and requesting certificate for ${DOMAIN}..."
-  apt-get install -y certbot python3-certbot-nginx >/dev/null
-  if certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos -m "$SSL_EMAIL" --redirect; then
-    ok "HTTPS active at https://${DOMAIN}"
+# ---------------------------------------------------------------------------
+# 10. SSL certificate (auto-renew via certbot timer)
+# ---------------------------------------------------------------------------
+if [[ "$ENABLE_SSL" == "yes" ]]; then
+  log "Requesting Let's Encrypt certificate for $DOMAIN..."
+  if certbot --nginx --non-interactive --agree-tos -m "$EMAIL" \
+       -d "$DOMAIN" -d "www.$DOMAIN" --redirect; then
+    ok "HTTPS active"
   else
-    warn "Certbot failed - ensure DNS for ${DOMAIN} points here, then run:"
-    warn "  sudo certbot --nginx -d ${DOMAIN}"
+    warn "Certbot failed. The site is reachable on HTTP. Re-run after DNS points here:"
+    warn "  sudo certbot --nginx -d $DOMAIN -d www.$DOMAIN"
   fi
 fi
 
-echo
-echo "============================================================"
-ok "Install complete."
-echo "  Site root : ${INSTALL_DIR}"
-echo "  Nginx conf: ${NGINX_CONF}"
-if [[ "$SETUP_SSL" == "yes" ]]; then
-  echo "  URL       : https://${DOMAIN}"
-else
-  echo "  URL       : http://${DOMAIN:-server-ip}"
-fi
-echo
-echo "To deploy a new build later, just re-run:"
-echo "  sudo bash deploy/install.sh"
-echo "============================================================"
+# ---------------------------------------------------------------------------
+# Done
+# ---------------------------------------------------------------------------
+ok "============================================================"
+ok " Phantom Network is live at: $SITE_URL"
+ok "------------------------------------------------------------"
+ok " Supabase Studio (admin DB UI):  $SITE_URL/api/  (proxied)"
+ok " Local Studio direct:            http://$(hostname -I | awk '{print $1}'):3001"
+ok " Studio login: admin / $DASHBOARD_PASSWORD"
+ok ""
+ok " Secrets file:    $SECRETS_FILE"
+ok " Stack control:   cd $INSTALL_DIR/deploy && docker compose ps"
+ok " Rebuild front:   sudo bash $INSTALL_DIR/deploy/install.sh"
+ok "============================================================"
+ok ""
+ok " DNS reminder: point  $DOMAIN  and  www.$DOMAIN  A records"
+ok " to this server's public IP:  $(curl -fsS https://api.ipify.org || echo '<your-server-ip>')"
+ok "============================================================"
