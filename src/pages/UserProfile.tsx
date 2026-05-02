@@ -9,8 +9,9 @@ import { StaffUsername, type StaffRole } from "@/components/casino/StaffUsername
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Trophy, Star, Crown, Twitter, Instagram, MessageCircle, Globe, UserPlus, Zap } from "lucide-react";
+import { ArrowLeft, Trophy, Star, Crown, Twitter, Instagram, MessageCircle, Globe, UserPlus, Zap, Gift } from "lucide-react";
 import { toast } from "sonner";
+import { GiftDialog } from "@/components/casino/social/GiftDialog";
 
 interface PublicProfile {
   user_id: string;
@@ -49,6 +50,7 @@ export default function UserProfile() {
   const [friendshipId, setFriendshipId] = useState<string | null>(null);
   const [pendingSent, setPendingSent] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [giftOpen, setGiftOpen] = useState(false);
 
   useEffect(() => {
     if (!userId || !user) { navigate("/login"); return; }
@@ -280,10 +282,19 @@ export default function UserProfile() {
                 <UserPlus className="h-4 w-4 mr-2" /> Add Friend
               </Button>
             )}
+            <Button variant="pink" onClick={() => setGiftOpen(true)}>
+              <Gift className="h-4 w-4 mr-2" /> Gift
+            </Button>
           </div>
         </div>
       </div>
       <BottomNav />
+      <GiftDialog
+        receiverId={profile.user_id}
+        receiverUsername={profile.username || "user"}
+        open={giftOpen}
+        onClose={() => setGiftOpen(false)}
+      />
     </div>
   );
 }

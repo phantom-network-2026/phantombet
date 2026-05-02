@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_feed: {
+        Row: {
+          activity_type: string
+          amount: number | null
+          created_at: string
+          detail: string | null
+          id: string
+          metadata: Json
+          title: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          activity_type: string
+          amount?: number | null
+          created_at?: string
+          detail?: string | null
+          id?: string
+          metadata?: Json
+          title: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          activity_type?: string
+          amount?: number | null
+          created_at?: string
+          detail?: string | null
+          id?: string
+          metadata?: Json
+          title?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
       ai_agent_log: {
         Row: {
           created_at: string
@@ -442,6 +478,27 @@ export type Database = {
           whitepaper_url?: string | null
           withdrawal_fee?: number
           withdrawal_min?: number
+        }
+        Relationships: []
+      }
+      exchange_watchlist: {
+        Row: {
+          created_at: string
+          id: string
+          symbol: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          symbol: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          symbol?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -1086,6 +1143,36 @@ export type Database = {
         }
         Relationships: []
       }
+      price_alerts: {
+        Row: {
+          created_at: string
+          direction: string
+          id: string
+          is_active: boolean
+          symbol: string
+          target_price: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          direction?: string
+          id?: string
+          is_active?: boolean
+          symbol: string
+          target_price: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          direction?: string
+          id?: string
+          is_active?: boolean
+          symbol?: string
+          target_price?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1101,9 +1188,11 @@ export type Database = {
           has_high_roller: boolean | null
           id: string
           name_color: string | null
+          pinned_achievement: string | null
           purchased_borders: string[]
           real_balance: number
           social_links: Json | null
+          status_message: string | null
           updated_at: string
           user_id: string
           username: string | null
@@ -1124,9 +1213,11 @@ export type Database = {
           has_high_roller?: boolean | null
           id?: string
           name_color?: string | null
+          pinned_achievement?: string | null
           purchased_borders?: string[]
           real_balance?: number
           social_links?: Json | null
+          status_message?: string | null
           updated_at?: string
           user_id: string
           username?: string | null
@@ -1147,9 +1238,11 @@ export type Database = {
           has_high_roller?: boolean | null
           id?: string
           name_color?: string | null
+          pinned_achievement?: string | null
           purchased_borders?: string[]
           real_balance?: number
           social_links?: Json | null
+          status_message?: string | null
           updated_at?: string
           user_id?: string
           username?: string | null
@@ -1483,6 +1576,36 @@ export type Database = {
           updated_at?: string
           used_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_gifts: {
+        Row: {
+          amount: number
+          created_at: string
+          gift_type: string
+          id: string
+          message: string | null
+          receiver_id: string
+          sender_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          gift_type: string
+          id?: string
+          message?: string | null
+          receiver_id: string
+          sender_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          gift_type?: string
+          id?: string
+          message?: string | null
+          receiver_id?: string
+          sender_id?: string
         }
         Relationships: []
       }
