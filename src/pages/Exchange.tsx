@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { Sparkline } from "@/components/casino/exchange/Sparkline";
 import { CoinDetailDialog, type CoinDetail } from "@/components/casino/exchange/CoinDetailDialog";
 import { SwapDialog } from "@/components/casino/exchange/SwapDialog";
+import { HoldingsPanel } from "@/components/casino/exchange/HoldingsPanel";
 import { useWatchlist } from "@/hooks/useWatchlist";
 import { useExchangeCoins } from "@/hooks/useExchangeCoins";
 
@@ -206,6 +207,13 @@ export default function Exchange() {
                   Preview Swap
                 </Button>
               </section>
+              <HoldingsPanel
+                coins={platformDirectory.map((c: any) => ({ symbol: c.symbol, name: c.name, price: c.price ?? c.price_usd }))}
+                onSwap={(symbol) => {
+                  setSwapDefaults({ from: symbol, to: symbol === "USDT" ? "BTC" : "USDT" });
+                  setSwapOpen(true);
+                }}
+              />
             </div>
 
             {/* Middle column: Markets, Pool, Portfolio, Listed */}

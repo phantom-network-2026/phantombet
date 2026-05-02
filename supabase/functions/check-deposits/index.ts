@@ -63,19 +63,18 @@ Deno.serve(async (req) => {
 
           if (usdtAmount < MIN_DEPOSIT_USD) continue;
 
-          // Credit the user
+          // Credit the user (real crypto balance — auto-syncs to user_coin_balances USDT via trigger)
           const { data: profile } = await adminClient
             .from("profiles")
-            .select("balance")
+            .select("real_balance")
             .eq("user_id", addr.user_id)
             .single();
 
           if (!profile) continue;
 
-          // Update balance
           await adminClient
             .from("profiles")
-            .update({ balance: profile.balance + usdtAmount })
+            .update({ real_balance: Number(profile.real_balance) + usdtAmount })
             .eq("user_id", addr.user_id);
 
           // Record deposit
