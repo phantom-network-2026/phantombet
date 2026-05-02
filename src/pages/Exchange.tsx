@@ -389,6 +389,13 @@ export default function Exchange() {
       </AuthGuard>
       <BottomNav />
       <CoinDetailDialog coin={selectedCoin} open={!!selectedCoin} onClose={() => setSelectedCoin(null)} />
+      <SwapDialog
+        open={swapOpen}
+        onOpenChange={setSwapOpen}
+        coins={platformDirectory.map((c: any) => ({ symbol: c.symbol, name: c.name, price: c.price ?? c.price_usd }))}
+        defaultFrom={swapDefaults.from}
+        defaultTo={swapDefaults.to}
+      />
     </div>
   );
 }
