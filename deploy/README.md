@@ -165,3 +165,38 @@ Import).
 **Need to point the frontend at a different backend later**
 Edit `/opt/phantom-network/.env`, change `VITE_SUPABASE_URL` /
 `VITE_SUPABASE_PUBLISHABLE_KEY`, then re-run `sudo bash deploy/install.sh`.
+
+---
+
+## Switching from local DB to a hosted Supabase project
+
+If you'd rather run the database on **supabase.com** instead of the bundled
+Postgres container:
+
+1. Create the new project at supabase.com
+2. Load schema + seed:
+   ```bash
+   psql "postgresql://postgres:PW@db.<NEW_REF>.supabase.co:5432/postgres" \
+     -f deploy/db/01-schema.sql
+   psql "postgresql://postgres:PW@db.<NEW_REF>.supabase.co:5432/postgres" \
+     -f deploy/db/02-seed.sql
+   ```
+3. (Optional) Migrate live data from your old Lovable Cloud project:
+   ```bash
+   export SOURCE_DB="postgresql://postgres:PW@db.muuucuwaaxsticfuelck.supabase.co:5432/postgres"
+   export TARGET_DB="postgresql://postgres:PW@db.<NEW_REF>.supabase.co:5432/postgres"
+   bash deploy/migrate-to-supabase.sh
+   ```
+4. Deploy edge functions to the new project:
+   ```bash
+   supabase link --project-ref <NEW_REF>
+   supabase functions deploy --project-ref <NEW_REF>
+   ```
+5. Re-create secrets (TRON_*, LIVEKIT_*, LOVABLE_API_KEY) in the new project's
+   dashboard → Edge Functions → Secrets.
+6. Flip the frontend over with one command:
+   ```bash
+   sudo bash deploy/switch-to-supabase.sh
+   ```
+   It will prompt for the new URL + anon key, stop the local DB containers,
+   rebuild, and reload Nginx. Done.
