@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { Sparkline } from "@/components/casino/exchange/Sparkline";
 import { CoinDetailDialog, type CoinDetail } from "@/components/casino/exchange/CoinDetailDialog";
 import { useWatchlist } from "@/hooks/useWatchlist";
+import { useExchangeCoins } from "@/hooks/useExchangeCoins";
 
 const markets = [
   ["PHX/USDT", "$0.0521", "+28.4%", "148M", "Listed"],
@@ -22,7 +23,7 @@ const markets = [
   ["GHOST/USDT", "$0.114", "+14.6%", "17M", "Listed"],
 ];
 
-const platformDirectory = [
+const platformDirectoryFallback = [
   { symbol: "BTC", name: "Bitcoin", network: "Bitcoin", price: "$63,420", change: "+2.1%", volume: "912M", status: "Listed", risk: 8, sector: "Majors" },
   { symbol: "ETH", name: "Ethereum", network: "Ethereum", price: "$3,180", change: "+3.6%", volume: "744M", status: "Listed", risk: 12, sector: "Majors" },
   { symbol: "SOL", name: "Solana", network: "Solana", price: "$142.60", change: "+6.4%", volume: "268M", status: "Listed", risk: 22, sector: "Layer 1" },
@@ -69,6 +70,8 @@ export default function Exchange() {
   const [selectedCoin, setSelectedCoin] = useState<CoinDetail | null>(null);
   const [showWatchlistOnly, setShowWatchlistOnly] = useState(false);
   const { has: isWatched, toggle: toggleWatch } = useWatchlist();
+  const { coins: liveCoins, loading: liveLoading } = useExchangeCoins();
+  const platformDirectory = liveCoins.length > 0 ? liveCoins : platformDirectoryFallback;
 
   const estimate = useMemo(
     () => (Number(fromAmount || 0) / 0.0521).toLocaleString(undefined, { maximumFractionDigits: 2 }),
@@ -76,7 +79,7 @@ export default function Exchange() {
   );
   const sectors = useMemo(
     () => ["All", ...Array.from(new Set(platformDirectory.map((c) => c.sector)))],
-    []
+    [platformDirectory]
   );
   const listedAssets = useMemo(() => platformDirectory.filter((coin) => {
     const matchesSector = assetFilter === "All" || coin.sector === assetFilter;
@@ -84,7 +87,7 @@ export default function Exchange() {
     const matchesSearch = !needle || coin.symbol.toLowerCase().includes(needle) || coin.name.toLowerCase().includes(needle) || coin.network.toLowerCase().includes(needle);
     const matchesWatch = !showWatchlistOnly || isWatched(coin.symbol);
     return matchesSector && matchesSearch && matchesWatch;
-  }), [assetFilter, assetSearch, showWatchlistOnly, isWatched]);
+  }), [assetFilter, assetSearch, showWatchlistOnly, isWatched, platformDirectory]);
 
   return (
     <div className="min-h-screen bg-background">
