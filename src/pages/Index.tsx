@@ -151,11 +151,11 @@ export default function Index() {
         </div>
       )}
 
-      {/* Welcome PhantomBet Hero Banner */}
+      {/* Welcome Phantom Casino Hero Banner */}
       <div className="mx-4 mt-3 rounded-2xl overflow-hidden border border-casino-gold/40 animate-border-gold">
         <img
           src={welcomeBannerImg}
-          alt="Welcome to PhantomBet — 100% Non-KYC Casino with Live Game Chat"
+          alt="Welcome to Phantom Casino — 100% Non-KYC Casino with Live Game Chat"
           className="w-full h-auto block"
           loading="eager"
         />

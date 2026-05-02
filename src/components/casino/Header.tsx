@@ -58,8 +58,8 @@ export function Header() {
                 <div className="font-display font-black text-sm sm:text-base tracking-wide bg-gradient-to-r from-casino-gold via-amber-200 to-casino-gold bg-clip-text text-transparent">
                   PHANTOM NETWORK
                 </div>
-                <div className="text-[9px] tracking-[0.3em] text-muted-foreground -mt-0.5">
-                  CASINO
+                <div className="text-[9px] tracking-[0.3em] text-muted-foreground -mt-0.5 uppercase">
+                  Phantom Casino
                 </div>
               </>
             )}

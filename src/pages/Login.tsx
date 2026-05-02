@@ -40,7 +40,7 @@ export default function Login() {
         <div className="text-center">
           <img src={logo} alt="PhantomBet" className="h-48 w-48 mx-auto mb-3" />
           <h1 className="font-display text-3xl font-black text-gold">Welcome Back</h1>
-          <p className="text-muted-foreground text-sm mt-1">Log in to your PhantomBet account</p>
+          <p className="text-muted-foreground text-sm mt-1">Log in to your Phantom Casino account</p>
         </div>
 
         <WelcomeBanner variant="login" />
