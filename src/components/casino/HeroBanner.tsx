@@ -11,7 +11,7 @@ export function HeroBanner() {
     <div className="relative overflow-hidden rounded-2xl mx-4 mt-4 group animate-border-gold">
       <img
         src={freeBetBuilderBanner}
-        alt="PhantomBet Football Betting — Get a $5 Free Bet Builder"
+        alt="Phantom Casino Football Betting — Get a $5 Free Bet Builder"
         className="w-full h-auto block bg-background"
         loading="eager"
       />

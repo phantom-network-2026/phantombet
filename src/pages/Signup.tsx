@@ -87,7 +87,7 @@ export default function Signup() {
     setLoading(true);
     
     // Generate a random internal email
-    const internalEmail = `${username.toLowerCase().replace(/[^a-z0-9]/g, "")}+${Date.now()}@phantombet.internal`;
+    const internalEmail = `${username.toLowerCase().replace(/[^a-z0-9]/g, "")}+${Date.now()}@phantomcasino.internal`;
     
     const { error: signUpError } = await signUp(internalEmail, password, username);
     if (signUpError) {
@@ -212,7 +212,7 @@ export default function Signup() {
       <div className="w-full max-w-sm space-y-5">
         <div className="text-center">
           <img src={logo} alt="PhantomBet" className="h-16 w-16 mx-auto mb-3" />
-          <h1 className="font-display text-3xl font-black text-gold">Join PhantomBet</h1>
+          <h1 className="font-display text-3xl font-black text-gold">Join Phantom Casino</h1>
           <p className="text-muted-foreground text-sm mt-1">Create your account & start winning</p>
         </div>
 

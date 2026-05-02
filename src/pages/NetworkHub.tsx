@@ -42,7 +42,7 @@ const APPS: App[] = [
   },
   {
     id: "phantombet",
-    name: "PhantomBet",
+    name: "Phantom Casino",
     tagline: "Casino, slots & sportsbook.",
     to: "/casino",
     image: betImg,

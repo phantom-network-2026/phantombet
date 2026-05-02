@@ -22,12 +22,12 @@ interface WelcomeBonus {
 
 const DEFAULT_MOCK_CONFIG = {
   mock_title: "🚧 Early Access — Development Mode",
-  mock_body: "PhantomBet is still in development. Real deposits are not available yet. Every new account receives $100 in mock funds to explore our games!",
+  mock_body: "Phantom Casino is still in development. Real deposits are not available yet. Every new account receives $100 in mock funds to explore our games!",
   mock_perk: "🎁 Loyal members who register now will receive a free 3-month VIP subscription on launch day!",
 };
 
 const DEFAULT_REAL_CONFIG = {
-  real_title: "🎰 Welcome to PhantomBet",
+  real_title: "🎰 Welcome to Phantom Casino",
   real_body: "Join the ultimate crypto casino experience. Deposit USDT and start playing instantly with provably fair games!",
   welcome_bonuses: [
     { id: "deposit_match", label: "100% Deposit Match", description: "Double your first deposit up to $50", icon: "rocket", amount: 50, enabled: true },

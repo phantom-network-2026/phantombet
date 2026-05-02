@@ -36,7 +36,7 @@ import {
 const SERVICES = [
   {
     id: "casino",
-    name: "PhantomBet Casino",
+    name: "Phantom Casino",
     tagline: "200+ slots, live roulette, blackjack, sportsbook & crash games.",
     cta: "Enter Casino",
     to: "/casino",
@@ -219,10 +219,11 @@ export default function NetworkLanding() {
           <h1 className="font-display text-2xl sm:text-4xl font-black bg-gradient-to-r from-casino-gold via-amber-200 to-casino-gold bg-clip-text text-transparent">
             One Network. Endless Possibilities.
           </h1>
-          <p className="text-muted-foreground text-sm sm:text-base mt-2 max-w-2xl mx-auto">
+          <p className="text-muted-foreground text-sm sm:text-base mt-2 max-w-2xl mx-auto whitespace-pre-wrap">
             A private, encrypted ecosystem to <span className="text-foreground">game</span>,{" "}
             <span className="text-foreground">trade</span> and{" "}
-            <span className="text-foreground">hang out</span> — without censorship or limits.
+            <span className="text-foreground">hang out</span> — without censorship or limits.{"\n\n"}
+            PLEASE UNSURE YOU HAVE A VPN OR A PROXY TO ENSURE MAXIMUM SECURITY.
           </p>
         </section>
 
@@ -310,7 +311,7 @@ export default function NetworkLanding() {
               <div className="text-center">
                 <Sparkles className="w-5 h-5 mx-auto text-casino-gold mb-1" />
                 <h2 className="font-display text-xl font-black bg-gradient-to-r from-casino-gold to-amber-200 bg-clip-text text-transparent">
-                  {user ? "Welcome back" : "Enter the Network"}
+                  {user ? "Welcome back" : "Enter The Network With Full Security And Encryption"}
                 </h2>
                 <p className="text-xs text-muted-foreground mt-1">
                   {user ? "You're signed in." : "One identity. Every Phantom service."}
