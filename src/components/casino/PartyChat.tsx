@@ -23,7 +23,7 @@ interface Lobby {
   host_id: string;
   is_public: boolean;
   max_members: number;
-  password_hash: string | null;
+  has_password?: boolean;
   created_at: string;
 }
 
@@ -72,11 +72,23 @@ export default function PartyChat() {
     let mounted = true;
     const load = async () => {
       const [{ data: lo }, { data: mb }] = await Promise.all([
-        supabase.from("party_lobbies").select("*").eq("is_active", true).order("created_at", { ascending: false }),
+        supabase
+          .from("party_lobbies")
+          .select("id, name, host_id, is_public, max_members, created_at")
+          .eq("is_active", true)
+          .order("created_at", { ascending: false }),
         supabase.from("party_lobby_members").select("*"),
       ]);
       if (!mounted) return;
-      setLobbies((lo as any) || []);
+      // Fetch which lobbies are password protected via a server-side RPC per lobby
+      const lobbiesArr = (lo as any[]) || [];
+      const withFlags = await Promise.all(
+        lobbiesArr.map(async (l) => {
+          const { data: hasPw } = await supabase.rpc("party_lobby_has_password", { p_lobby_id: l.id });
+          return { ...l, has_password: !!hasPw } as Lobby;
+        })
+      );
+      setLobbies(withFlags);
       setMembers((mb as any) || []);
       const ids = new Set<string>();
       (lo || []).forEach((l: any) => ids.add(l.host_id));
@@ -183,35 +195,36 @@ export default function PartyChat() {
   const createLobby = async () => {
     if (!user || !newName.trim()) return;
     const pwHash = !newPublic && newPassword ? await hashPassword(newPassword) : null;
-    const { data, error } = await supabase
-      .from("party_lobbies")
-      .insert({
-        name: newName.trim(),
-        host_id: user.id,
-        is_public: newPublic,
-        password_hash: pwHash,
-        max_members: 8,
-      })
-      .select()
-      .single();
-    if (error || !data) { toast.error(error?.message || "Failed"); return; }
-    await supabase.from("party_lobby_members").insert({ lobby_id: data.id, user_id: user.id });
+    const { data: newId, error } = await supabase.rpc("party_create_lobby", {
+      p_name: newName.trim(),
+      p_is_public: newPublic,
+      p_max_members: 8,
+      p_password_hash: pwHash,
+    });
+    if (error || !newId) { toast.error(error?.message || "Failed"); return; }
+    const created: Lobby = {
+      id: newId as unknown as string,
+      name: newName.trim(),
+      host_id: user.id,
+      is_public: newPublic,
+      max_members: 8,
+      has_password: !!pwHash,
+      created_at: new Date().toISOString(),
+    };
     setShowCreate(false); setNewName(""); setNewPassword(""); setNewPublic(true);
-    setActiveLobby(data as any);
-    await connectVoice(data as any);
+    setActiveLobby(created);
+    await connectVoice(created);
   };
 
   const joinLobby = async (lobby: Lobby, password?: string) => {
     if (!user) return;
-    if (lobby.password_hash) {
-      if (!password) { setJoinPwOpen(lobby); return; }
-      const h = await hashPassword(password);
-      if (h !== lobby.password_hash) { toast.error("Wrong password"); return; }
-    }
-    const count = members.filter((m) => m.lobby_id === lobby.id).length;
-    if (count >= lobby.max_members) { toast.error("Lobby full"); return; }
-    const { error } = await supabase.from("party_lobby_members").insert({ lobby_id: lobby.id, user_id: user.id });
-    if (error && !error.message.includes("duplicate")) { toast.error(error.message); return; }
+    if (lobby.has_password && !password) { setJoinPwOpen(lobby); return; }
+    const pwHash = password ? await hashPassword(password) : null;
+    const { error } = await supabase.rpc("party_join_lobby", {
+      p_lobby_id: lobby.id,
+      p_password_hash: pwHash,
+    });
+    if (error) { toast.error(error.message || "Failed to join"); return; }
     setJoinPwOpen(null); setJoinPw("");
     setActiveLobby(lobby);
     await connectVoice(lobby);
