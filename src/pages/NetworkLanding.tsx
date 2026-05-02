@@ -354,14 +354,6 @@ export default function NetworkLanding() {
                       Create account
                     </Link>
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() => navigate("/hub")}
-                    className="w-full text-xs text-muted-foreground hover:text-foreground transition pt-1"
-                  >
-                    Continue as guest →
-                  </button>
                 </>
               )}
 
@@ -527,9 +519,11 @@ export default function NetworkLanding() {
                 Create Account
               </Button>
             )}
-            <Button variant="outline" onClick={() => navigate(user ? "/hub" : "/casino")}>
-              {user ? "Go to Hub" : "Browse as Guest"}
-            </Button>
+            {user && (
+              <Button variant="outline" onClick={() => navigate("/hub")}>
+                Go to Hub
+              </Button>
+            )}
           </div>
           <p className="mt-5 text-[10px] tracking-widest uppercase text-muted-foreground/60">
             PhantomBet · Phantom Exchange · Phantom Wallet
