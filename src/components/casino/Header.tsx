@@ -71,10 +71,10 @@ export function Header() {
           {user ? (
             <>
               <BalanceDisplay size="md" />
-              <Button variant="gold" size="sm" onClick={() => navigate("/deposit")}>
+              <Button variant="gold" size="sm" disabled title="Disabled during testing phase — launching early June 2026" className="opacity-50 cursor-not-allowed">
                 {t("deposit")}
               </Button>
-              <Button variant="pink" size="sm" onClick={() => navigate("/withdraw")}>
+              <Button variant="pink" size="sm" disabled title="Disabled during testing phase — launching early June 2026" className="opacity-50 cursor-not-allowed">
                 <ArrowDownToLine className="h-4 w-4 mr-1" /> {t("withdraw")}
               </Button>
               <Button variant="ghost" size="sm" onClick={() => navigate("/exchange")} className="text-casino-gold">
@@ -163,10 +163,10 @@ export function Header() {
                 <User className="h-4 w-4 mr-1" /> {t("profile")}
               </Button>
               <div className="flex gap-2">
-                <Button variant="gold" className="flex-1" onClick={() => { navigate("/deposit"); setMenuOpen(false); }}>
+                <Button variant="gold" className="flex-1 opacity-50 cursor-not-allowed" disabled title="Disabled during testing phase">
                   {t("deposit")}
                 </Button>
-                <Button variant="pink" className="flex-1" onClick={() => { navigate("/withdraw"); setMenuOpen(false); }}>
+                <Button variant="pink" className="flex-1 opacity-50 cursor-not-allowed" disabled title="Disabled during testing phase">
                   <ArrowDownToLine className="h-4 w-4 mr-1" /> {t("withdraw")}
                 </Button>
               </div>
