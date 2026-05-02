@@ -373,6 +373,7 @@ export default function Exchange() {
         </div>
       </AuthGuard>
       <BottomNav />
+      <CoinDetailDialog coin={selectedCoin} open={!!selectedCoin} onClose={() => setSelectedCoin(null)} />
     </div>
   );
 }
