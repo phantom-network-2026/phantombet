@@ -256,9 +256,19 @@ export default function Exchange() {
                   <h2 className="font-display text-xl font-black flex items-center gap-2">
                     <Globe className="text-cyan" /> Listed Cryptocurrencies
                   </h2>
-                  <div className="relative md:w-72">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input value={assetSearch} onChange={(e) => setAssetSearch(e.target.value)} placeholder="Search coins, symbols, networks" className="pl-9" />
+                  <div className="flex items-center gap-2 md:w-auto">
+                    <Button
+                      size="sm"
+                      variant={showWatchlistOnly ? "gold" : "outline"}
+                      onClick={() => setShowWatchlistOnly((v) => !v)}
+                    >
+                      <Star className={`h-3.5 w-3.5 mr-1 ${showWatchlistOnly ? "fill-current" : ""}`} />
+                      Watchlist
+                    </Button>
+                    <div className="relative flex-1 md:w-64">
+                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input value={assetSearch} onChange={(e) => setAssetSearch(e.target.value)} placeholder="Search coins" className="pl-9" />
+                    </div>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2 p-3">
@@ -276,26 +286,43 @@ export default function Exchange() {
                     </button>
                   ))}
                 </div>
-                <div className="hidden grid-cols-7 gap-2 px-4 py-2 text-[10px] uppercase text-muted-foreground sm:grid">
-                  <span className="col-span-2">Asset</span><span>Network</span><span>Price</span><span>24h</span><span>Risk</span><span>Status</span>
-                </div>
                 <div className="max-h-[420px] overflow-auto divide-y divide-border">
-                  {listedAssets.map((coin) => (
-                    <button key={coin.symbol} className="grid w-full grid-cols-[1fr_auto] items-center gap-3 px-4 py-3 text-left text-xs transition hover:bg-secondary/60 sm:grid-cols-7 sm:gap-2 sm:text-sm">
-                      <span className="flex min-w-0 items-center gap-2 sm:col-span-2">
-                        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary/15 font-display font-black text-primary">{coin.symbol.slice(0, 2)}</span>
-                        <span className="min-w-0">
-                          <b className="block truncate">{coin.symbol}</b>
-                          <span className="block truncate text-muted-foreground">{coin.name}</span>
-                        </span>
-                      </span>
-                      <span className="justify-self-end rounded-full bg-secondary px-2 py-1 text-primary sm:justify-self-auto sm:bg-transparent sm:p-0">{coin.status}</span>
-                      <span className="truncate text-muted-foreground">{coin.network}</span>
-                      <span>{coin.price}</span>
-                      <span className={coin.change.startsWith("-") ? "text-loss" : "text-profit"}>{coin.change}</span>
-                      <span className={coin.risk > 55 ? "text-loss" : coin.risk > 30 ? "text-primary" : "text-profit"}>{coin.risk}/100</span>
-                    </button>
-                  ))}
+                  {listedAssets.length === 0 && (
+                    <div className="px-4 py-12 text-center text-sm text-muted-foreground">
+                      {showWatchlistOnly ? "Star a coin to add it to your watchlist." : "No coins match your filter."}
+                    </div>
+                  )}
+                  {listedAssets.map((coin) => {
+                    const positive = !coin.change.startsWith("-");
+                    const watched = isWatched(coin.symbol);
+                    return (
+                      <div key={coin.symbol} className="flex items-center gap-3 px-4 py-3 transition hover:bg-secondary/60">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); toggleWatch(coin.symbol); }}
+                          className={`shrink-0 ${watched ? "text-casino-gold" : "text-muted-foreground hover:text-casino-gold"}`}
+                          aria-label={watched ? "Remove from watchlist" : "Add to watchlist"}
+                        >
+                          <Star className={`h-4 w-4 ${watched ? "fill-current" : ""}`} />
+                        </button>
+                        <button
+                          onClick={() => setSelectedCoin(coin as CoinDetail)}
+                          className="grid flex-1 min-w-0 grid-cols-[auto_1fr_auto] sm:grid-cols-[auto_1fr_auto_auto_auto] items-center gap-3 text-left text-xs sm:text-sm"
+                        >
+                          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary/15 font-display font-black text-primary">{coin.symbol.slice(0, 2)}</span>
+                          <span className="min-w-0">
+                            <b className="block truncate">{coin.symbol}</b>
+                            <span className="block truncate text-[10px] text-muted-foreground">{coin.name} · {coin.network}</span>
+                          </span>
+                          <Sparkline seed={coin.symbol} positive={positive} width={64} height={24} className="hidden sm:block" />
+                          <span className="text-right">
+                            <b className="block">{coin.price}</b>
+                            <span className={`block text-[10px] ${positive ? "text-profit" : "text-loss"}`}>{coin.change}</span>
+                          </span>
+                          <span className={`hidden sm:inline text-[10px] ${coin.risk > 55 ? "text-loss" : coin.risk > 30 ? "text-primary" : "text-profit"}`}>R{coin.risk}</span>
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               </section>
             </div>
