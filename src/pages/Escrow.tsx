@@ -15,6 +15,7 @@ import { AuthGuard } from "@/components/casino/AuthGuard";
 import { Shield, ShieldCheck, Truck, PackageCheck, AlertTriangle, Plus, Image as ImageIcon, Camera, Video, Hash, Loader2, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import escrowBanner from "@/assets/escrow-banner.jpg";
 
 type Deal = {
   id: string;
@@ -489,6 +490,14 @@ function EscrowInner() {
     <div className="min-h-screen gradient-casino-bg pb-24">
       <Header />
       <div className="container max-w-3xl py-4 space-y-4 px-3">
+        <div className="relative overflow-hidden rounded-2xl border border-casino-gold/40 shadow-[0_0_40px_-10px_hsl(var(--primary)/0.6)]">
+          <img
+            src={escrowBanner}
+            alt="Phantom Escrow — Secure Peer-to-Peer Trades, USDT Locked Until Delivery"
+            className="w-full h-auto block"
+            loading="eager"
+          />
+        </div>
         <div className="rounded-2xl border border-casino-gold/40 bg-gradient-to-br from-casino-gold/10 to-primary/10 p-4">
           <div className="flex items-start gap-3">
             <div className="h-10 w-10 rounded-xl bg-casino-gold/20 border border-casino-gold/40 flex items-center justify-center text-casino-gold">
