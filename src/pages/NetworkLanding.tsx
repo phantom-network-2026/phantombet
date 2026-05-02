@@ -31,6 +31,7 @@ import {
   ServerOff,
   Users,
   MessageSquare,
+  Handshake,
 } from "lucide-react";
 
 const SERVICES = [
@@ -88,6 +89,17 @@ const SERVICES = [
     icon: <MessageSquare className="w-5 h-5" />,
     accent: "from-amber-400/40 via-primary/30 to-rose-400/30",
     border: "border-amber-400/40",
+  },
+  {
+    id: "escrow",
+    name: "Phantom Escrow",
+    tagline: "Safe peer-to-peer trades in USDT — with proof of postage & delivery.",
+    cta: "Open Escrow",
+    to: "/escrow",
+    img: heroEncryption,
+    icon: <Handshake className="w-5 h-5" />,
+    accent: "from-emerald-400/40 via-primary/30 to-amber-400/30",
+    border: "border-emerald-400/40",
   },
 ];
 
