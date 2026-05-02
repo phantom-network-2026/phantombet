@@ -259,6 +259,45 @@ export type Database = {
         }
         Relationships: []
       }
+      coin_swaps: {
+        Row: {
+          created_at: string
+          fee_usd: number
+          from_amount: number
+          from_symbol: string
+          id: string
+          rate: number
+          status: string
+          to_amount: number
+          to_symbol: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          fee_usd?: number
+          from_amount: number
+          from_symbol: string
+          id?: string
+          rate: number
+          status?: string
+          to_amount: number
+          to_symbol: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          fee_usd?: number
+          from_amount?: number
+          from_symbol?: string
+          id?: string
+          rate?: number
+          status?: string
+          to_amount?: number
+          to_symbol?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       daily_spins: {
         Row: {
           id: string

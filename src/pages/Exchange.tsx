@@ -13,6 +13,7 @@ import {
 import { toast } from "sonner";
 import { Sparkline } from "@/components/casino/exchange/Sparkline";
 import { CoinDetailDialog, type CoinDetail } from "@/components/casino/exchange/CoinDetailDialog";
+import { SwapDialog } from "@/components/casino/exchange/SwapDialog";
 import { useWatchlist } from "@/hooks/useWatchlist";
 import { useExchangeCoins } from "@/hooks/useExchangeCoins";
 
@@ -69,6 +70,8 @@ export default function Exchange() {
   const [assetSearch, setAssetSearch] = useState("");
   const [selectedCoin, setSelectedCoin] = useState<CoinDetail | null>(null);
   const [showWatchlistOnly, setShowWatchlistOnly] = useState(false);
+  const [swapOpen, setSwapOpen] = useState(false);
+  const [swapDefaults, setSwapDefaults] = useState<{ from: string; to: string }>({ from: "USDT", to: "BTC" });
   const { has: isWatched, toggle: toggleWatch } = useWatchlist();
   const { coins: liveCoins, loading: liveLoading } = useExchangeCoins();
   const platformDirectory = liveCoins.length > 0 ? liveCoins : platformDirectoryFallback;
@@ -192,7 +195,16 @@ export default function Exchange() {
                   <p className="text-xs text-muted-foreground">To PHX</p>
                   <p className="mt-2 text-xl font-bold text-gold">{estimate}</p>
                 </div>
-                <Button variant="pink" className="w-full">Preview Swap</Button>
+                <Button
+                  variant="pink"
+                  className="w-full"
+                  onClick={() => {
+                    setSwapDefaults({ from: "USDT", to: "BTC" });
+                    setSwapOpen(true);
+                  }}
+                >
+                  Preview Swap
+                </Button>
               </section>
             </div>
 
@@ -377,6 +389,13 @@ export default function Exchange() {
       </AuthGuard>
       <BottomNav />
       <CoinDetailDialog coin={selectedCoin} open={!!selectedCoin} onClose={() => setSelectedCoin(null)} />
+      <SwapDialog
+        open={swapOpen}
+        onOpenChange={setSwapOpen}
+        coins={platformDirectory.map((c: any) => ({ symbol: c.symbol, name: c.name, price: c.price ?? c.price_usd }))}
+        defaultFrom={swapDefaults.from}
+        defaultTo={swapDefaults.to}
+      />
     </div>
   );
 }
