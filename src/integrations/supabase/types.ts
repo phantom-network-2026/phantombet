@@ -238,6 +238,27 @@ export type Database = {
         }
         Relationships: []
       }
+      coin_price_history: {
+        Row: {
+          id: number
+          price_usd: number
+          recorded_at: string
+          symbol: string
+        }
+        Insert: {
+          id?: number
+          price_usd: number
+          recorded_at?: string
+          symbol: string
+        }
+        Update: {
+          id?: number
+          price_usd?: number
+          recorded_at?: string
+          symbol?: string
+        }
+        Relationships: []
+      }
       daily_spins: {
         Row: {
           id: string
@@ -389,6 +410,7 @@ export type Database = {
           is_trading_enabled: boolean
           is_withdraw_enabled: boolean
           kyc_tier_required: number
+          last_price_sync_at: string | null
           logo_url: string | null
           market_cap: number
           max_supply: number | null
@@ -425,6 +447,7 @@ export type Database = {
           is_trading_enabled?: boolean
           is_withdraw_enabled?: boolean
           kyc_tier_required?: number
+          last_price_sync_at?: string | null
           logo_url?: string | null
           market_cap?: number
           max_supply?: number | null
@@ -461,6 +484,7 @@ export type Database = {
           is_trading_enabled?: boolean
           is_withdraw_enabled?: boolean
           kyc_tier_required?: number
+          last_price_sync_at?: string | null
           logo_url?: string | null
           market_cap?: number
           max_supply?: number | null
@@ -1575,6 +1599,36 @@ export type Database = {
           total_count?: number
           updated_at?: string
           used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_coin_balances: {
+        Row: {
+          available: number
+          created_at: string
+          id: string
+          locked: number
+          symbol: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          available?: number
+          created_at?: string
+          id?: string
+          locked?: number
+          symbol: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          available?: number
+          created_at?: string
+          id?: string
+          locked?: number
+          symbol?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
