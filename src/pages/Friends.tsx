@@ -7,10 +7,11 @@ import { BottomNav } from "@/components/casino/BottomNav";
 import { ProfileAvatar } from "@/components/casino/ProfileAvatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Users, UserPlus, Search, MessageCircle, Check, X, Clock, Circle, MessageSquare, Sparkles, Trophy, Inbox, PartyPopper } from "lucide-react";
+import { Users, UserPlus, Search, MessageCircle, Check, X, Clock, Circle, MessageSquare, Sparkles, Trophy, Inbox, PartyPopper, Activity } from "lucide-react";
 import { toast } from "sonner";
 import PartyChat from "@/components/casino/PartyChat";
 import Forum from "@/components/casino/Forum";
+import { ActivityFeed } from "@/components/casino/social/ActivityFeed";
 import socialHero from "@/assets/social-hero.jpg";
 import tileForum from "@/assets/social-tile-forum.jpg";
 import tileFriends from "@/assets/social-tile-friends.jpg";
@@ -37,7 +38,7 @@ export default function Friends() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab = (searchParams.get("tab") as any) || "forum";
-  const [tab, setTab] = useState<"forum" | "friends" | "party" | "online" | "requests" | "search" | "messages" | "leaderboard">(initialTab);
+  const [tab, setTab] = useState<"forum" | "friends" | "party" | "online" | "requests" | "search" | "messages" | "leaderboard" | "feed">(initialTab);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<UserResult[]>([]);
   const [friendships, setFriendships] = useState<Friendship[]>([]);
@@ -290,10 +291,10 @@ export default function Friends() {
         <div className="grid grid-cols-5 gap-2 mb-4">
           {[
             { id: "forum",       label: "Forum",   img: tileForum,   icon: MessageSquare, count: undefined as number | undefined },
+            { id: "feed",        label: "Feed",    img: tileForum,   icon: Activity,      count: undefined },
             { id: "friends",     label: "Friends", img: tileFriends, icon: Users,         count: accepted.length },
             { id: "messages",    label: "DMs",     img: tileFriends, icon: Inbox,         count: undefined },
             { id: "party",       label: "Party",   img: tileParty,   icon: PartyPopper,   count: undefined },
-            { id: "leaderboard", label: "Top",     img: tileParty,   icon: Trophy,        count: undefined },
           ].map((tile) => (
             <button
               key={tile.id}
@@ -324,7 +325,7 @@ export default function Friends() {
 
         {/* Secondary tab pills */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
-          {(["forum", "friends", "messages", "party", "online", "leaderboard", "requests", "search"] as const).map((t) => (
+          {(["forum", "feed", "friends", "messages", "party", "online", "leaderboard", "requests", "search"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -351,6 +352,9 @@ export default function Friends() {
 
         {/* Forum */}
         {tab === "forum" && <Forum />}
+
+        {/* Activity Feed */}
+        {tab === "feed" && <ActivityFeed />}
 
         {/* Party Chat */}
         {tab === "party" && <PartyChat />}
