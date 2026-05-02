@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
       // Use a separate client (no service role) to perform an actual password sign-in
       const supabasePublic = createClient(
         Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!
+        Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!
       );
       const { data: signInData, error: signInError } =
         await supabasePublic.auth.signInWithPassword({ email, password });
@@ -183,6 +183,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
+    console.error("resolve-username error:", err);
     return new Response(JSON.stringify({ error: "Internal error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
