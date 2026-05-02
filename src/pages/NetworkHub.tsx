@@ -17,6 +17,7 @@ import {
   Globe,
   Users,
   MessageSquare,
+  Handshake,
 } from "lucide-react";
 
 type App = {
@@ -69,6 +70,14 @@ const APPS: App[] = [
     name: "Phantom Forum",
     tagline: "Threads, guides & releases.",
     to: "/friends?tab=forum",
+    image: walletImg,
+    status: "live",
+  },
+  {
+    id: "escrow",
+    name: "Phantom Escrow",
+    tagline: "Safe USDT trades with proofs.",
+    to: "/escrow",
     image: walletImg,
     status: "live",
   },

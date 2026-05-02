@@ -400,6 +400,163 @@ export type Database = {
         }
         Relationships: []
       }
+      escrow_deals: {
+        Row: {
+          amount_usdt: number
+          auto_release_at: string | null
+          cancelled_reason: string | null
+          created_at: string
+          delivered_at: string | null
+          description: string
+          fee_amount: number
+          fee_percent: number
+          id: string
+          payout_amount: number
+          receiver_id: string
+          receiver_username: string
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          sender_id: string
+          sender_username: string
+          status: Database["public"]["Enums"]["escrow_status"]
+          title: string
+          total_locked: number
+          tracking_carrier: string | null
+          tracking_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_usdt: number
+          auto_release_at?: string | null
+          cancelled_reason?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          description: string
+          fee_amount?: number
+          fee_percent?: number
+          id?: string
+          payout_amount?: number
+          receiver_id: string
+          receiver_username: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          sender_id: string
+          sender_username: string
+          status?: Database["public"]["Enums"]["escrow_status"]
+          title: string
+          total_locked?: number
+          tracking_carrier?: string | null
+          tracking_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_usdt?: number
+          auto_release_at?: string | null
+          cancelled_reason?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          description?: string
+          fee_amount?: number
+          fee_percent?: number
+          id?: string
+          payout_amount?: number
+          receiver_id?: string
+          receiver_username?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          sender_id?: string
+          sender_username?: string
+          status?: Database["public"]["Enums"]["escrow_status"]
+          title?: string
+          total_locked?: number
+          tracking_carrier?: string | null
+          tracking_number?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      escrow_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          deal_id: string
+          detail: string | null
+          event_type: Database["public"]["Enums"]["escrow_event_type"]
+          id: string
+          metadata: Json
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          deal_id: string
+          detail?: string | null
+          event_type: Database["public"]["Enums"]["escrow_event_type"]
+          id?: string
+          metadata?: Json
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          deal_id?: string
+          detail?: string | null
+          event_type?: Database["public"]["Enums"]["escrow_event_type"]
+          id?: string
+          metadata?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "escrow_events_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "escrow_deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      escrow_proofs: {
+        Row: {
+          caption: string | null
+          created_at: string
+          deal_id: string
+          file_path: string | null
+          id: string
+          kind: Database["public"]["Enums"]["escrow_proof_kind"]
+          text_value: string | null
+          uploaded_by: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          deal_id: string
+          file_path?: string | null
+          id?: string
+          kind: Database["public"]["Enums"]["escrow_proof_kind"]
+          text_value?: string | null
+          uploaded_by: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          deal_id?: string
+          file_path?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["escrow_proof_kind"]
+          text_value?: string | null
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "escrow_proofs_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "escrow_deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exchange_audit_log: {
         Row: {
           action: string
@@ -1913,6 +2070,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_escrow_party: {
+        Args: { _deal_id: string; _user_id: string }
+        Returns: boolean
+      }
       party_create_lobby: {
         Args: {
           p_is_public: boolean
@@ -1976,6 +2137,36 @@ export type Database = {
         | "staff"
         | "active_user"
         | "owner"
+      escrow_event_type:
+        | "created"
+        | "accepted"
+        | "declined"
+        | "cancelled"
+        | "shipped"
+        | "delivered"
+        | "confirmed_received"
+        | "disputed"
+        | "resolved_release"
+        | "resolved_refund"
+        | "auto_released"
+        | "expired"
+        | "note"
+      escrow_proof_kind:
+        | "postage"
+        | "tracking"
+        | "delivery_photo"
+        | "delivery_video"
+        | "other"
+      escrow_status:
+        | "pending"
+        | "accepted"
+        | "shipped"
+        | "delivered"
+        | "disputed"
+        | "released"
+        | "refunded"
+        | "cancelled"
+        | "expired"
       football_bet_market: "home" | "draw" | "away"
       football_match_status: "upcoming" | "live" | "finished" | "cancelled"
       forum_prefix:
@@ -2141,6 +2332,39 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user", "moderator", "staff", "active_user", "owner"],
+      escrow_event_type: [
+        "created",
+        "accepted",
+        "declined",
+        "cancelled",
+        "shipped",
+        "delivered",
+        "confirmed_received",
+        "disputed",
+        "resolved_release",
+        "resolved_refund",
+        "auto_released",
+        "expired",
+        "note",
+      ],
+      escrow_proof_kind: [
+        "postage",
+        "tracking",
+        "delivery_photo",
+        "delivery_video",
+        "other",
+      ],
+      escrow_status: [
+        "pending",
+        "accepted",
+        "shipped",
+        "delivered",
+        "disputed",
+        "released",
+        "refunded",
+        "cancelled",
+        "expired",
+      ],
       football_bet_market: ["home", "draw", "away"],
       football_match_status: ["upcoming", "live", "finished", "cancelled"],
       forum_prefix: [
