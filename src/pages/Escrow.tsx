@@ -15,6 +15,7 @@ import { AuthGuard } from "@/components/casino/AuthGuard";
 import { Shield, ShieldCheck, Truck, PackageCheck, AlertTriangle, Plus, Image as ImageIcon, Camera, Video, Hash, Loader2, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import escrowBanner from "@/assets/escrow-banner.jpg";
 
 type Deal = {
   id: string;
