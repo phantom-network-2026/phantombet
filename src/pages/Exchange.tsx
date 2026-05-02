@@ -8,9 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Activity, ArrowDownUp, BarChart3, Boxes, ChevronDown, Crown, Gauge,
-  Globe, Rocket, Search, Shield, Zap, Coins, Sparkles,
+  Globe, Rocket, Search, Shield, Zap, Coins, Sparkles, Star, Bell,
 } from "lucide-react";
 import { toast } from "sonner";
+import { Sparkline } from "@/components/casino/exchange/Sparkline";
+import { CoinDetailDialog, type CoinDetail } from "@/components/casino/exchange/CoinDetailDialog";
+import { useWatchlist } from "@/hooks/useWatchlist";
 
 const markets = [
   ["PHX/USDT", "$0.0521", "+28.4%", "148M", "Listed"],
@@ -63,6 +66,9 @@ export default function Exchange() {
   const [activeMenu, setActiveMenu] = useState("trade");
   const [assetFilter, setAssetFilter] = useState("All");
   const [assetSearch, setAssetSearch] = useState("");
+  const [selectedCoin, setSelectedCoin] = useState<CoinDetail | null>(null);
+  const [showWatchlistOnly, setShowWatchlistOnly] = useState(false);
+  const { has: isWatched, toggle: toggleWatch } = useWatchlist();
 
   const estimate = useMemo(
     () => (Number(fromAmount || 0) / 0.0521).toLocaleString(undefined, { maximumFractionDigits: 2 }),
@@ -76,8 +82,9 @@ export default function Exchange() {
     const matchesSector = assetFilter === "All" || coin.sector === assetFilter;
     const needle = assetSearch.trim().toLowerCase();
     const matchesSearch = !needle || coin.symbol.toLowerCase().includes(needle) || coin.name.toLowerCase().includes(needle) || coin.network.toLowerCase().includes(needle);
-    return matchesSector && matchesSearch;
-  }), [assetFilter, assetSearch]);
+    const matchesWatch = !showWatchlistOnly || isWatched(coin.symbol);
+    return matchesSector && matchesSearch && matchesWatch;
+  }), [assetFilter, assetSearch, showWatchlistOnly, isWatched]);
 
   return (
     <div className="min-h-screen bg-background">
