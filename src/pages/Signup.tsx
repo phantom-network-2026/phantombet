@@ -212,7 +212,8 @@ export default function Signup() {
 
   return (
     <div className="relative min-h-screen gradient-casino-bg flex items-center justify-center p-4">
-      <div className="absolute top-4 right-4 z-10">
+      <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+        <CurrencyPicker />
         <LanguagePicker />
       </div>
       <div className="w-full max-w-sm space-y-5">
@@ -234,6 +235,25 @@ export default function Signup() {
           <div>
             <Label htmlFor="password">Password</Label>
             <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={1} className="bg-secondary border-border" />
+          </div>
+          <div>
+            <Label>Display Currency</Label>
+            <p className="text-[11px] text-muted-foreground mb-2">
+              Account balances are held in USD. This sets how amounts are displayed to you (£, € or $).
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              {CURRENCIES.map((c) => (
+                <button
+                  key={c.code}
+                  type="button"
+                  onClick={() => setCurrency(c.code as CurrencyCode)}
+                  className={`flex flex-col items-center justify-center rounded-lg border px-2 py-2 transition-colors ${currency === c.code ? "border-casino-gold bg-casino-gold/10 text-casino-gold" : "border-border bg-secondary/60 text-muted-foreground hover:bg-secondary"}`}
+                >
+                  <span className="text-lg font-bold leading-none">{c.symbol}</span>
+                  <span className="text-[10px] mt-1">{c.code}</span>
+                </button>
+              ))}
+            </div>
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" variant="gold" className="w-full">
