@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import WelcomeBanner from "@/components/casino/WelcomeBanner";
 import logo from "@/assets/phantombet-logo.png";
 import { LanguagePicker } from "@/components/casino/LanguagePicker";
+import { CurrencyPicker } from "@/components/casino/CurrencyPicker";
 import ConnectingSplash from "@/components/casino/ConnectingSplash";
 
 export default function Login() {
@@ -33,7 +34,8 @@ export default function Login() {
       {showSplash && (
         <ConnectingSplash onComplete={() => navigate("/hub")} />
       )}
-      <div className="absolute top-3 right-3">
+      <div className="absolute top-3 right-3 flex items-center gap-2">
+        <CurrencyPicker />
         <LanguagePicker />
       </div>
       <div className="w-full max-w-sm space-y-3">
