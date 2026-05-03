@@ -115,7 +115,8 @@ export default function Signup() {
         {showSplash && (
           <ConnectingSplash onComplete={() => navigate("/casino")} />
         )}
-        <div className="absolute top-4 right-4 z-10">
+        <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+          <CurrencyPicker />
           <LanguagePicker />
         </div>
         <div className="w-full max-w-sm space-y-5">
@@ -154,7 +155,8 @@ export default function Signup() {
   if (step === "seed") {
     return (
       <div className="relative min-h-screen gradient-casino-bg flex items-center justify-center p-4">
-        <div className="absolute top-4 right-4 z-10">
+        <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+          <CurrencyPicker />
           <LanguagePicker />
         </div>
         <div className="w-full max-w-sm space-y-5">
