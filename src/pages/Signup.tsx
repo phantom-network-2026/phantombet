@@ -11,6 +11,8 @@ import SignupPrivacyBanner from "@/components/casino/SignupPrivacyBanner";
 import logo from "@/assets/phantombet-logo.png";
 import { Copy, Shield, AlertTriangle } from "lucide-react";
 import { LanguagePicker } from "@/components/casino/LanguagePicker";
+import { CurrencyPicker } from "@/components/casino/CurrencyPicker";
+import { useCurrency, CURRENCIES, CurrencyCode } from "@/hooks/useCurrency";
 import { toast } from "sonner";
 import ConnectingSplash from "@/components/casino/ConnectingSplash";
 
@@ -53,6 +55,7 @@ export default function Signup() {
   const [showSplash, setShowSplash] = useState(false);
   const { signUp } = useAuth();
   const navigate = useNavigate();
+  const { currency, setCurrency } = useCurrency();
 
   const seedPhrase = useMemo(() => generateSeedPhrase(), []);
   const seedWords = seedPhrase.split(" ");
@@ -60,6 +63,7 @@ export default function Signup() {
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim() || !password.trim()) return;
+    if (!currency) return;
     // Generate a random verification word index
     setVerifyIndex(Math.floor(Math.random() * 10));
     setStep("seed");
