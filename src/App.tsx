@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
 import { LanguageProvider } from "@/hooks/useLanguage";
+import { CurrencyProvider } from "@/hooks/useCurrency";
 import { usePresence } from "@/hooks/usePresence";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
@@ -90,6 +91,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <LanguageProvider>
+        <CurrencyProvider>
         <AuthProvider>
           <PresenceTracker>
             <LightningOverlay />
@@ -167,6 +169,7 @@ const App = () => (
             </Routes>
           </PresenceTracker>
         </AuthProvider>
+        </CurrencyProvider>
         </LanguageProvider>
       </BrowserRouter>
     </TooltipProvider>
