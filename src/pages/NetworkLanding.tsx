@@ -201,6 +201,7 @@ export default function NetworkLanding() {
               Hub <ArrowRight className="w-3 h-3 ml-1" />
             </Button>
           )}
+          <CurrencyPicker />
           <LanguagePicker />
         </div>
       </header>
