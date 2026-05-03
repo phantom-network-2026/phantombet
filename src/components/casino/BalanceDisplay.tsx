@@ -1,5 +1,6 @@
 import { Wallet } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useCurrency } from "@/hooks/useCurrency";
 
 interface BalanceDisplayProps {
   size?: "sm" | "md" | "lg";
@@ -9,6 +10,7 @@ interface BalanceDisplayProps {
 
 export function BalanceDisplay({ size = "md", className = "", showIcon = true }: BalanceDisplayProps) {
   const { profile, isMockMode } = useAuth();
+  const { format, current } = useCurrency();
 
   const balance = isMockMode ? (profile?.balance ?? 0) : (profile?.real_balance ?? 0);
 
@@ -31,12 +33,12 @@ export function BalanceDisplay({ size = "md", className = "", showIcon = true }:
     <div className={`flex items-center rounded-full bg-secondary/80 border border-border/50 font-display font-bold shrink-0 ${sizeClasses[size]} ${className}`}>
       {showIcon && <Wallet className={`${iconSize[size]} text-casino-gold`} />}
       <span className="text-casino-gold whitespace-nowrap">
-        ${realBalance.toFixed(2)}
+        {format(realBalance)}
       </span>
-      <span className="text-muted-foreground font-normal text-[0.7em] whitespace-nowrap">USDT</span>
+      <span className="text-muted-foreground font-normal text-[0.7em] whitespace-nowrap">{current.code}</span>
       <span className="text-muted-foreground text-[0.7em] mx-0.5">|</span>
       <span className="text-emerald-400 whitespace-nowrap">
-        ${bonusBalance.toFixed(2)}
+        {format(bonusBalance)}
       </span>
       <span className="text-muted-foreground font-normal text-[0.7em] whitespace-nowrap">Bonus</span>
     </div>

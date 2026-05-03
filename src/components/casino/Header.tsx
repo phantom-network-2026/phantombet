@@ -10,6 +10,7 @@ import { BalanceDisplay } from "./BalanceDisplay";
 import { ProfileAvatar } from "./ProfileAvatar";
 import { NotificationBell } from "./NotificationBell";
 import { useLanguage, LANGUAGES } from "@/hooks/useLanguage";
+import { CurrencyPicker } from "./CurrencyPicker";
 import logo from "@/assets/phantom-network-logo.png";
 
 export function Header() {
@@ -239,6 +240,10 @@ export function Header() {
                     ))}
                   </div>
                 )}
+                <div className="flex items-center justify-between gap-2 px-1 pt-1">
+                  <span className="text-xs text-muted-foreground">Display currency</span>
+                  <CurrencyPicker />
+                </div>
               </div>
             </>
           ) : (
@@ -279,6 +284,10 @@ export function Header() {
                     ))}
                   </div>
                 )}
+                <div className="flex items-center justify-between gap-2 px-1 pt-1">
+                  <span className="text-xs text-muted-foreground">Display currency</span>
+                  <CurrencyPicker />
+                </div>
               </div>
             </>
           )}
