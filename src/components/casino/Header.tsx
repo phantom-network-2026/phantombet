@@ -10,6 +10,7 @@ import { BalanceDisplay } from "./BalanceDisplay";
 import { ProfileAvatar } from "./ProfileAvatar";
 import { NotificationBell } from "./NotificationBell";
 import { useLanguage, LANGUAGES } from "@/hooks/useLanguage";
+import { CurrencyPicker } from "./CurrencyPicker";
 import logo from "@/assets/phantom-network-logo.png";
 
 export function Header() {
