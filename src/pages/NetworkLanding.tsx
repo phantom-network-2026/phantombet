@@ -11,6 +11,7 @@ import heroCasino from "@/assets/phantombet-casino-hero.png";
 import heroWallet from "@/assets/phantom-wallet-hero.png";
 import heroEncryption from "@/assets/phantom-encryption-hero.jpg";
 import { LanguagePicker } from "@/components/casino/LanguagePicker";
+import { CurrencyPicker } from "@/components/casino/CurrencyPicker";
 import ConnectingSplash from "@/components/casino/ConnectingSplash";
 import {
   ArrowRight,
