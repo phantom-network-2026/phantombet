@@ -19,6 +19,7 @@ const PUBLIC_KEYS = [
   "sports_promo_banners",
   "exchange_coins",
   "exchange_welcome",
+  "auth_bypass",
 ];
 
 Deno.serve(async (req) => {
