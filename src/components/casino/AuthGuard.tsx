@@ -14,14 +14,16 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
     (async () => {
-      const { data } = await supabase
-        .from("site_settings")
-        .select("value")
-        .eq("key", "auth_bypass")
-        .maybeSingle();
-      if (!mounted) return;
-      const v = data?.value as any;
-      setBypass(v?.enabled === true);
+      try {
+        const { data } = await supabase.functions.invoke("get-public-settings", {
+          body: { keys: ["auth_bypass"] },
+        });
+        if (!mounted) return;
+        const v = (data as any)?.settings?.auth_bypass;
+        setBypass(v?.enabled === true);
+      } catch {
+        if (mounted) setBypass(false);
+      }
     })();
     return () => { mounted = false; };
   }, []);
