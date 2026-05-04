@@ -217,7 +217,7 @@ export default function NetworkHub() {
               Choose Your Service
             </h2>
             <span className="text-[9px] tracking-widest uppercase text-muted-foreground">
-              5 services • 1 account
+              {APPS.length} services • 1 account
             </span>
           </div>
 
