@@ -8,7 +8,6 @@ import { HeroBanner } from "@/components/casino/HeroBanner";
 import { CategoryTabs } from "@/components/casino/CategoryTabs";
 import { GameCard } from "@/components/casino/GameCard";
 import { HomeCarousels } from "@/components/casino/HomeCarousels";
-import welcomeBannerImg from "@/assets/welcome-phantombet-banner.jpeg";
 
 // Default game images for when DB is empty
 import slotsImg from "@/assets/game-slots.jpg";
@@ -151,17 +150,8 @@ export default function Index() {
         </div>
       )}
 
-      {/* Welcome Phantom Casino Hero Banner */}
-      <div className="mx-4 mt-3 rounded-2xl overflow-hidden border border-casino-gold/40 animate-border-gold">
-        <img
-          src={welcomeBannerImg}
-          alt="Welcome to Phantom Casino — 100% Non-KYC Casino with Live Game Chat"
-          className="w-full h-auto block"
-          loading="eager"
-        />
-      </div>
-
-      <HeroBanner />
+      <HeroBanner variant="casino" />
+      <HeroBanner variant="sportsbook" />
 
       {/* Prize Reel Banner */}
       <PrizeReelBanner />

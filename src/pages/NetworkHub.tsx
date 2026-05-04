@@ -6,6 +6,7 @@ import hubHero from "@/assets/hub-hero.jpg";
 import exchangeImg from "@/assets/hub-exchange-tile.jpg";
 import betImg from "@/assets/hub-bet-tile.jpg";
 import walletImg from "@/assets/hub-wallet-tile.jpg";
+import sportsbookImg from "@/assets/hub-sportsbook-tile.jpg";
 import {
   ArrowRight,
   LogOut,
@@ -47,6 +48,14 @@ const APPS: App[] = [
     tagline: "Casino, slots & sportsbook.",
     to: "/casino",
     image: betImg,
+    status: "live",
+  },
+  {
+    id: "sportsbook",
+    name: "Phantom Sportsbook",
+    tagline: "Live odds, builders & in-play.",
+    to: "/sportsbook",
+    image: sportsbookImg,
     status: "live",
   },
   {
@@ -208,7 +217,7 @@ export default function NetworkHub() {
               Choose Your Service
             </h2>
             <span className="text-[9px] tracking-widest uppercase text-muted-foreground">
-              5 services • 1 account
+              {APPS.length} services • 1 account
             </span>
           </div>
 
