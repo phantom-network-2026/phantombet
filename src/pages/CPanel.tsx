@@ -2573,7 +2573,7 @@ function ExchangeAdminPanel({ onBack }: { onBack: () => void }) {
   );
 }
 
-type ActivePanel = null | "users" | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "bonus-probability" | "slots-config" | "promotions" | "wallet-mode" | "deposits-withdrawals" | "welcome-config" | "ghost-users" | "broadcasts" | "dev-console" | "ai-agent" | "sports-promos" | "exchange-admin" | "help-listings" | "simulated-activity";
+type ActivePanel = null | "users" | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "bonus-probability" | "slots-config" | "promotions" | "wallet-mode" | "deposits-withdrawals" | "welcome-config" | "ghost-users" | "broadcasts" | "dev-console" | "ai-agent" | "sports-promos" | "exchange-admin" | "help-listings" | "simulated-activity" | "auth-bypass";
 
 // ── Login Requirement Toggle ────────────────────────────────────
 function LoginRequirementPanel({ onBack }: { onBack: () => void }) {
@@ -2706,6 +2706,7 @@ export default function CPanel() {
           {activePanel === "sports-promos" && <SportsPromoUploaderPanel onBack={back} />}
          {activePanel === "exchange-admin" && <ExchangeAdminPanel onBack={back} />}
           {activePanel === "help-listings" && <HelpListingAdminPanel onBack={back} />}
+          {activePanel === "auth-bypass" && <LoginRequirementPanel onBack={back} />}
           {activePanel === "simulated-activity" && (
             <PanelView title="Simulated Activity" onBack={back}>
               <SimulatedActivityPanel />
@@ -2875,6 +2876,7 @@ export default function CPanel() {
                 <ToolCard icon={<Shield className="h-6 w-6" />} label="Moderation Log" onClick={() => setActivePanel("security")} />
                 <ToolCard icon={<Ban className="h-6 w-6" />} label="Chat Bans" onClick={() => setActivePanel("security")} />
                 <ToolCard icon={<AlertTriangle className="h-6 w-6" />} label="Activity Logs" onClick={() => setActivePanel("logs")} />
+                <ToolCard icon={<Power className="h-6 w-6" />} label="Login Requirement" onClick={() => setActivePanel("auth-bypass")} />
               </div>
             </CpanelSection>
             )}
