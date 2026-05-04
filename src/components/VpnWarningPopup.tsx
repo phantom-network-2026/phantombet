@@ -1,0 +1,81 @@
+import { useEffect, useState } from "react";
+import { ShieldAlert, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+
+const STORAGE_KEY = "phantom_vpn_warning_dismissed_forever";
+const INTERVAL_MS = 60 * 1000;
+
+export function VpnWarningPopup() {
+  const [open, setOpen] = useState(false);
+  const [neverShow, setNeverShow] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem(STORAGE_KEY) === "true") return;
+    const tick = () => setOpen(true);
+    const t = setTimeout(tick, 5000); // first show after 5s
+    const i = setInterval(() => {
+      if (localStorage.getItem(STORAGE_KEY) === "true") return;
+      setOpen(true);
+    }, INTERVAL_MS);
+    return () => { clearTimeout(t); clearInterval(i); };
+  }, []);
+
+  const dismiss = () => {
+    if (neverShow) localStorage.setItem(STORAGE_KEY, "true");
+    setOpen(false);
+  };
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-3 sm:p-6 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative w-full max-w-md rounded-2xl border-2 border-destructive/70 bg-[hsl(265_60%_6%)] shadow-[0_0_50px_hsl(0_80%_50%/0.4)] overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-destructive/15 via-transparent to-transparent pointer-events-none" />
+        <button
+          onClick={dismiss}
+          aria-label="Dismiss warning"
+          className="absolute top-2 right-2 z-10 h-8 w-8 rounded-full bg-black/40 hover:bg-black/70 flex items-center justify-center text-foreground/70 hover:text-foreground transition"
+        >
+          <X className="h-4 w-4" />
+        </button>
+
+        <div className="relative p-5 sm:p-6">
+          <div className="flex items-start gap-3 mb-3">
+            <div className="h-12 w-12 rounded-xl bg-destructive/20 border border-destructive/60 flex items-center justify-center text-destructive shrink-0 animate-pulse">
+              <ShieldAlert className="h-6 w-6" />
+            </div>
+            <div>
+              <div className="text-[10px] tracking-[0.25em] uppercase text-destructive/80 mb-0.5">Security Warning</div>
+              <h2 className="font-display font-black text-lg leading-tight">You Are Not Using A VPN</h2>
+            </div>
+          </div>
+
+          <div className="space-y-2 text-sm text-foreground/85 leading-snug">
+            <p>
+              Your connection is <span className="font-bold text-destructive">unprotected</span>. Without a VPN your IP, location and traffic are exposed to your ISP and any observer.
+            </p>
+            <p className="text-xs text-foreground/70 border-l-2 border-casino-gold/60 pl-2.5 py-1 bg-casino-gold/5 rounded-r">
+              <span className="font-bold text-casino-gold">At launch</span>, access to the Phantom Network <span className="font-bold">will not be granted</span> unless you are running a VPN. Set one up now to avoid disruption.
+            </p>
+          </div>
+
+          <label className="mt-4 flex items-center gap-2 cursor-pointer group">
+            <Checkbox
+              checked={neverShow}
+              onCheckedChange={(v) => setNeverShow(v === true)}
+              className="border-foreground/40 data-[state=checked]:bg-casino-gold data-[state=checked]:text-black"
+            />
+            <span className="text-xs text-foreground/80 group-hover:text-foreground transition">Never show this again</span>
+          </label>
+
+          <div className="mt-4 flex gap-2">
+            <Button variant="gold" size="sm" className="flex-1" onClick={dismiss}>
+              I Understand
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
