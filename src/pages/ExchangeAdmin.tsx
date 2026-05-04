@@ -324,6 +324,9 @@ export default function ExchangeAdmin() {
         const row: any = {};
         headers.forEach((h, i) => { row[h] = values[i] ?? ""; });
         if (!row.symbol) continue;
+        // Wallet addresses moved to exchange_coin_wallets — strip from coin upsert
+        delete row.hot_wallet_address;
+        delete row.cold_wallet_address;
         const numericKeys = ["price_usd","change_24h","volume_24h","market_cap","display_order","circulating_supply","risk_score"];
         numericKeys.forEach((k) => { if (row[k] !== undefined && row[k] !== "") row[k] = Number(row[k]); else delete row[k]; });
         if (row.is_featured !== undefined) row.is_featured = String(row.is_featured).toLowerCase() === "true";
