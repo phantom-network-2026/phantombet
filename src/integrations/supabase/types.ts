@@ -587,19 +587,46 @@ export type Database = {
         }
         Relationships: []
       }
+      exchange_coin_wallets: {
+        Row: {
+          coin_id: string
+          cold_wallet_address: string | null
+          hot_wallet_address: string | null
+          updated_at: string
+        }
+        Insert: {
+          coin_id: string
+          cold_wallet_address?: string | null
+          hot_wallet_address?: string | null
+          updated_at?: string
+        }
+        Update: {
+          coin_id?: string
+          cold_wallet_address?: string | null
+          hot_wallet_address?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exchange_coin_wallets_coin_id_fkey"
+            columns: ["coin_id"]
+            isOneToOne: true
+            referencedRelation: "exchange_coins"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exchange_coins: {
         Row: {
           change_24h: number
           circulating_supply: number
           coingecko_id: string | null
-          cold_wallet_address: string | null
           contract_address: string | null
           created_at: string
           daily_withdraw_limit: number
           description: string | null
           display_order: number
           fallback_icon: string | null
-          hot_wallet_address: string | null
           id: string
           is_deposit_enabled: boolean
           is_featured: boolean
@@ -629,14 +656,12 @@ export type Database = {
           change_24h?: number
           circulating_supply?: number
           coingecko_id?: string | null
-          cold_wallet_address?: string | null
           contract_address?: string | null
           created_at?: string
           daily_withdraw_limit?: number
           description?: string | null
           display_order?: number
           fallback_icon?: string | null
-          hot_wallet_address?: string | null
           id?: string
           is_deposit_enabled?: boolean
           is_featured?: boolean
@@ -666,14 +691,12 @@ export type Database = {
           change_24h?: number
           circulating_supply?: number
           coingecko_id?: string | null
-          cold_wallet_address?: string | null
           contract_address?: string | null
           created_at?: string
           daily_withdraw_limit?: number
           description?: string | null
           display_order?: number
           fallback_icon?: string | null
-          hot_wallet_address?: string | null
           id?: string
           is_deposit_enabled?: boolean
           is_featured?: boolean
