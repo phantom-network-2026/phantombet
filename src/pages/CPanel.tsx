@@ -2575,6 +2575,73 @@ function ExchangeAdminPanel({ onBack }: { onBack: () => void }) {
 
 type ActivePanel = null | "users" | "files" | "database" | "config" | "security" | "maintenance" | "logs" | "house-edge" | "game-probability" | "bonus-probability" | "slots-config" | "promotions" | "wallet-mode" | "deposits-withdrawals" | "welcome-config" | "ghost-users" | "broadcasts" | "dev-console" | "ai-agent" | "sports-promos" | "exchange-admin" | "help-listings" | "simulated-activity";
 
+// ── Login Requirement Toggle ────────────────────────────────────
+function LoginRequirementPanel({ onBack }: { onBack: () => void }) {
+  const [bypass, setBypass] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "auth_bypass")
+        .maybeSingle();
+      const v = data?.value as any;
+      setBypass(v?.enabled === true);
+      setLoading(false);
+    })();
+  }, []);
+
+  const toggle = async (checked: boolean) => {
+    setSaving(true);
+    const { data: existing } = await supabase
+      .from("site_settings")
+      .select("id")
+      .eq("key", "auth_bypass")
+      .maybeSingle();
+    if (existing) {
+      await supabase.from("site_settings").update({ value: { enabled: checked } as any }).eq("key", "auth_bypass");
+    } else {
+      await supabase.from("site_settings").insert({ key: "auth_bypass", value: { enabled: checked } as any });
+    }
+    setBypass(checked);
+    setSaving(false);
+    toast.success(checked ? "Login bypass ENABLED — guests can access everything" : "Login bypass DISABLED — login required for protected pages");
+  };
+
+  return (
+    <PanelView title="Login Requirement" onBack={onBack}>
+      {loading ? (
+        <p className="text-sm text-muted-foreground">Loading...</p>
+      ) : (
+        <div className="space-y-4">
+          <div className="rounded-lg border border-border bg-card/40 p-4 space-y-3">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="font-semibold text-foreground flex items-center gap-2">
+                  <Lock className="h-4 w-4" /> Bypass Login Screens
+                </h3>
+                <p className="text-xs text-muted-foreground mt-1 max-w-md">
+                  When ON, AuthGuard-protected pages (games, wallet, etc.) will load for guests without showing the "Login Required" screen. Use for testing or open-access mode.
+                </p>
+              </div>
+              <Switch checked={bypass} onCheckedChange={toggle} disabled={saving} />
+            </div>
+            <div className={`text-xs font-medium ${bypass ? "text-amber-400" : "text-green-400"}`}>
+              Status: {bypass ? "BYPASS ON — no login required" : "Login required (default)"}
+            </div>
+          </div>
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-amber-200/80">
+            ⚠️ This is a UI-only bypass. Database RLS policies still enforce real authentication for data writes.
+          </div>
+        </div>
+      )}
+    </PanelView>
+  );
+}
+
 export default function CPanel() {
   const { isAdmin, isOwner, loading, profile } = useAuth();
   const navigate = useNavigate();
