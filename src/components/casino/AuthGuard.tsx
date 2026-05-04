@@ -1,14 +1,32 @@
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { BottomNav } from "@/components/casino/BottomNav";
 import { Lock } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const [bypass, setBypass] = useState<boolean | null>(null);
 
-  if (loading) {
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      const { data } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "auth_bypass")
+        .maybeSingle();
+      if (!mounted) return;
+      const v = data?.value as any;
+      setBypass(v?.enabled === true);
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  if (loading || bypass === null) {
     return (
       <div className="min-h-screen gradient-casino-bg flex items-center justify-center">
         <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
@@ -16,7 +34,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!user) {
+  if (!user && !bypass) {
     return (
       <div className="min-h-screen gradient-casino-bg pb-20 md:pb-0">
         <div className="container max-w-md py-16 px-4 text-center space-y-6">
