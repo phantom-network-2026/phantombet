@@ -63,7 +63,7 @@ const COIN_COLUMNS = [
   "price_usd","change_24h","volume_24h","market_cap","circulating_supply","max_supply",
   "risk_score","status","is_featured","is_trading_enabled","is_deposit_enabled","is_withdraw_enabled",
   "withdrawal_min","withdrawal_fee","daily_withdraw_limit","kyc_tier_required",
-  "contract_address","hot_wallet_address","cold_wallet_address","scheduled_listing_at",
+  "contract_address","scheduled_listing_at",
   "description","whitepaper_url","website_url","display_order",
 ].join(",");
 
@@ -123,13 +123,23 @@ export default function ExchangeAdmin() {
 
   const loadAll = async () => {
     setLoading(true);
-    const [coinsRes, settingsRes, auditRes] = await Promise.all([
+    const [coinsRes, walletsRes, settingsRes, auditRes] = await Promise.all([
       supabase.from("exchange_coins").select(COIN_COLUMNS).order("display_order", { ascending: true }),
+      supabase.from("exchange_coin_wallets" as any).select("coin_id,hot_wallet_address,cold_wallet_address"),
       supabase.from("site_settings").select("value").eq("key", "exchange_settings").maybeSingle(),
       supabase.from("exchange_audit_log").select("id,action,target_type,target_id,created_at,metadata").order("created_at", { ascending: false }).limit(50),
     ]);
     if (coinsRes.error) toast.error(coinsRes.error.message);
-    setCoins(((coinsRes.data ?? []) as unknown) as Coin[]);
+    const walletMap = new Map<string, { hot: string | null; cold: string | null }>();
+    for (const w of ((walletsRes.data as any[]) ?? [])) {
+      walletMap.set(w.coin_id, { hot: w.hot_wallet_address, cold: w.cold_wallet_address });
+    }
+    const merged = ((coinsRes.data ?? []) as any[]).map((c) => ({
+      ...c,
+      hot_wallet_address: walletMap.get(c.id)?.hot ?? null,
+      cold_wallet_address: walletMap.get(c.id)?.cold ?? null,
+    }));
+    setCoins(merged as Coin[]);
     if (settingsRes.data?.value) setSettings({ ...DEFAULT_SETTINGS, ...(settingsRes.data.value as Settings) });
     setAuditLog((auditRes.data as any) ?? []);
     setLoading(false);
@@ -188,22 +198,31 @@ export default function ExchangeAdmin() {
   const saveDraft = async () => {
     if (!draft) return;
     if (!draft.symbol?.trim() || !draft.name?.trim()) { toast.error("Symbol and Name are required"); return; }
+    const { hot_wallet_address, cold_wallet_address, ...coinFields } = draft;
     const payload = {
-      ...draft,
+      ...coinFields,
       symbol: draft.symbol!.trim().toUpperCase(),
       name: draft.name!.trim(),
     };
     if (editingId === "__new__") {
       const { data, error } = await supabase.from("exchange_coins").insert(payload as any).select(COIN_COLUMNS).single();
       if (error) { toast.error(error.message); return; }
-      const coin = (data as unknown) as Coin;
+      const coin = { ...(data as any), hot_wallet_address, cold_wallet_address } as Coin;
+      if (hot_wallet_address || cold_wallet_address) {
+        await supabase.from("exchange_coin_wallets" as any).upsert({
+          coin_id: coin.id, hot_wallet_address, cold_wallet_address,
+        });
+      }
       setCoins((prev) => [...prev, coin]);
       await logAction("coin_create", "exchange_coin", coin.id, { symbol: coin.symbol });
       toast.success(`${coin.symbol} listed`);
     } else {
       const { data, error } = await supabase.from("exchange_coins").update(payload as any).eq("id", editingId!).select(COIN_COLUMNS).single();
       if (error) { toast.error(error.message); return; }
-      const coin = (data as unknown) as Coin;
+      await supabase.from("exchange_coin_wallets" as any).upsert({
+        coin_id: editingId, hot_wallet_address, cold_wallet_address,
+      });
+      const coin = { ...(data as any), hot_wallet_address, cold_wallet_address } as Coin;
       setCoins((prev) => prev.map((c) => c.id === editingId ? coin : c));
       await logAction("coin_update", "exchange_coin", coin.id, { symbol: coin.symbol });
       toast.success(`${coin.symbol} updated`);
