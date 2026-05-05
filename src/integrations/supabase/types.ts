@@ -1207,6 +1207,147 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_likes: {
+        Row: {
+          created_at: string
+          id: string
+          liked_user_id: string | null
+          listing_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          liked_user_id?: string | null
+          listing_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          liked_user_id?: string | null
+          listing_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      marketplace_listings: {
+        Row: {
+          accepted_currencies: string[]
+          category: string
+          created_at: string
+          description: string
+          id: string
+          images: string[]
+          like_count: number
+          listing_type: string
+          price_usd: number
+          seller_id: string
+          status: string
+          title: string
+          updated_at: string
+          view_count: number
+        }
+        Insert: {
+          accepted_currencies?: string[]
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          images?: string[]
+          like_count?: number
+          listing_type?: string
+          price_usd?: number
+          seller_id: string
+          status?: string
+          title: string
+          updated_at?: string
+          view_count?: number
+        }
+        Update: {
+          accepted_currencies?: string[]
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          images?: string[]
+          like_count?: number
+          listing_type?: string
+          price_usd?: number
+          seller_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          view_count?: number
+        }
+        Relationships: []
+      }
+      marketplace_orders: {
+        Row: {
+          amount_usd: number
+          buyer_id: string
+          created_at: string
+          currency: string
+          id: string
+          listing_id: string
+          seller_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount_usd?: number
+          buyer_id: string
+          created_at?: string
+          currency?: string
+          id?: string
+          listing_id: string
+          seller_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount_usd?: number
+          buyer_id?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          listing_id?: string
+          seller_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      marketplace_reviews: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          listing_id: string
+          rating: number
+          reviewed_user_id: string
+          reviewer_id: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          id?: string
+          listing_id: string
+          rating: number
+          reviewed_user_id: string
+          reviewer_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          listing_id?: string
+          rating?: number
+          reviewed_user_id?: string
+          reviewer_id?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string
