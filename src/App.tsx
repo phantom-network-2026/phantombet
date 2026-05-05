@@ -41,6 +41,7 @@ import Wallet from "./pages/Wallet.tsx";
 import UserProfile from "./pages/UserProfile.tsx";
 import PlayGame from "./pages/PlayGame.tsx";
 import Escrow from "./pages/Escrow.tsx";
+import Marketplace from "./pages/Marketplace.tsx";
 
 // New HTML5 games
 import ChickenCross from "./pages/games/ChickenCross.tsx";
@@ -134,6 +135,7 @@ const App = () => (
               <Route path="/exchange" element={<Exchange />} />
               <Route path="/wallet" element={<Wallet />} />
               <Route path="/escrow" element={<Escrow />} />
+              <Route path="/marketplace" element={<Marketplace />} />
               <Route path="/sportsbook" element={<Sportsbook />} />
               {/* New HTML5 games */}
               <Route path="/chicken-cross" element={<ChickenCross />} />
