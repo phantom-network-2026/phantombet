@@ -7,6 +7,7 @@ import exchangeImg from "@/assets/hub-exchange-tile.jpg";
 import betImg from "@/assets/hub-bet-tile.jpg";
 import walletImg from "@/assets/hub-wallet-tile.jpg";
 import sportsbookImg from "@/assets/hub-sportsbook-tile.jpg";
+import marketplaceImg from "@/assets/hub-marketplace-tile.jpg";
 import {
   ArrowRight,
   LogOut,
@@ -19,6 +20,7 @@ import {
   Users,
   MessageSquare,
   Handshake,
+  Store,
 } from "lucide-react";
 
 type App = {
@@ -88,6 +90,14 @@ const APPS: App[] = [
     tagline: "Safe USDT trades with proofs.",
     to: "/escrow",
     image: walletImg,
+    status: "live",
+  },
+  {
+    id: "marketplace",
+    name: "Phantom Marketplace",
+    tagline: "Buy & sell with crypto.",
+    to: "/marketplace",
+    image: marketplaceImg,
     status: "live",
   },
 ];
