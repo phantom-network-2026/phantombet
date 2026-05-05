@@ -10,6 +10,7 @@ import heroExchange from "@/assets/phantom-exchange-hero.png";
 import heroCasino from "@/assets/phantombet-casino-hero.png";
 import heroWallet from "@/assets/phantom-wallet-hero.png";
 import heroEncryption from "@/assets/phantom-encryption-hero.jpg";
+import heroMarketplace from "@/assets/hero-marketplace-banner.jpg";
 import { LanguagePicker } from "@/components/casino/LanguagePicker";
 import { CurrencyPicker } from "@/components/casino/CurrencyPicker";
 import ConnectingSplash from "@/components/casino/ConnectingSplash";
@@ -33,6 +34,7 @@ import {
   Users,
   MessageSquare,
   Handshake,
+  Store,
 } from "lucide-react";
 
 const SERVICES = [
@@ -101,6 +103,17 @@ const SERVICES = [
     icon: <Handshake className="w-5 h-5" />,
     accent: "from-emerald-400/40 via-primary/30 to-amber-400/30",
     border: "border-emerald-400/40",
+  },
+  {
+    id: "marketplace",
+    name: "Phantom Marketplace",
+    tagline: "Buy & sell goods, services and digital downloads — paid in crypto, escrow-protected.",
+    cta: "Open Marketplace",
+    to: "/marketplace",
+    img: heroMarketplace,
+    icon: <Store className="w-5 h-5" />,
+    accent: "from-fuchsia-500/40 via-primary/30 to-amber-400/30",
+    border: "border-fuchsia-400/40",
   },
 ];
 
