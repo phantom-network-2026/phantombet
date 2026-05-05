@@ -1,14 +1,43 @@
-import { useEffect, useState } from "react";
-import { ShieldAlert, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ShieldAlert, X, Monitor, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 
-const STORAGE_KEY = "phantom_vpn_warning_dismissed_forever";
+// v2 — reset prior dismissals so all users see the new device/browser message
+const STORAGE_KEY = "phantom_vpn_warning_dismissed_forever_v2";
 const INTERVAL_MS = 60 * 1000;
+
+function detectClient() {
+  const ua = navigator.userAgent;
+  // Browser
+  let browser = "Unknown Browser";
+  if (/Edg\//.test(ua)) browser = "Microsoft Edge";
+  else if (/OPR\//.test(ua) || /Opera/.test(ua)) browser = "Opera";
+  else if (/Chrome\//.test(ua) && !/Chromium/.test(ua)) browser = "Google Chrome";
+  else if (/Firefox\//.test(ua)) browser = "Mozilla Firefox";
+  else if (/Safari\//.test(ua) && /Version\//.test(ua)) browser = "Safari";
+  const vMatch = ua.match(/(Edg|OPR|Chrome|Firefox|Version)\/([\d.]+)/);
+  if (vMatch) browser += ` ${vMatch[2].split(".")[0]}`;
+
+  // Device / OS
+  let device = "Unknown Device";
+  if (/iPhone/.test(ua)) device = "Apple iPhone";
+  else if (/iPad/.test(ua)) device = "Apple iPad";
+  else if (/Macintosh/.test(ua)) device = "Apple Mac";
+  else if (/Android/.test(ua)) {
+    const m = ua.match(/Android[^;]*;\s*([^)]+?)(?:\sBuild|\))/);
+    device = m ? `Android — ${m[1].trim()}` : "Android Device";
+  } else if (/Windows NT 10/.test(ua)) device = "Windows 10/11 PC";
+  else if (/Windows/.test(ua)) device = "Windows PC";
+  else if (/Linux/.test(ua)) device = "Linux Device";
+
+  return { browser, device };
+}
 
 export function VpnWarningPopup() {
   const [open, setOpen] = useState(false);
   const [neverShow, setNeverShow] = useState(false);
+  const { browser, device } = useMemo(detectClient, []);
 
   useEffect(() => {
     if (localStorage.getItem(STORAGE_KEY) === "true") return;
@@ -55,6 +84,19 @@ export function VpnWarningPopup() {
             <p>
               Your connection is <span className="font-bold text-destructive">unprotected</span>. Without a VPN your IP, location and traffic are exposed to your ISP and any observer.
             </p>
+            <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-2.5 space-y-1.5">
+              <div className="text-[10px] tracking-[0.2em] uppercase text-destructive/80 font-bold">Exposed Fingerprint</div>
+              <div className="flex items-center gap-2 text-xs">
+                <Monitor className="h-3.5 w-3.5 text-destructive shrink-0" />
+                <span className="text-foreground/60">Device:</span>
+                <span className="font-mono font-bold text-foreground truncate">{device}</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs">
+                <Globe className="h-3.5 w-3.5 text-destructive shrink-0" />
+                <span className="text-foreground/60">Browser:</span>
+                <span className="font-mono font-bold text-foreground truncate">{browser}</span>
+              </div>
+            </div>
             <p className="text-xs text-foreground/70 border-l-2 border-casino-gold/60 pl-2.5 py-1 bg-casino-gold/5 rounded-r">
               <span className="font-bold text-casino-gold">At launch</span>, access to the Phantom Network <span className="font-bold">will not be granted</span> unless you are running a VPN. Set one up now to avoid disruption.
             </p>
