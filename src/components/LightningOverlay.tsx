@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 /**
  * Site-wide lightning + storm glow overlay.
@@ -7,7 +7,6 @@ import { useEffect, useRef, useState } from "react";
 export function LightningOverlay() {
   const [flash, setFlash] = useState(0);
   const [variant, setVariant] = useState<"gold" | "blue" | "white">("gold");
-  const audioCtxRef = useRef<AudioContext | null>(null);
 
   useEffect(() => {
     let timeout: number;
@@ -15,25 +14,6 @@ export function LightningOverlay() {
       const variants: Array<"gold" | "blue" | "white"> = ["gold", "blue", "white", "blue", "gold"];
       setVariant(variants[Math.floor(Math.random() * variants.length)]);
       setFlash((f) => f + 1);
-      try {
-        if (!audioCtxRef.current) {
-          const Ctx = (window.AudioContext || (window as any).webkitAudioContext) as typeof AudioContext;
-          if (Ctx) audioCtxRef.current = new Ctx();
-        }
-        const ctx = audioCtxRef.current;
-        if (ctx) {
-          const o = ctx.createOscillator();
-          const g = ctx.createGain();
-          o.type = "sawtooth";
-          o.frequency.setValueAtTime(60 + Math.random() * 30, ctx.currentTime);
-          g.gain.setValueAtTime(0.0001, ctx.currentTime);
-          g.gain.exponentialRampToValueAtTime(0.03, ctx.currentTime + 0.02);
-          g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.6);
-          o.connect(g).connect(ctx.destination);
-          o.start();
-          o.stop(ctx.currentTime + 0.65);
-        }
-      } catch {}
       timeout = window.setTimeout(trigger, 2000 + Math.random() * 3500);
     };
     timeout = window.setTimeout(trigger, 1500);
