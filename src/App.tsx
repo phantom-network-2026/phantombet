@@ -79,6 +79,7 @@ import Sportsbook from "./pages/Sportsbook.tsx";
 import { LightningOverlay } from "./components/LightningOverlay";
 import { TestingPhaseBanner } from "./components/TestingPhaseBanner";
 import { VpnWarningPopup } from "./components/VpnWarningPopup";
+import { UkGeoBlock } from "./components/UkGeoBlock";
 const queryClient = new QueryClient();
 
 function PresenceTracker({ children }: { children: React.ReactNode }) {
@@ -92,6 +93,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <UkGeoBlock>
         <LanguageProvider>
         <CurrencyProvider>
         <AuthProvider>
@@ -175,6 +177,7 @@ const App = () => (
         </AuthProvider>
         </CurrencyProvider>
         </LanguageProvider>
+        </UkGeoBlock>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
